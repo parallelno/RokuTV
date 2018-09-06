@@ -22,7 +22,7 @@ Function Main() as void
 
     stableFPS = 33
 	
-	backObj = CreateFrame(backgroundRegion, screen, 0, 0, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
+	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 	
     while true
         event = port.GetMessage()
@@ -40,7 +40,7 @@ Function Main() as void
     end while
 End Function
 
-function CreateFrame(_region as object, _screen as object, _localOffsetX=_region.GetWidth()/2.0 as float, _localOffsetY=_region.GetHeight()/2.0 as float, _scaleX=1 as float, _scaleY=1 as float)
+function CreateSpriteObj(_region as object, _screen as object, _localOffsetX=_region.GetWidth()/2.0 as float, _localOffsetY=_region.GetHeight()/2.0 as float, _scaleX=1 as float, _scaleY=1 as float) as object
 	'SPRITE_STATUS_DEATH = 0
 	'SPRITE_STATUS_LIVE = 1
 	
@@ -56,9 +56,19 @@ function CreateFrame(_region as object, _screen as object, _localOffsetX=_region
 		'status	: SPRITE_STATUS_LIVE
 		visible	: true
 		currentRegion	: _region
-		regions	: CreateObject("roArray", 1, true) ': m.regions[0] = m.currentRegion
+		regions	: CreateObject("roArray", 1, true)
 		screen	: _screen
 		Draw	: function() : m.screen.DrawScaledObject(m.x - m.localOffsetX * m.scaleX, m.y - m.localOffsetY * m.scaleY, m.scaleX, m.scaleY, m.currentRegion) : end function
+		AddRegions	: AddRegions
 	}
+	
+	obj.regions[0] = m.currentRegion
+	
 	return obj
+end Function
+
+function AddRegions(_regions as object)
+	for each region in _regions
+		m.regions.Push(region)
+	end for
 end Function
