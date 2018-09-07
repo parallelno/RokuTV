@@ -1,6 +1,6 @@
 Library "v30/bslDefender.brs"
 
-Function Main() as void
+function Main() as void
     screen = CreateObject("roScreen", true)
     port = CreateObject("roMessagePort")
     bitmapset = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/bitmapset.xml"))
@@ -15,14 +15,14 @@ Function Main() as void
     screen.SetAlphaEnable(true)
     codes = bslUniversalControlEventCodes()
 	
-	backgroundRegion = bitmapset.regions.background
-
-    ballAnim = bitmapset.animations.animated_3ball
-    ballSprite = compositor.NewAnimatedSprite((screenWidth-ballSize)\2, (screenHeight-ballSize)\2, ballAnim)    
-
-    stableFPS = 33
+	stableFPS = 33
 	
-	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
+	backgroundRegion = bitmapset.regions.background
+	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
+
+	ballAnim = bitmapset.animations.animated_3ball
+	ballObj = CreateSpriteObj(ballAnim[0], screen, screenWidth/2, screenHeight/2)
+	ballObj.ReplaceRegions(ballAnim)
 	
     while true
         event = port.GetMessage()
@@ -32,43 +32,57 @@ Function Main() as void
                 deltaTime = clock.TotalMilliseconds()
             if (deltaTime > stableFPS)
 				backObj.Draw()
+				ballObj.Draw()
                 screen.SwapBuffers()
                 clock.Mark()
             endif
         
         endif
     end while
-End Function
+end function
 
-function CreateSpriteObj(_region as object, _screen as object, _localOffsetX=_region.GetWidth()/2.0 as float, _localOffsetY=_region.GetHeight()/2.0 as float, _scaleX=1 as float, _scaleY=1 as float) as object
-	'SPRITE_STATUS_DEATH = 0
-	'SPRITE_STATUS_LIVE = 1
-	
+function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float) as object
 	obj = {
-		x		: 0
-		y		: 0
+		x		: _x
+		y		: _y
 		localOffsetX	: _localOffsetX
 		localOffsetY	: _localOffsetY
 		scaleX	: _scaleX
 		scaleY	: _scaleY
 		speedX	: 0
 		speedY	: 0
-		'status	: SPRITE_STATUS_LIVE
 		visible	: true
 		currentRegion	: _region
 		regions	: CreateObject("roArray", 1, true)
 		screen	: _screen
-		Draw	: function() : m.screen.DrawScaledObject(m.x - m.localOffsetX * m.scaleX, m.y - m.localOffsetY * m.scaleY, m.scaleX, m.scaleY, m.currentRegion) : end function
+		Draw	: function() : m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion) : end function
 		AddRegions	: AddRegions
+		ReplaceRegions	: ReplaceRegions
+		Update	: SimpleSpriteUpdate
+		drawX	: 0 
+		drawY	: 0
+		'animations	: CreateObject("roArray", 1, true)
 	}
 	
+	obj.Update()
 	obj.regions[0] = m.currentRegion
+	'obj.animations[0] = {idle : m.regions}
 	
 	return obj
-end Function
+end function
 
-function AddRegions(_regions as object)
+function SimpleSpriteUpdate() as void
+	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX
+	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY
+end function
+
+function AddRegions(_regions as object) as void
 	for each region in _regions
 		m.regions.Push(region)
 	end for
+end Function
+
+function ReplaceRegions(_regions as object) as void
+	m.regions = _regions
+	m.currentRegion = _regions[0]
 end Function
