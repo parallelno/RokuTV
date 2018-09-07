@@ -22,7 +22,10 @@ function Main() as void
 
 	ballAnim = bitmapset.animations.animated_3ball
 	ballObj = CreateSpriteObj(ballAnim[0], screen, screenWidth/2, screenHeight/2)
-	ballObj.ReplaceRegions(ballAnim)
+
+	heroAnim = bitmapset.animations.hero_anim
+	heroObj = CreateSpriteObj(heroAnim[0], screen, screenWidth/2, screenHeight/2, 0,0, 1,1, heroAnim)
+
 	
     while true
         event = port.GetMessage()
@@ -33,6 +36,7 @@ function Main() as void
             if (deltaTime > stableFPS)
 				backObj.Draw()
 				ballObj.Draw()
+				heroObj.Draw()
                 screen.SwapBuffers()
                 clock.Mark()
             endif
@@ -41,8 +45,9 @@ function Main() as void
     end while
 end function
 
-function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float) as object
+function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object) as object
 	obj = {
+		name	: "idle"
 		x		: _x
 		y		: _y
 		localOffsetX	: _localOffsetX
@@ -53,22 +58,24 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 		speedY	: 0
 		visible	: true
 		currentRegion	: _region
-		regions	: CreateObject("roArray", 1, true)
+		regions	: _regions
 		screen	: _screen
-		Draw	: function() : m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion) : end function
+		drawX	: 0 
+		drawY	: 0
+		
+		Draw	: DrawSprite
 		AddRegions	: AddRegions
 		ReplaceRegions	: ReplaceRegions
 		Update	: SimpleSpriteUpdate
-		drawX	: 0 
-		drawY	: 0
-		'animations	: CreateObject("roArray", 1, true)
 	}
 	
 	obj.Update()
-	obj.regions[0] = m.currentRegion
-	'obj.animations[0] = {idle : m.regions}
 	
 	return obj
+end function
+
+function DrawSprite() as void
+	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
 end function
 
 function SimpleSpriteUpdate() as void
