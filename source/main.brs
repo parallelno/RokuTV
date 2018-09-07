@@ -45,28 +45,33 @@ function Main() as void
     end while
 end function
 
-function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object) as object
+function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object, _AnimationUpdate=SimpleSpriteAnimationUpdate as object ) as object
 	obj = {
+		active : true
 		name	: "idle"
+		length	: 1.0
+		loop	: true
+		speed	: 1.0
+		time	: 0
 		x		: _x
 		y		: _y
 		localOffsetX	: _localOffsetX
 		localOffsetY	: _localOffsetY
 		scaleX	: _scaleX
 		scaleY	: _scaleY
-		speedX	: 0
-		speedY	: 0
+		speedX	: 0.0
+		speedY	: 0.0
 		visible	: true
-		currentRegion	: _region
 		regions	: _regions
+		currentRegion	: _region
+		currentRegionNum	: 0
 		screen	: _screen
-		drawX	: 0 
+		drawX	: 0
 		drawY	: 0
 		
 		Draw	: DrawSprite
-		AddRegions	: AddRegions
-		ReplaceRegions	: ReplaceRegions
 		Update	: SimpleSpriteUpdate
+		AnimationUpdate	: _AnimationUpdate
 	}
 	
 	obj.Update()
@@ -79,17 +84,33 @@ function DrawSprite() as void
 end function
 
 function SimpleSpriteUpdate() as void
+	m.AnimationUpdate()
 	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX
 	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY
 end function
 
-function AddRegions(_regions as object) as void
-	for each region in _regions
-		m.regions.Push(region)
-	end for
-end Function
-
-function ReplaceRegions(_regions as object) as void
-	m.regions = _regions
-	m.currentRegion = _regions[0]
-end Function
+function SimpleSpriteAnimationUpdate(_deltatime as float) as void
+	if (m.active = false) return
+	if (m.regions = invalid) return
+	
+	m.time += _deltatime * m.speed
+	if (m.time > m.lenght) 
+		if (m.loop = true)
+			m.time -= m.lenght
+		else 
+			m.time = m.lenght
+		endif
+	end if
+	if (m.time < 0) 
+		if (m.loop = true)
+			m.time += m.lenght
+		else 
+			m.time = 0
+		endif
+	end if
+	
+	m.currentRegionNum = Int(m.time / m.length * m.regions.Count())
+	
+	currentRegion = m.regions[m.currentRegionNum]
+	if ( currentRegion <> invlid) m.currentRegion = currentRegion
+end function
