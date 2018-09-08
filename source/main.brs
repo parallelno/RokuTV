@@ -45,10 +45,10 @@ function Main() as void
     end while
 end function
 
-function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object, _AnimationUpdate=SimpleSpriteAnimationUpdate as object ) as object
+function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object, _name="idle" as String, _AnimationUpdate=SimpleSpriteAnimationUpdate as object ) as object
 	obj = {
-		active : true
-		name	: "idle"
+		active	: true
+		name	: _name
 		length	: 1.0
 		loop	: true
 		speed	: 1.0
@@ -74,7 +74,7 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 		AnimationUpdate	: _AnimationUpdate
 	}
 	
-	obj.Update()
+	obj.Update(0)
 	
 	return obj
 end function
@@ -83,10 +83,10 @@ function DrawSprite() as void
 	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
 end function
 
-function SimpleSpriteUpdate(_deltatime as float) as void
+function SimpleSpriteUpdate(_deltatime as float, _x=0 as float, _y=0 as float) as void
 	m.AnimationUpdate(_deltatime)
-	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX
-	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY
+	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + _x
+	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY + _y
 end function
 
 function SimpleSpriteAnimationUpdate(_deltatime as float) as void
@@ -113,4 +113,43 @@ function SimpleSpriteAnimationUpdate(_deltatime as float) as void
 	
 	currentRegion = m.regions[m.currentRegionNum]
 	if ( currentRegion <> invlid) m.currentRegion = currentRegion
+end function
+
+function CreateVisObj(_name as String, _screen as object, _x=0 as float, _y=0 as float, _regionsArray as object) as object
+	obj = {
+		active	: true
+		visible	: true
+		name	: _name
+		screen	: _screen
+		x		: _x
+		y		: _y
+		spriteObjArray	: invalid
+		currentAnimationName	: "idle"
+				
+		Draw	: DrawVisObj
+		Update	: SimpleVisObjUpdate
+	}
+	
+	for each regions in _regionsArray
+		m.spriteObjArray.Push( CreateSpriteObj(regions[0], _screen, 0, 0, 0,0, 1,1, regions, regions + "") )
+	end for
+	
+	obj.Update(0)
+	
+	return obj
+end function
+
+function SimpleVisObjUpdate(_deltatime as float) as void
+	if (m.active = false) return
+	for each spriteObj in m.spriteObjArray
+		spriteObj.Update(_deltatime, m.x, m.y)
+	end for
+end function
+
+function VisObjDraw() as void
+	if (m.visible = false) return
+	
+	for each spriteObj in m.spriteObjArray
+		spriteObj.Draw()
+	end for
 end function
