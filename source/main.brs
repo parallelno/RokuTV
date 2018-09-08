@@ -83,8 +83,8 @@ function DrawSprite() as void
 	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
 end function
 
-function SimpleSpriteUpdate() as void
-	m.AnimationUpdate()
+function SimpleSpriteUpdate(_deltatime as float) as void
+	m.AnimationUpdate(_deltatime)
 	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX
 	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY
 end function
