@@ -8,10 +8,15 @@
 	</Bitmap>	
 	<Bitmap name="background" filespec="pkg:/assets/desert_BG.png" />
 	<Bitmap name="hero" filespec="pkg:/assets/walk_sheet.png">
-		<Region name="r1" x="0" y="0" w="64" h="128" />
-		<Region name="r2" x="64" y="0" w="64" h="128" />
-		<Region name="r3" x="128" y="0" w="64" h="128" />
-		<Region name="r4" x="184" y="128" w="64" h="128" />
+		<Region name="r1" x="0" y="0" w="72" h="97" />
+		<Region name="r2" x="72" y="0" w="72" h="97" />
+		<Region name="r3" x="144" y="0" w="72" h="97" />
+		<Region name="r4" x="0" y="97" w="72" h="97" />
+		<Region name="r5" x="72" y="97" w="72" h="97" />
+		<Region name="r6" x="144" y="97" w="72" h="97" />
+		<Region name="r7" x="0" y="194" w="72" h="97" />
+		<Region name="r8" x="72" y="194" w="72" h="97" />
+		<Region name="r9" x="144" y="194" w="72" h="97" />
 	</Bitmap>	
 	<Animation name="animated_3ball">
 		<frame use="3ball_bitmapset.r1" />
@@ -23,7 +28,12 @@
 		<frame use="hero.r1" />
 		<frame use="hero.r2" />
 		<frame use="hero.r3" />
-		<frame use="hero.r4" />		
+		<frame use="hero.r4" />
+		<frame use="hero.r5" />
+		<frame use="hero.r6" />
+		<frame use="hero.r7" />
+		<frame use="hero.r8" />
+		<frame use="hero.r9" />
 	</Animation>
 </BitmapSet>
 

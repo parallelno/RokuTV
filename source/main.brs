@@ -15,27 +15,35 @@ function Main() as void
     screen.SetAlphaEnable(true)
     codes = bslUniversalControlEventCodes()
 	
-	stableFPS = 33
+	STABLE_FPS = 33.0 / 1000.0
 	
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 
 	ballAnim = bitmapset.animations.animated_3ball
-	ballObj = CreateSpriteObj(ballAnim[0], screen, screenWidth/2, screenHeight/2)
+	ballObj = CreateSpriteObj(ballAnim[0], screen, screenWidth/2, screenHeight/2, 0,0,1,1, ballAnim)
 
 	heroAnim = bitmapset.animations.hero_anim
-	heroObj = CreateSpriteObj(heroAnim[0], screen, screenWidth/2, screenHeight/2, 0,0, 1,1, heroAnim)
-
+	'heroObj = CreateSpriteObj(heroAnim[0], screen, screenWidth/2 + 200, screenHeight/2, 0, 0, 1, 1, heroAnim)
+	
+	heroAnimPack = CreateObject("roArray",0 , true)
+	heroAnimPack.Push(heroAnim)
+	heroAnimPack.Push(heroAnim)
+	
+	heroObj = CreateVisObj("hero", screen, screenWidth/2 + 200, screenHeight/2, heroAnimPack)
 	
     while true
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
             id = event.GetInt()            
         else if (event = invalid)
-                deltaTime = clock.TotalMilliseconds()
-            if (deltaTime > stableFPS)
+                deltaTime = clock.TotalMilliseconds() / 1000.0
+            if (deltaTime > STABLE_FPS)
+				ballObj.Update(deltaTime)
+				'heroObj.Update(deltaTime)
+				
 				backObj.Draw()
-				ballObj.Draw()
+				'ballObj.Draw()
 				heroObj.Draw()
                 screen.SwapBuffers()
                 clock.Mark()
@@ -74,7 +82,7 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 		AnimationUpdate	: _AnimationUpdate
 	}
 	
-	obj.Update(0)
+	obj.Update()
 	
 	return obj
 end function
@@ -83,39 +91,40 @@ function DrawSprite() as void
 	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
 end function
 
-function SimpleSpriteUpdate(_deltatime as float, _x=0 as float, _y=0 as float) as void
+function SimpleSpriteUpdate(_deltatime=0 as float, _x=0 as float, _y=0 as float) as void
 	m.AnimationUpdate(_deltatime)
 	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + _x
 	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY + _y
 end function
 
-function SimpleSpriteAnimationUpdate(_deltatime as float) as void
+function SimpleSpriteAnimationUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
 	if (m.regions = invalid) return
 	
 	m.time += _deltatime * m.speed
-	if (m.time > m.lenght) 
+	if (m.time > m.length) 
 		if (m.loop = true)
-			m.time -= m.lenght
+			m.time -= m.length
 		else 
-			m.time = m.lenght
+			m.time = m.length
 		endif
 	end if
 	if (m.time < 0) 
 		if (m.loop = true)
-			m.time += m.lenght
+			m.time += m.length
 		else 
 			m.time = 0
 		endif
 	end if
-	
+
 	m.currentRegionNum = Int(m.time / m.length * m.regions.Count())
+	if (m.currentRegionNum > ( m.regions.Count() - 1) ) m.currentRegionNum -= 1
 	
 	currentRegion = m.regions[m.currentRegionNum]
-	if ( currentRegion <> invlid) m.currentRegion = currentRegion
+	if ( currentRegion <> invalid) m.currentRegion = currentRegion
 end function
 
-function CreateVisObj(_name as String, _screen as object, _x=0 as float, _y=0 as float, _regionsArray as object) as object
+function CreateVisObj(_name as String, _screen as object, _x=0 as float, _y=0 as float, _regionsArray=invalid as object) as object
 	obj = {
 		active	: true
 		visible	: true
@@ -126,20 +135,24 @@ function CreateVisObj(_name as String, _screen as object, _x=0 as float, _y=0 as
 		spriteObjArray	: invalid
 		currentAnimationName	: "idle"
 				
-		Draw	: DrawVisObj
+		Draw	: VisObjDraw
 		Update	: SimpleVisObjUpdate
 	}
 	
+	m.spriteObjArray = CreateObject("roArray", 0, true)
+	
 	for each regions in _regionsArray
-		m.spriteObjArray.Push( CreateSpriteObj(regions[0], _screen, 0, 0, 0,0, 1,1, regions, regions + "") )
+		if (regions <> invalid)
+			m.spriteObjArray.Push( CreateSpriteObj(regions[0], _screen) )
+		endif
 	end for
 	
-	obj.Update(0)
+	obj.Update()
 	
 	return obj
 end function
 
-function SimpleVisObjUpdate(_deltatime as float) as void
+function SimpleVisObjUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
 	for each spriteObj in m.spriteObjArray
 		spriteObj.Update(_deltatime, m.x, m.y)
@@ -149,7 +162,5 @@ end function
 function VisObjDraw() as void
 	if (m.visible = false) return
 	
-	for each spriteObj in m.spriteObjArray
-		spriteObj.Draw()
-	end for
+	if (m.spriteObjArray <> invalid AND m.spriteObjArray.Count() > 0) m.spriteObjArray[0].Draw() '<---------------------------- error
 end function
