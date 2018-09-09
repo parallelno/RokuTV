@@ -5,8 +5,6 @@ function Main() as void
     port = CreateObject("roMessagePort")
     bitmapset = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/bitmapset.xml"))
     ballsize = bitmapset.extrainfo.ballsize.ToInt()
-    compositor = CreateObject("roCompositor")
-    compositor.SetDrawTo(screen, &h02041000)
     screenWidth = screen.GetWidth()
     screenHeight= screen.GetHeight()
     clock = CreateObject("roTimespan")
@@ -24,11 +22,10 @@ function Main() as void
 	ballObj = CreateSpriteObj(ballAnim[0], screen, screenWidth/2, screenHeight/2, 0,0,1,1, ballAnim)
 
 	heroAnim = bitmapset.animations.hero_anim
-	'heroObj = CreateSpriteObj(heroAnim[0], screen, screenWidth/2 + 200, screenHeight/2, 0, 0, 1, 1, heroAnim)
 	
-	heroAnimPack = CreateObject("roArray",0 , true)
-	heroAnimPack.Push(heroAnim)
-	heroAnimPack.Push(heroAnim)
+	heroAnimPack = {}
+	heroAnimPack.AddReplace("idle2", ballAnim)
+	heroAnimPack.AddReplace("idle", heroAnim)
 	
 	heroObj = CreateVisObj("hero", screen, screenWidth/2 + 200, screenHeight/2, heroAnimPack)
 	
@@ -40,10 +37,10 @@ function Main() as void
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > STABLE_FPS)
 				ballObj.Update(deltaTime)
-				'heroObj.Update(deltaTime)
+				heroObj.Update(deltaTime)
 				
 				backObj.Draw()
-				'ballObj.Draw()
+				ballObj.Draw()
 				heroObj.Draw()
                 screen.SwapBuffers()
                 clock.Mark()
@@ -81,8 +78,6 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 		Update	: SimpleSpriteUpdate
 		AnimationUpdate	: _AnimationUpdate
 	}
-	
-	obj.Update()
 	
 	return obj
 end function
@@ -124,7 +119,7 @@ function SimpleSpriteAnimationUpdate(_deltatime=0 as float) as void
 	if ( currentRegion <> invalid) m.currentRegion = currentRegion
 end function
 
-function CreateVisObj(_name as String, _screen as object, _x=0 as float, _y=0 as float, _regionsArray=invalid as object) as object
+function CreateVisObj(_name as String, _screen as object, _x as float, _y as float, _regionsArray as object, _currentAnimationName="idle" as String) as object
 	obj = {
 		active	: true
 		visible	: true
@@ -132,35 +127,31 @@ function CreateVisObj(_name as String, _screen as object, _x=0 as float, _y=0 as
 		screen	: _screen
 		x		: _x
 		y		: _y
-		spriteObjArray	: invalid
-		currentAnimationName	: "idle"
+		spriteObjArray	: {}
+		currentAnimationName	: _currentAnimationName
 				
 		Draw	: VisObjDraw
 		Update	: SimpleVisObjUpdate
 	}
 	
-	m.spriteObjArray = CreateObject("roArray", 0, true)
-	
-	for each regions in _regionsArray
-		if (regions <> invalid)
-			m.spriteObjArray.Push( CreateSpriteObj(regions[0], _screen) )
-		endif
+	for each regionsName in _regionsArray
+		obj.spriteObjArray.AddReplace(regionsName, CreateSpriteObj(_regionsArray[regionsName][0], _screen,0,0,0,0,1,1, _regionsArray[regionsName], regionsName) )
 	end for
-	
-	obj.Update()
 	
 	return obj
 end function
 
 function SimpleVisObjUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
-	for each spriteObj in m.spriteObjArray
-		spriteObj.Update(_deltatime, m.x, m.y)
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
 	end for
 end function
 
 function VisObjDraw() as void
 	if (m.visible = false) return
 	
-	if (m.spriteObjArray <> invalid AND m.spriteObjArray.Count() > 0) m.spriteObjArray[0].Draw() '<---------------------------- error
+	spriteObj = m.spriteObjArray.Lookup(m.currentAnimationName)
+	if (spriteObj <> invalid) spriteObj.Draw()
 end function
