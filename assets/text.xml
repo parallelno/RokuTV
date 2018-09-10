@@ -1,0 +1,11 @@
+<BitmapSet>
+	<ExtraInfo idle_speed = "1" idle2_speed = "2" />
+	<Bitmap name="menu_background" filespec="pkg:/assets/Menu01.png" />
+	<Bitmap name="game_text" filespec="pkg:/assets/GameText.png">
+		<Region name="r1" x="0" y="0" w="370" h="95" />
+		<Region name="r2" x="0" y="96" w="292" h="100" />
+		<Region name="r3" x="0" y="196" w="663" h="93" />
+		<Region name="r4" x="0" y="190" w="313" h="96" />
+		<Region name="r5" x="0" y="188" w="343" h="97" />
+	</Bitmap>
+</BitmapSet>
