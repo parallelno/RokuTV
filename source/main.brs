@@ -15,7 +15,7 @@ function Main() as void
 	
 	STABLE_FPS = 33.0 / 1000.0
 	
-	GAME_FIELD_MAX_X = screenWidth - 80
+	GAME_FIELD_MAX_X = screenWidth - 80.0
 	GAME_FIELD_MIN_X = 80
 	GAME_FIELD_MAX_Y = screenHeight - 80
 	GAME_FIELD_MIN_Y = 200
@@ -34,7 +34,8 @@ function Main() as void
 	GAME_STATE_MENU_Y = [ 489, 540, 600 ]
 	menuState = GAME_STATE_MENU_L1
 	
-	GAME_INTRO_DELAY = 3
+	GAME_INTRO_DELAY = 1.0
+	GAME_OVER_DELAY = 3.0
 	
 	score = 0
 	gameState = GAME_STATE_MENU
@@ -46,18 +47,19 @@ function Main() as void
 	menuCursorRegion = bitmapset.regions.menu_cursor
 	menuCursorObj = CreateSpriteObj(menuCursorRegion, screen, 270, GAME_STATE_MENU_Y[menuState], 0, 0, 1, 1)
 
-	textRoundRegion = textAnimDataSet.regions.game_text.r1
-	textRoundObj = CreateSpriteObj(textRoundRegion, screen, screenWidth/2, screenHeight/2, 0, 0, 1, 1)
+	textRoundObj = CreateVisObj("Round", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "round", TextRoundObjUpdate)
+	textGameOverObj = CreateVisObj("GameOver", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "game_over", TextRoundObjUpdate)
 	
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 	
 		
 	ball = CreateVisObj("ball", screen, screenWidth/2, screenHeight/2, bitmapset, "idle2", BallVisObjUpdate)
-	ball.ballSpeedX = 10
-	ball.ballSpeedY = 10
-	ball.ballCurrentSpeedX = 10
-	ball.ballCurrentSpeedY = 10
+	
+	ball.Speeds = [5, 10, 15]
+	
+	ball.ballCurrentSpeedX = ball.Speeds[0]
+	ball.ballCurrentSpeedY = ball.Speeds[0]
 	ball.maxX = GAME_FIELD_MAX_X
 	ball.minX = GAME_FIELD_MIN_X
 	ball.maxY = GAME_FIELD_MAX_Y
@@ -65,7 +67,12 @@ function Main() as void
 	ball.radius = 64
 
 	
-	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet)
+	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
+	heroObj2.heroSpeed = 10
+	heroObj2.heroCurrentSpeed = 0
+	heroObj2.maxY = GAME_FIELD_MAX_Y
+	heroObj2.minY = GAME_FIELD_MIN_Y
+	heroObj2.height = 146
 	
 	heroObj1 = CreateVisObj("hero1", screen, 100, screenHeight/2, hero1AnimDataSet, "idle", HeroVisObjUpdate)
 	heroObj1.heroSpeed = 10
@@ -90,6 +97,9 @@ MENU_LOOP:
 				if (menuState > 2 ) menuState = 2
 			endif
 			if (id = 6)
+				ball.ballCurrentSpeedX = ball.Speeds[menuState]
+				ball.ballCurrentSpeedY = ball.Speeds[menuState]
+				
 				Goto GAME_INTRO_LOOP
 			endif
         else if (event = invalid)
@@ -107,14 +117,21 @@ MENU_LOOP:
         endif
     end while
 
-	gameIntroLoopTime = 0
-
 GAME_INTRO_LOOP:
+	gameIntroLoopTime = 0.0
+	textRoundObj.currentTime = 0.0
+	textRoundObj.time = 0.3
+	textRoundObj.scaleStart = 1.7
+	textRoundObj.scaleEnd = 1.0
+	textRoundObj.scale = textRoundObj.scaleStart
+
+	
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
         if (deltaTime > STABLE_FPS)
 			heroObj1.Update(deltaTime)
 			heroObj2.Update(deltaTime)
+			textRoundObj.Update(deltaTime)
 			
 			backObj.Draw()
 			heroObj1.Draw()
@@ -123,13 +140,20 @@ GAME_INTRO_LOOP:
 			textRoundObj.Draw()
 			
 			screen.SwapBuffers()
+			
+			if (gameIntroLoopTime > GAME_INTRO_DELAY) Goto GAME_LOOP
+			gameIntroLoopTime += deltaTime
+			
             clock.Mark()
 		endif
-		if (gameIntroLoopTime > GAME_INTRO_DELAY) Goto GAME_LOOP
-		gameIntroLoopTime += deltaTime
 	end while
 
-GAME_LOOP:	
+GAME_LOOP:
+	ball.Hero1Miss = false
+	ball.Hero2Miss = false
+	ball.x = screenWidth/2
+	ball.y = screenHeight/2
+
     while true
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
@@ -140,11 +164,12 @@ GAME_LOOP:
 			if (id = codes.BUTTON_DOWN_PRESSED)
 				heroObj1.heroCurrentSpeed = heroObj1.heroSpeed
 			endif
+			if (id = 0) Goto MENU_LOOP
         else if (event = invalid)
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > STABLE_FPS)
 				heroObj1.Update(deltaTime)
-				heroObj2.Update(deltaTime)
+				heroObj2.Update(deltaTime, ball)
 				ball.Update(deltaTime, heroObj1, heroObj2)
 				
 				backObj.Draw()
@@ -154,10 +179,48 @@ GAME_LOOP:
 				ball.Draw()
                 screen.SwapBuffers()
                 clock.Mark()
+				
+				if (ball.Hero1Miss = true) Goto GAME_OVER_LOOP
             endif        
         endif
     end while
 
+GAME_OVER_LOOP:
+	gameOverLoopTime = 0.0
+	textGameOverObj.currentTime = 0.0
+	textGameOverObj.time = 1
+	textGameOverObj.scaleStart = 1.7
+	textGameOverObj.scaleEnd = 1.0
+	textGameOverObj.scale = textGameOverObj.scaleStart
+
+	
+    while true
+		event = port.GetMessage()
+        if (type(event) = "roUniversalControlEvent")
+            id = event.GetInt()
+			if ( (id = 0) OR (id = 6) ) Goto MENU_LOOP
+        elseif (event = invalid)
+			deltaTime = clock.TotalMilliseconds() / 1000.0
+			if (deltaTime > STABLE_FPS)
+				heroObj1.Update(deltaTime)
+				heroObj2.Update(deltaTime)
+				textGameOverObj.Update(deltaTime)
+			
+				backObj.Draw()
+				heroObj1.Draw()
+				heroObj2.Draw()
+			
+				textGameOverObj.Draw()
+			
+				screen.SwapBuffers()
+			
+				if (gameOverLoopTime > GAME_OVER_DELAY) Goto MENU_LOOP
+				gameOverLoopTime += deltaTime
+			
+				clock.Mark()
+			endif
+		endif
+	end while
 	
 end function
 
@@ -274,6 +337,10 @@ function VisObjDraw() as void
 	if (spriteObj <> invalid) spriteObj.Draw()
 end function
 
+function Blend(_x as float, _y as float, _blendFactor as float) as float
+	return _x *(1.0 - _blendFactor) + _y * _blendFactor
+end function
+
 
 '---------------------------------------------------------------------
 function HeroVisObjUpdate(_deltatime=0 as float) as void
@@ -288,18 +355,36 @@ function HeroVisObjUpdate(_deltatime=0 as float) as void
 	end for
 end function
 
+function AIHeroVisObjUpdate(_deltatime=0 as float, _ball=invalid as object) as void
+	if (m.active = false) return
+	
+	if (_ball <> invalid) m.y = _ball.y
+	if (m.y > m.maxY) m.y = m.maxY
+	if (m.y < m.minY) m.y = m.minY
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
 function BallVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _hero2=invalid as object) as void
 	if (m.active = false) return
 	
 	m.x += m.ballCurrentSpeedX
 	m.y += m.ballCurrentSpeedY
 	
-	if ( (m.x > m.maxX) OR (m.x < m.minX) ) m.ballCurrentSpeedX *= -1
+	if (m.x > m.maxX) m.ballCurrentSpeedX *= -1
+	if (m.x < m.minX) m.Hero1Miss = true
 	if ( (m.y > m.maxY) OR (m.y < m.minY) ) m.ballCurrentSpeedY *= -1
 	
-	distanceX = Abs(_hero1.x - m.x)
-	if (distanceX < m.radius)
+	toHero1distanceX = Abs(_hero1.x - m.x)
+	if (toHero1distanceX < m.radius)
 		if ( (m.y < _hero1.y + _hero1.height / 2 ) AND (m.y > _hero1.y - _hero1.height / 2 ) ) m.ballCurrentSpeedX *= -1
+	endif
+
+	toHero2distanceX = Abs(_hero2.x - m.x)
+	if (toHero2distanceX < m.radius)
+		if ( (m.y < _hero2.y + _hero2.height / 2 ) AND (m.y > _hero2.y - _hero2.height / 2 ) ) m.ballCurrentSpeedX *= -1
 	endif
 	
 	for each spriteObjName in m.spriteObjArray
@@ -307,10 +392,16 @@ function BallVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _hero
 	end for
 end function
 
-function Distance2D(_ball as object, _hero as object) as object
-	coord = {
-		x	: 0
-		y	: 0
-	}
-	return coord
+function TextRoundObjUpdate(_deltatime=0 as float) as void
+	if (m.currentTime < m.time) 
+		blendFactor = m.currentTime / m.time
+		m.scale = Blend(m.scaleStart, m.scaleEnd, blendFactor)
+	endif
+	m.currentTime += _deltatime
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+		m.spriteObjArray[spriteObjName].scaleX = m.scale
+		m.spriteObjArray[spriteObjName].scaleY = m.scale
+	end for
 end function
