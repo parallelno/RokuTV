@@ -8,6 +8,18 @@
 		<Region name="r4" x="0" y="290" w="313" h="96" />
 		<Region name="r5" x="0" y="388" w="343" h="97" />
 	</Bitmap>
+	<Bitmap name="numbers" filespec="pkg:/assets/Numbers.png">
+		<Region name="r0" x="0" y="0" w="64" h="84" />
+		<Region name="r1" x="0" y="0" w="64" h="84" />
+		<Region name="r2" x="0" y="0" w="64" h="84" />
+		<Region name="r3" x="0" y="0" w="64" h="84" />
+		<Region name="r4" x="0" y="0" w="64" h="84" />
+		<Region name="r5" x="0" y="0" w="64" h="84" />
+		<Region name="r6" x="0" y="0" w="64" h="84" />
+		<Region name="r7" x="0" y="0" w="64" h="84" />
+		<Region name="r8" x="0" y="0" w="64" h="84" />
+		<Region name="r9" x="0" y="0" w="64" h="84" />
+	</Bitmap>
 	<Animation name="round">
 		<frame use="game_text.r1" />
 	</Animation>
