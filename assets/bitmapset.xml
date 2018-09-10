@@ -1,6 +1,6 @@
 <BitmapSet>
-	<ExtraInfo ballsize="128" />
-	<Bitmap name="3ball_bitmapset" filespec="pkg:/assets/3ballset.png">
+	<ExtraInfo idle_speed = "1" idle2_speed = "2" />
+	<Bitmap name="ball_anim" filespec="pkg:/assets/3ballset.png">
 		<Region name="r1" x="0" y="0" w="128" h="128" />
 		<Region name="r2" x="128" y="0" w="128" h="128" />
 		<Region name="r3" x="256" y="0" w="128" h="128" />
@@ -18,13 +18,13 @@
 		<Region name="r8" x="72" y="194" w="72" h="97" />
 		<Region name="r9" x="144" y="194" w="72" h="97" />
 	</Bitmap>	
-	<Animation name="animated_3ball">
-		<frame use="3ball_bitmapset.r1" />
-		<frame use="3ball_bitmapset.r2" />
-		<frame use="3ball_bitmapset.r3" />
-		<frame use="3ball_bitmapset.r4" />		
+	<Animation name="idle2">
+		<frame use="ball_anim.r1" />
+		<frame use="ball_anim.r2" />
+		<frame use="ball_anim.r3" />
+		<frame use="ball_anim.r4" />		
 	</Animation>
-	<Animation name="hero_anim">
+	<Animation name="idle">
 		<frame use="hero.r1" />
 		<frame use="hero.r2" />
 		<frame use="hero.r3" />
@@ -36,4 +36,3 @@
 		<frame use="hero.r9" />
 	</Animation>
 </BitmapSet>
-

@@ -4,7 +4,7 @@ function Main() as void
     screen = CreateObject("roScreen", true)
     port = CreateObject("roMessagePort")
     bitmapset = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/bitmapset.xml"))
-    ballsize = bitmapset.extrainfo.ballsize.ToInt()
+	hero1AnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/platform.xml"))
     screenWidth = screen.GetWidth()
     screenHeight= screen.GetHeight()
     clock = CreateObject("roTimespan")
@@ -17,31 +17,50 @@ function Main() as void
 	
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
+		
+	ball = CreateVisObj("ball", screen, screenWidth/2, screenHeight/2, bitmapset, "idle2", BallVisObjUpdate)
+	ball.ballSpeedX = 10
+	ball.ballSpeedY = 10
+	ball.ballCurrentSpeedX = 10
+	ball.ballCurrentSpeedY = 10
+	ball.maxX = screenWidth - 80
+	ball.minX = 80
+	ball.maxY = screenHeight - 80
+	ball.minY = 80
+	ball.radius = 64
 
-	ballAnim = bitmapset.animations.animated_3ball
-	ballObj = CreateSpriteObj(ballAnim[0], screen, screenWidth/2, screenHeight/2, 0,0,1,1, ballAnim)
-
-	heroAnim = bitmapset.animations.hero_anim
 	
-	heroAnimPack = {}
-	heroAnimPack.AddReplace("idle2", ballAnim)
-	heroAnimPack.AddReplace("idle", heroAnim)
+	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet)
 	
-	heroObj = CreateVisObj("hero", screen, screenWidth/2 + 200, screenHeight/2, heroAnimPack)
+	heroObj1 = CreateVisObj("hero1", screen, 100, screenHeight/2, hero1AnimDataSet, "idle", HeroVisObjUpdate)
+	heroObj1.heroSpeed = 10
+	heroObj1.heroCurrentSpeed = 0
+	heroObj1.maxY = screenHeight - 80
+	heroObj1.minY = 80
+	heroObj1.height = 146
 	
     while true
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
-            id = event.GetInt()            
+            id = event.GetInt()
+			if (id = codes.BUTTON_UP_PRESSED)
+				heroObj1.heroCurrentSpeed = -heroObj1.heroSpeed
+			endif
+			if (id = codes.BUTTON_DOWN_PRESSED)
+				heroObj1.heroCurrentSpeed = heroObj1.heroSpeed
+			endif
         else if (event = invalid)
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > STABLE_FPS)
-				ballObj.Update(deltaTime)
-				heroObj.Update(deltaTime)
+				heroObj1.Update(deltaTime)
+				heroObj2.Update(deltaTime)
+				ball.Update(deltaTime, heroObj1, heroObj2)
 				
 				backObj.Draw()
-				ballObj.Draw()
-				heroObj.Draw()
+				
+				heroObj1.Draw()
+				heroObj2.Draw()
+				ball.Draw()
                 screen.SwapBuffers()
                 clock.Mark()
             endif
@@ -119,7 +138,7 @@ function SimpleSpriteAnimationUpdate(_deltatime=0 as float) as void
 	if ( currentRegion <> invalid) m.currentRegion = currentRegion
 end function
 
-function CreateVisObj(_name as String, _screen as object, _x as float, _y as float, _regionsArray as object, _currentAnimationName="idle" as String) as object
+function CreateVisObj(_name as String, _screen as object, _x as float, _y as float, _animsData as object, _currentAnimationName="idle" as String, _Update=SimpleVisObjUpdate as object) as object
 	obj = {
 		active	: true
 		visible	: true
@@ -131,11 +150,18 @@ function CreateVisObj(_name as String, _screen as object, _x as float, _y as flo
 		currentAnimationName	: _currentAnimationName
 				
 		Draw	: VisObjDraw
-		Update	: SimpleVisObjUpdate
+		Update	: _Update
 	}
 	
-	for each regionsName in _regionsArray
-		obj.spriteObjArray.AddReplace(regionsName, CreateSpriteObj(_regionsArray[regionsName][0], _screen,0,0,0,0,1,1, _regionsArray[regionsName], regionsName) )
+	regionsArray = _animsData.animations
+	
+	for each regionsName in regionsArray
+		spriteObj = CreateSpriteObj(regionsArray[regionsName][0], _screen,0,0,0,0,1,1, regionsArray[regionsName], regionsName)
+		
+		spriteObjSpeed = _animsData.extrainfo.Lookup(regionsName + "_speed")
+		if (spriteObjSpeed <> invalid) spriteObj.speed = spriteObjSpeed.ToFloat()
+		
+		obj.spriteObjArray.AddReplace(regionsName,  spriteObj)
 	end for
 	
 	return obj
@@ -154,4 +180,45 @@ function VisObjDraw() as void
 	
 	spriteObj = m.spriteObjArray.Lookup(m.currentAnimationName)
 	if (spriteObj <> invalid) spriteObj.Draw()
+end function
+
+
+'---------------------------------------------------------------------
+function HeroVisObjUpdate(_deltatime=0 as float) as void
+	if (m.active = false) return
+	
+	m.y += m.heroCurrentSpeed
+	if (m.y > m.maxY) m.y = m.maxY
+	if (m.y < m.minY) m.y = m.minY
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
+function BallVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _hero2=invalid as object) as void
+	if (m.active = false) return
+	
+	m.x += m.ballCurrentSpeedX
+	m.y += m.ballCurrentSpeedY
+	
+	if ( (m.x > m.maxX) OR (m.x < m.minX) ) m.ballCurrentSpeedX *= -1
+	if ( (m.y > m.maxY) OR (m.y < m.minY) ) m.ballCurrentSpeedY *= -1
+	
+	distanceX = Abs(_hero1.x - m.x)
+	if (distanceX < m.radius)
+		if ( (m.y < _hero1.y + _hero1.height / 2 ) AND (m.y > _hero1.y - _hero1.height / 2 ) ) m.ballCurrentSpeedX *= -1
+	endif
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
+function Distance2D(_ball as object, _hero as object) as object
+	coord = {
+		x	: 0
+		y	: 0
+	}
+	return coord
 end function
