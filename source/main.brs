@@ -224,9 +224,76 @@ GAME_OVER_LOOP:
 	
 end function
 
+
+' ENGINE API ---------------------------------------------------------------------
+function CreateNumberTextObj(_value=0 as string, _regions as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float) as object
+	obj = {
+		active	: true
+		visible	: true
+		value	: _value
+		x		: _x
+		y		: _y
+		localOffsetX	: _localOffsetX
+		localOffsetY	: _localOffsetY
+		drawX	: 0
+		drawY	: 0
+		scaleX	: _scaleX
+		scaleY	: _scaleY
+		regions	: _regions
+		screen	: _screen
+		actualDrawRegions	: {}
+		
+		Draw	: DrawNumberText
+		Update	: SimpleNumberTextUpdate
+	
+	return obj
+end function
+
+function DrawNumberText(_deltatime=0 as float) as void
+	if (m.active = false) return
+	valueDigitsCount = 1
+	
+	if (m.value > 99999999) m.value = 99999999	
+	if (m.value < 0) m.value = 0
+	
+	if (m.value >= 10000000) 
+		valueDigitsCount = 8
+	elseif (m.value >= 1000000) 
+		valueDigitsCount = 7
+	elseif (m.value >= 100000) 
+		valueDigitsCount = 6
+	elseif (m.value >= 10000) 
+		valueDigitsCount = 5
+	elseif (m.value >= 1000) 
+		valueDigitsCount = 4
+	elseif (m.value >= 100) 
+		valueDigitsCount = 3
+	elseif (m.value >= 10) 
+		valueDigitsCount = 2
+	endif
+
+	m.actualDrawRegions.Clear()
+	tempValue = m.value
+	divider = 10000000
+	
+	for i=1 to valueDigitsCount
+		charCode = tempValue \ divider
+		m.actualDrawRegions.Push(m.regions[charCode])
+		tempValue = tempValue - charCode * divider
+		divider \= 10
+	end for
+end function
+
+function SimpleNumberTextUpdate() as void
+	if (m.visible = false) return
+	for each actualDrawRegion in m.actualDrawRegions
+	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
+end function
+
 function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object, _name="idle" as String, _AnimationUpdate=SimpleSpriteAnimationUpdate as object ) as object
 	obj = {
 		active	: true
+		visible	: true
 		name	: _name
 		length	: 1.0
 		loop	: true
@@ -236,17 +303,14 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 		y		: _y
 		localOffsetX	: _localOffsetX
 		localOffsetY	: _localOffsetY
+		drawX	: 0
+		drawY	: 0
 		scaleX	: _scaleX
 		scaleY	: _scaleY
-		speedX	: 0.0
-		speedY	: 0.0
-		visible	: true
 		regions	: _regions
 		currentRegion	: _region
 		currentRegionNum	: 0
 		screen	: _screen
-		drawX	: 0
-		drawY	: 0
 		
 		Draw	: DrawSprite
 		Update	: SimpleSpriteUpdate
@@ -257,6 +321,7 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 end function
 
 function DrawSprite() as void
+	if (m.visible = false) return
 	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
 end function
 
