@@ -49,7 +49,14 @@ function Main() as void
 
 	textRoundObj = CreateVisObj("Round", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "round", TextRoundObjUpdate)
 	textGameOverObj = CreateVisObj("GameOver", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "game_over", TextRoundObjUpdate)
-	
+
+	textScoreObj = CreateSpriteObj(textAnimDataSet.animations.score[0], screen, 10, 0, -0.5, -0.5, 0.5, 0.5)	
+	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 170, 5, -0.5, -0.5, 0.5, 0.5)
+	numScoreObj.HIT_BALL_SCORE = 50
+
+	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 500, 0, -0.5, -0.5, 0.5, 0.5)	
+	numBestScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 800, 5, -0.5, -0.5, 0.5, 0.5)
+
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 	
@@ -153,6 +160,7 @@ GAME_LOOP:
 	ball.Hero2Miss = false
 	ball.x = screenWidth/2
 	ball.y = screenHeight/2
+	numScoreObj.value = 0
 
     while true
         event = port.GetMessage()
@@ -170,10 +178,18 @@ GAME_LOOP:
             if (deltaTime > STABLE_FPS)
 				heroObj1.Update(deltaTime)
 				heroObj2.Update(deltaTime, ball)
-				ball.Update(deltaTime, heroObj1, heroObj2)
-				
+				ball.Update(deltaTime, heroObj1, heroObj2, numScoreObj)
+				numScoreObj.Update(deltaTime)
+				textScoreObj.Update(deltaTime)
+				numBestScoreObj.Update(deltaTime)
+				textBestScoreObj.Update(deltaTime)
+
+								
 				backObj.Draw()
-				
+				textScoreObj.Draw()
+				numScoreObj.Draw()
+				textBestScoreObj.Draw()
+				numBestScoreObj.Draw()
 				heroObj1.Draw()
 				heroObj2.Draw()
 				ball.Draw()
@@ -192,7 +208,7 @@ GAME_OVER_LOOP:
 	textGameOverObj.scaleStart = 1.7
 	textGameOverObj.scaleEnd = 1.0
 	textGameOverObj.scale = textGameOverObj.scaleStart
-
+	if (numBestScoreObj.value < numScoreObj.value) numBestScoreObj.value = numScoreObj.value
 	
     while true
 		event = port.GetMessage()
@@ -205,8 +221,14 @@ GAME_OVER_LOOP:
 				heroObj1.Update(deltaTime)
 				heroObj2.Update(deltaTime)
 				textGameOverObj.Update(deltaTime)
+				numBestScoreObj.Update(deltaTime)
+				textBestScoreObj.Update(deltaTime)
 			
 				backObj.Draw()
+				textBestScoreObj.Draw()
+				numBestScoreObj.Draw()
+				textScoreObj.Draw()
+				numScoreObj.Draw()
 				heroObj1.Draw()
 				heroObj2.Draw()
 			
@@ -224,37 +246,75 @@ GAME_OVER_LOOP:
 	
 end function
 
+' SERVISE FUNCTIONS --------------------------------------------------------------
+function MinF(_x as float, _y as float) as float
+	if (_x > _y) return _y
+	return _x
+end function
+
+function MaxF(_x as float, _y as float) as float
+	if (_x > _y) return _x
+	return _y
+end function
+
+function ClampF(_v as float, _min=0 as float, _max=1 as float) as float
+	min = MinF(_min, _max)
+	max = MaxF(_min, _max)
+	
+	if (_v > max) _v = max
+	if (_v < min) _v = min
+	return _v
+end function
+
+function ClampI(_v as integer, _min as integer, _max as integer) as integer
+	if (_v > _max) _v = _max
+	if (_v < _min) _v = _min
+	return _v
+end function
+
+function Blend(_x as float, _y as float, _blendFactor as float) as float
+	return _x *(1.0 - _blendFactor) + _y * _blendFactor
+end function
 
 ' ENGINE API ---------------------------------------------------------------------
-function CreateNumberTextObj(_value=0 as string, _regions as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float) as object
+function CreateNumberTextObj(_value as integer, _regions as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _AnimationUpdate=SimpleNumTextAnimationUpdate as object ) as object
 	obj = {
-		active	: true
-		visible	: true
-		value	: _value
-		x		: _x
-		y		: _y
+		active			: true
+		visible			: true
+		value			: _value
+		x				: _x
+		y				: _y
 		localOffsetX	: _localOffsetX
 		localOffsetY	: _localOffsetY
-		drawX	: 0
-		drawY	: 0
-		scaleX	: _scaleX
-		scaleY	: _scaleY
-		regions	: _regions
-		screen	: _screen
-		actualDrawRegions	: {}
+		drawX			: 0
+		drawY			: 0
+		scaleX			: _scaleX
+		scaleY			: _scaleY
+		length			: 1.0
+		loop			: true
+		speed			: 1.0
+		time			: 0
+		regions			: _regions
+		screen			: _screen
+		actualDrawRegions	: []
+		beetweenCharOffset	: 0
+		charWidth		: _regions[0].GetWidth()
+		charHeight		: _regions[0].GetHeight()
 		
-		Draw	: DrawNumberText
-		Update	: SimpleNumberTextUpdate
-	
+		Draw			: DrawNumberText
+		Update			: SimpleNumberTextUpdate
+		AnimationUpdate	: _AnimationUpdate
+	}
+		
 	return obj
 end function
 
-function DrawNumberText(_deltatime=0 as float) as void
+function SimpleNumberTextUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
-	valueDigitsCount = 1
+	m.AnimationUpdate(_deltatime)
 	
-	if (m.value > 99999999) m.value = 99999999	
-	if (m.value < 0) m.value = 0
+	m.value = ClampI(m.value, 0, 99999999)
+	valueDigitsCount = 1
 	
 	if (m.value >= 10000000) 
 		valueDigitsCount = 8
@@ -274,20 +334,47 @@ function DrawNumberText(_deltatime=0 as float) as void
 
 	m.actualDrawRegions.Clear()
 	tempValue = m.value
-	divider = 10000000
+	divider = 10 ^ (valueDigitsCount - 1)
 	
+	charCode = 0
 	for i=1 to valueDigitsCount
 		charCode = tempValue \ divider
 		m.actualDrawRegions.Push(m.regions[charCode])
 		tempValue = tempValue - charCode * divider
 		divider \= 10
 	end for
+	
+	m.drawX = m.x + (-m.localOffsetX - 0.5) * (m.charWidth + m.beetweenCharOffset) * valueDigitsCount * m.scaleX
+	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.charHeight * m.scaleY
 end function
 
-function SimpleNumberTextUpdate() as void
+function SimpleNumTextAnimationUpdate(_deltatime=0 as float) as void
+	if (m.active = false) return
+	
+	m.time += _deltatime * m.speed
+	if (m.time > m.length) 
+		if (m.loop = true)
+			m.time -= m.length
+		else 
+			m.time = m.length
+		endif
+	end if
+	if (m.time < 0) 
+		if (m.loop = true)
+			m.time += m.length
+		else 
+			m.time = 0
+		endif
+	end if
+end function
+
+function DrawNumberText() as void
 	if (m.visible = false) return
+	charOffsetX = 0
 	for each actualDrawRegion in m.actualDrawRegions
-	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
+		m.screen.DrawScaledObject(m.drawX + charOffsetX, m.drawY, m.scaleX, m.scaleY, actualDrawRegion)
+		charOffsetX += (m.charWidth + m.beetweenCharOffset) * m.scaleX
+	end for
 end function
 
 function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object, _name="idle" as String, _AnimationUpdate=SimpleSpriteAnimationUpdate as object ) as object
@@ -326,6 +413,7 @@ function DrawSprite() as void
 end function
 
 function SimpleSpriteUpdate(_deltatime=0 as float, _x=0 as float, _y=0 as float) as void
+	if (m.active = false) return
 	m.AnimationUpdate(_deltatime)
 	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + _x
 	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY + _y
@@ -402,11 +490,6 @@ function VisObjDraw() as void
 	if (spriteObj <> invalid) spriteObj.Draw()
 end function
 
-function Blend(_x as float, _y as float, _blendFactor as float) as float
-	return _x *(1.0 - _blendFactor) + _y * _blendFactor
-end function
-
-
 '---------------------------------------------------------------------
 function HeroVisObjUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
@@ -432,7 +515,7 @@ function AIHeroVisObjUpdate(_deltatime=0 as float, _ball=invalid as object) as v
 	end for
 end function
 
-function BallVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _hero2=invalid as object) as void
+function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _numScoreObj as object) as void
 	if (m.active = false) return
 	
 	m.x += m.ballCurrentSpeedX
@@ -442,10 +525,18 @@ function BallVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _hero
 	if (m.x < m.minX) m.Hero1Miss = true
 	if ( (m.y > m.maxY) OR (m.y < m.minY) ) m.ballCurrentSpeedY *= -1
 	
+	isHero1HitBall = false
+	
 	toHero1distanceX = Abs(_hero1.x - m.x)
 	if (toHero1distanceX < m.radius)
-		if ( (m.y < _hero1.y + _hero1.height / 2 ) AND (m.y > _hero1.y - _hero1.height / 2 ) ) m.ballCurrentSpeedX *= -1
+		if ( (m.y < _hero1.y + _hero1.height / 2 ) AND (m.y > _hero1.y - _hero1.height / 2 ) ) 
+			m.ballCurrentSpeedX *= -1
+			m.x = _hero1.x + m.radius
+			isHero1HitBall = true
+		endif
 	endif
+	
+	if (isHero1HitBall = true) _numScoreObj.value += _numScoreObj.HIT_BALL_SCORE
 
 	toHero2distanceX = Abs(_hero2.x - m.x)
 	if (toHero2distanceX < m.radius)
@@ -461,6 +552,8 @@ function TextRoundObjUpdate(_deltatime=0 as float) as void
 	if (m.currentTime < m.time) 
 		blendFactor = m.currentTime / m.time
 		m.scale = Blend(m.scaleStart, m.scaleEnd, blendFactor)
+	else
+		m.scale = ClampF(m.scale, m.scaleStart, m.scaleEnd)
 	endif
 	m.currentTime += _deltatime
 	
