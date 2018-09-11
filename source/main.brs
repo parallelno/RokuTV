@@ -19,14 +19,7 @@ function Main() as void
 	GAME_FIELD_MIN_X = 80
 	GAME_FIELD_MAX_Y = screenHeight - 80
 	GAME_FIELD_MIN_Y = 200
-	
-	GAME_STATE_MENU = 0
-	GAME_STATE_GAME_INTRO = 1
-	GAME_STATE_GAME_PLAY = 2
-	GAME_STATE_GAME_MISS = 3
-	GAME_STATE_GAME_GOAL = 4
-	GAME_STATE_GAME_GAMEOVER = 5
-	
+		
 	GAME_STATE_MENU_L1 = 0
 	GAME_STATE_MENU_L2 = 1
 	GAME_STATE_MENU_L3 = 2
@@ -37,10 +30,11 @@ function Main() as void
 	GAME_INTRO_DELAY = 1.0
 	GAME_OVER_DELAY = 3.0
 	
-	score = 0
-	gameState = GAME_STATE_MENU
+	HIT_BALL_SCORE = 50
+	BALL_SPEEDS = [5, 10, 15] 'speed depends on game difficulty
 	
-	
+	HERO_SPEED = 10
+		
 	menuBackgroundRegion = textAnimDataSet.regions.menu_background
 	menuBackObj = CreateSpriteObj(menuBackgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / menuBackgroundRegion.GetWidth(), screenHeight / menuBackgroundRegion.GetHeight())
 	
@@ -52,7 +46,7 @@ function Main() as void
 
 	textScoreObj = CreateSpriteObj(textAnimDataSet.animations.score[0], screen, 10, 0, -0.5, -0.5, 0.5, 0.5)	
 	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 170, 5, -0.5, -0.5, 0.5, 0.5)
-	numScoreObj.HIT_BALL_SCORE = 50
+	numScoreObj.HIT_BALL_SCORE = HIT_BALL_SCORE
 
 	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 500, 0, -0.5, -0.5, 0.5, 0.5)	
 	numBestScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 800, 5, -0.5, -0.5, 0.5, 0.5)
@@ -63,10 +57,8 @@ function Main() as void
 		
 	ball = CreateVisObj("ball", screen, screenWidth/2, screenHeight/2, bitmapset, "idle2", BallVisObjUpdate)
 	
-	ball.Speeds = [5, 10, 15]
-	
-	ball.ballCurrentSpeedX = ball.Speeds[0]
-	ball.ballCurrentSpeedY = ball.Speeds[0]
+	ball.ballCurrentSpeedX = BALL_SPEEDS[0]
+	ball.ballCurrentSpeedY = BALL_SPEEDS[0]
 	ball.maxX = GAME_FIELD_MAX_X
 	ball.minX = GAME_FIELD_MIN_X
 	ball.maxY = GAME_FIELD_MAX_Y
@@ -75,14 +67,14 @@ function Main() as void
 
 	
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
-	heroObj2.heroSpeed = 10
+	heroObj2.heroSpeed = HERO_SPEED
 	heroObj2.heroCurrentSpeed = 0
 	heroObj2.maxY = GAME_FIELD_MAX_Y
 	heroObj2.minY = GAME_FIELD_MIN_Y
 	heroObj2.height = 146
 	
 	heroObj1 = CreateVisObj("hero1", screen, 100, screenHeight/2, hero1AnimDataSet, "idle", HeroVisObjUpdate)
-	heroObj1.heroSpeed = 10
+	heroObj1.heroSpeed = HERO_SPEED
 	heroObj1.heroCurrentSpeed = 0
 	heroObj1.maxY = GAME_FIELD_MAX_Y
 	heroObj1.minY = GAME_FIELD_MIN_Y
@@ -104,8 +96,8 @@ MENU_LOOP:
 				if (menuState > 2 ) menuState = 2
 			endif
 			if (id = 6)
-				ball.ballCurrentSpeedX = ball.Speeds[menuState]
-				ball.ballCurrentSpeedY = ball.Speeds[menuState]
+				ball.ballCurrentSpeedX = BALL_SPEEDS[menuState]
+				ball.ballCurrentSpeedY = BALL_SPEEDS[menuState]
 				
 				Goto GAME_INTRO_LOOP
 			endif
@@ -478,9 +470,7 @@ end function
 function SimpleVisObjUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
 	
-	for each spriteObjName in m.spriteObjArray
-		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-	end for
+	m.spriteObjArray.Lookup(m.currentAnimationName).Update(_deltatime, m.x, m.y)
 end function
 
 function VisObjDraw() as void
