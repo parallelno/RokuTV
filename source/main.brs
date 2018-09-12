@@ -365,6 +365,71 @@ function Blend(_x as float, _y as float, _blendFactor as float) as float
 end function
 
 ' ENGINE API ---------------------------------------------------------------------
+function CreateCollisionEngine() as void
+	obj = {
+		id		: 0
+		active	: true
+		objList	: {}
+		
+		AddCollision	: AddCollisionObj
+		StartUpdate		: StartCollisionUpdate
+	}
+	return obj
+end function
+
+function StartCollisionUpdate()    ' need check logic _____________________________________________________________________________>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	for each id in objList
+		objList[id].isUpdated = false
+	end for
+end function
+
+function AddCollisionObj(_collisionType as String, _x=0 as float, _y=0 as float, _scaleX=1 as float, _scaleY=1 as float, _group=0 as integer) as void
+	obj = invalid
+	theSameCollisionGroupList = {}
+		for each id in m.objList
+			if (objList[id].group = _group)
+				theSameCollisionGroupList.AddReplace(id, objList[id])
+			end if
+		end for
+
+	if (_collisionType = "box")	
+		obj = CreateCollisionBox(m.id, _x, _y, _scaleX, _scaleY, _group, theSameCollisionGroupList)
+	elseif (_collisionType = "circle")	
+		obj = CreateCollisionCircle(m.id, _x, _y, _scaleX, _scaleY, _group, theSameCollisionGroupList)
+	end if
+	m.objList.AddReplace(m.id, obj)
+	
+	m.id +=1
+end function
+
+function CreateCollisionBox(_id as integer, _x=0 as float, _y=0 as float, _scaleX=1 as float, _scaleY=1 as float, _group=0 as integer, _theSameCollisionGroupList=invalid as object) as object
+	obj = {
+		id : _id
+		active	: true
+		isUpdated	: false
+		group	: _group
+		x		: _x
+		y		: _y		
+		scaleX	: _scaleX
+		scaleY	: _scaleY
+		speedX	: 0
+		speedY	: 0
+		theSameCollisionGroupList	: _theSameCollisionGroupList
+		collidedList	: {}
+		
+		Update	: CollisionBoxUpdate
+	}
+	return obj
+end function
+
+function CollisionBoxUpdate() as void
+	' check collision with theSameCollisionGroupList (it need to be updated each AddCollisionObj call)
+	' if it is, remove object from list in collided and add collided object to collided list
+	' finaly we will have list only with collided objects
+	
+	'm.isUpdated = true
+end function
+
 function CreateNumberTextObj(_value as integer, _regions as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _AnimationUpdate=SimpleNumTextAnimationUpdate as object ) as object
 	obj = {
 		active			: true
