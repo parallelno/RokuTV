@@ -32,7 +32,10 @@ function Main() as void
 	GAME_OVER_DELAY = 3.0
 	
 	HIT_BALL_SCORE = 50
+	AI_FAIL_SCORE = 100
 	BALL_SPEEDS = [5, 10, 15] 'speed depends on game difficulty
+
+	AI_HERO_SPEEDS = [3.3, 7, 13] 'speed depends on game difficulty
 	
 	HERO_SPEED = 10
 	
@@ -54,6 +57,7 @@ function Main() as void
 	textScoreObj = CreateSpriteObj(textAnimDataSet.animations.score[0], screen, 10, 0, -0.5, -0.5, 0.5, 0.5)	
 	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 170, 5, -0.5, -0.5, 0.5, 0.5)
 	numScoreObj.HIT_BALL_SCORE = HIT_BALL_SCORE
+	numScoreObj.AI_FAIL_SCORE = AI_FAIL_SCORE
 
 	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 700, 0, -0.5, -0.5, 0.5, 0.5)	
 	numBestScoreObj = CreateNumberTextObj(bestScore, textAnimDataSet.animations.numbers_anim, screen, 1000, 5, -0.5, -0.5, 0.5, 0.5)
@@ -79,7 +83,7 @@ function Main() as void
 
 	
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
-	heroObj2.heroSpeed = HERO_SPEED
+	heroObj2.heroSpeed = AI_HERO_SPEEDS[0]
 	heroObj2.heroCurrentSpeed = 0
 	heroObj2.maxY = GAME_FIELD_MAX_Y
 	heroObj2.minY = GAME_FIELD_MIN_Y
@@ -179,12 +183,11 @@ NEW_LIFE_LOOP:
 	ball.currentAnimationName = "idle3"
 	heroObj1.heroCurrentSpeed = 0
 	heroObj2.heroCurrentSpeed = 0
+	heroObj2.heroSpeed = AI_HERO_SPEEDS[menuState]
 
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
 		if (deltaTime > STABLE_FPS)
-			'heroObj1.Update(deltaTime)
-			'heroObj2.Update(deltaTime, ball)
 			ball.Update(deltaTime, heroObj1, heroObj2, numScoreObj)
 			numScoreObj.Update(deltaTime)
 			textScoreObj.Update(deltaTime)
@@ -264,7 +267,6 @@ GAME_LOOP:
 					LivesObj[i].Draw()
 				end for
                 screen.SwapBuffers()
-                clock.Mark()
 				
 				if (ball.Hero1Miss = true) 
 					lifeCount -= 1
@@ -274,6 +276,10 @@ GAME_LOOP:
 						Goto NEW_LIFE_LOOP
 					endif
 				end if
+				if (ball.Hero2Miss = true) 
+					Goto NEW_LIFE_LOOP
+				endif
+				clock.Mark()
             endif        
         endif
     end while
@@ -585,11 +591,16 @@ end function
 
 function AIHeroVisObjUpdate(_deltatime=0 as float, _ball=invalid as object) as void
 	if (m.active = false) return
+	if (_ball = invalid) Goto SPRITES_UPDATE
 	
-	if (_ball <> invalid) m.y = _ball.y
+	if (m.y < _ball.y) m.heroCurrentSpeed = m.heroSpeed
+	if (m.y > _ball.y) m.heroCurrentSpeed = -m.heroSpeed
+
+	m.y += m.heroCurrentSpeed
 	if (m.y > m.maxY) m.y = m.maxY
 	if (m.y < m.minY) m.y = m.minY
 	
+SPRITES_UPDATE:
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
 	end for
@@ -601,8 +612,11 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	m.x += m.ballCurrentSpeedX
 	m.y += m.ballCurrentSpeedY
 	
-	if (m.x > m.maxX) m.ballCurrentSpeedX *= -1
 	if (m.x < m.minX) m.Hero1Miss = true
+	if (m.x > m.maxX) 
+		m.Hero2Miss = true
+		_numScoreObj.value += _numScoreObj.AI_FAIL_SCORE
+	endif
 	if ( (m.y > m.maxY) OR (m.y < m.minY) ) m.ballCurrentSpeedY *= -1
 	
 	isHero1HitBall = false
@@ -611,6 +625,9 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	if (toHero1distanceX < m.radius)
 		if ( (m.y < _hero1.y + _hero1.height / 2 ) AND (m.y > _hero1.y - _hero1.height / 2 ) ) 
 			m.ballCurrentSpeedX *= -1
+			m.ballCurrentSpeedY += _hero1.heroCurrentSpeed * 0.3
+			m.ballCurrentSpeedX *= 1.1
+			
 			m.x = _hero1.x + m.radius
 			isHero1HitBall = true
 		endif
@@ -618,9 +635,19 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	
 	if (isHero1HitBall = true) _numScoreObj.value += _numScoreObj.HIT_BALL_SCORE
 
+	isHero2HitBall = false
 	toHero2distanceX = Abs(_hero2.x - m.x)
 	if (toHero2distanceX < m.radius)
-		if ( (m.y < _hero2.y + _hero2.height / 2 ) AND (m.y > _hero2.y - _hero2.height / 2 ) ) m.ballCurrentSpeedX *= -1
+		if ( (m.y < _hero2.y + _hero2.height / 2 ) AND (m.y > _hero2.y - _hero2.height / 2 ) ) 
+			m.ballCurrentSpeedX *= -1
+			m.ballCurrentSpeedY += _hero2.heroCurrentSpeed * 0.3
+			m.ballCurrentSpeedX *= 1.1
+			
+			m.x = _hero2.x - m.radius
+			isHero2HitBall = true
+		else
+			isHero2HitBall = false
+		endif
 	endif
 	
 	for each spriteObjName in m.spriteObjArray
