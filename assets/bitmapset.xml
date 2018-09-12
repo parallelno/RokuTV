@@ -25,6 +25,9 @@
 		<frame use="ball_anim.r3" />
 		<frame use="ball_anim.r4" />		
 	</Animation>
+	<Animation name="idle3">
+		<frame use="ball_anim.r1" />
+	</Animation>
 	<Animation name="idle">
 		<frame use="hero.r1" />
 		<frame use="hero.r2" />
