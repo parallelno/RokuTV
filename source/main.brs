@@ -225,9 +225,10 @@ GAME_LOOP:
 	ball.Hero2Miss = false
 	ball.x = screenWidth/2
 	ball.y = screenHeight/2
-	ball.ballCurrentSpeedX = BALL_SPEEDS[menuState]
-	ball.ballCurrentSpeedY = BALL_SPEEDS[menuState] * Sgn(Rnd(0)-0.5)
-	if (ball.ballCurrentSpeedY = 0 ) ball.ballCurrentSpeedY = BALL_SPEEDS[menuState]
+	PI = 3.14159
+	ballSpeedAngle = PI/4 + Rnd(0) * PI/2
+	ball.ballCurrentSpeedX = Sin(ballSpeedAngle) * BALL_SPEEDS[menuState]
+	ball.ballCurrentSpeedY = Cos(ballSpeedAngle) * BALL_SPEEDS[menuState]
 
     while true
         event = port.GetMessage()
@@ -364,72 +365,97 @@ function Blend(_x as float, _y as float, _blendFactor as float) as float
 	return _x *(1.0 - _blendFactor) + _y * _blendFactor
 end function
 
-' ENGINE API ---------------------------------------------------------------------
-function CreateCollisionEngine() as void
+' COLLISION API /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function CreateCollisionEngine() as object
 	obj = {
-		id		: 0
-		active	: true
-		objList	: {}
+		id						: 0 ' id for next created obj
+		active					: true
+		collisionGroups			: {} ' {groupName : {id, obj}}
+		COLLISION_TYPE_BOX		: 0
+		COLLISION_TYPE_CIRCLE	: 1
 		
-		AddCollision	: AddCollisionObj
-		StartUpdate		: StartCollisionUpdate
+		AddCollision	: AddCollision
+		Update			: CollisionEngineUpdate
 	}
 	return obj
 end function
 
-function StartCollisionUpdate()    ' need check logic _____________________________________________________________________________>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	for each id in objList
-		objList[id].isUpdated = false
+function CollisionEngineUpdate()
+	for each collisionGroupName in collisionGroups
+		collisionGroup = collisionGroups[collisionGroupName]
+		for each collisionID in collisionGroup
+			collision = collisionGroup[collisionID]
+			collision.collidingObjects = {}
+			collision.collidedObjObects = {}
+			collidingObjects = m.collisionGroups.Lookup(collision.group)
+			if (collidingObjects <> invalid) collision.collidingObjects.Append(collidingObjects)
+		end for
+	end for
+	
+	for each collisionGroupName in collisionGroups
+		collisionGroup = collisionGroups[collisionGroupName]
+		for each collisionID in collisionGroup
+			collisionGroup[collisionID].Update()
+		end for
 	end for
 end function
 
-function AddCollisionObj(_collisionType as String, _x=0 as float, _y=0 as float, _scaleX=1 as float, _scaleY=1 as float, _group=0 as integer) as void
-	obj = invalid
-	theSameCollisionGroupList = {}
-		for each id in m.objList
-			if (objList[id].group = _group)
-				theSameCollisionGroupList.AddReplace(id, objList[id])
-			end if
-		end for
-
-	if (_collisionType = "box")	
-		obj = CreateCollisionBox(m.id, _x, _y, _scaleX, _scaleY, _group, theSameCollisionGroupList)
-	elseif (_collisionType = "circle")	
-		obj = CreateCollisionCircle(m.id, _x, _y, _scaleX, _scaleY, _group, theSameCollisionGroupList)
+function AddCollision(_collisionType as integer, _group as String, _collidingGroupList as object, _x=0 as float, _y=0 as float, _scaleX=1 as float, _scaleY=1 as float) as void
+	obj = {} 'CreateCollisionBox(m.id, _collisionType, _group, _collidingGroupList, m, _x, _y, _scaleX, _scaleY)
+	group = m.collisionGroups.Lookup(_group)
+	idName = m.id.ToStr()
+	if (group = invalid)
+		newGroup = {idName : obj}
+		m.collisionGroups.AddReplace(_group, newGroup)
+	else
+		group.AddReplace(idName, obj)
+		m.collisionGroups.AddReplace(_group, group)
 	end if
-	m.objList.AddReplace(m.id, obj)
 	
 	m.id +=1
 end function
 
-function CreateCollisionBox(_id as integer, _x=0 as float, _y=0 as float, _scaleX=1 as float, _scaleY=1 as float, _group=0 as integer, _theSameCollisionGroupList=invalid as object) as object
+function CreateCollision(_id as integer, _collisionType as integer, _group as String, _collidingGroupList as object, _collisionEngine as object, _x as float, _y as float, _scaleX=1 as float, _scaleY=1 as float) as object
 	obj = {
 		id : _id
 		active	: true
-		isUpdated	: false
+		collisionType	: _collisionType
 		group	: _group
+		collidingGroupList	: _collidingGroupList
+		collisionEngine	: _collisionEngine
 		x		: _x
 		y		: _y		
 		scaleX	: _scaleX
 		scaleY	: _scaleY
 		speedX	: 0
 		speedY	: 0
-		theSameCollisionGroupList	: _theSameCollisionGroupList
-		collidedList	: {}
+		collidingObjects	: []
+		collidedObjObects	: []
 		
-		Update	: CollisionBoxUpdate
+		Update	: CollisionUpdate
+		Destroy	: CollisionDestroy
 	}
 	return obj
 end function
 
-function CollisionBoxUpdate() as void
+function CollisionDestroy()
+	group = m.collisionEngine.collisionGroups.Lookup(m.group)
+	group.Delete(m.id.ToStr())
+	if (group.Count() <> 0) 
+		m.collisionEngine.collisionGroups.AddReplace(group)
+	else
+		m.collisionEngine.collisionGroups.Delete(m.group)
+	end if
+end function
+
+function CollisionUpdate() as void
 	' check collision with theSameCollisionGroupList (it need to be updated each AddCollisionObj call)
 	' if it is, remove object from list in collided and add collided object to collided list
 	' finaly we will have list only with collided objects
 	
-	'm.isUpdated = true
 end function
 
+' GRAPHICS API /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateNumberTextObj(_value as integer, _regions as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _AnimationUpdate=SimpleNumTextAnimationUpdate as object ) as object
 	obj = {
 		active			: true
@@ -641,7 +667,7 @@ function VisObjDraw() as void
 	if (spriteObj <> invalid) spriteObj.Draw()
 end function
 
-'---------------------------------------------------------------------
+'/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function HeroVisObjUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
 	
@@ -658,8 +684,11 @@ function AIHeroVisObjUpdate(_deltatime=0 as float, _ball=invalid as object) as v
 	if (m.active = false) return
 	if (_ball = invalid) Goto SPRITES_UPDATE
 	
-	if (m.y < _ball.y) m.heroCurrentSpeed = m.heroSpeed
-	if (m.y > _ball.y) m.heroCurrentSpeed = -m.heroSpeed
+	ballDistance = Abs(m.y - _ball.y)
+	if (ballDistance > m.heroSpeed)
+		if (m.y < _ball.y) m.heroCurrentSpeed = m.heroSpeed
+		if (m.y > _ball.y) m.heroCurrentSpeed = -m.heroSpeed
+	end if
 
 	m.y += m.heroCurrentSpeed
 	if (m.y > m.maxY) m.y = m.maxY
