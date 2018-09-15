@@ -1,0 +1,9 @@
+<BitmapSet>
+	<ExtraInfo idle_speed = "1" />
+	<Bitmap name="bonus" filespec="pkg:/assets/bonus.png">
+		<Region name="r1" x="0" y="0" w="70" h="70" />
+	</Bitmap>
+	<Animation name="idle">
+		<frame use="bonus.r1" />
+	</Animation>
+</BitmapSet>

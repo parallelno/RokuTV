@@ -7,6 +7,7 @@ function Main() as void
     bitmapset = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/bitmapset.xml"))
 	hero1AnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/platform.xml"))
 	textAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/text.xml"))
+	coinGoldAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_gold_anim.xml"))
     screenWidth = screen.GetWidth()
     screenHeight= screen.GetHeight()
     clock = CreateObject("roTimespan")
@@ -70,7 +71,33 @@ function Main() as void
 		lifeObj = CreateSpriteObj(menuCursorRegion, screen, 400 + 36*i, 25)
 		LivesObj.Push(lifeObj)
 	end for
-		
+	
+	coin = CreateVisObj("coin", screen, screenWidth/2, screenHeight/2, coinGoldAnimDataSet, "idle", CoinVisObjUpdate)
+	coin.scaleX = 64
+	coin.scaleY = 64
+	coin.STATE_INTRO_PREPARING = 0
+	coin.STATE_INTRO = 1
+	coin.STATE_GAME = 2
+	coin.STATE_DEATH = 3
+	coin.state = coin.STATE_DEATH
+	coin.FLASHING_SPEED = 15
+	coin.flashingTimer = 1
+	coin.minX = 0
+	coin.maxX = screenWidth
+	coin.minY = coin.scaleY
+	coin.maxY = GAME_FIELD_MAX_Y - coin.scaleY
+	coin.SPEED_X = 3
+	coin.SPEED_Y = 3
+	coin.speedX = coin.SPEED_X
+	coin.speedY = coin.SPEED_Y
+	coin.spawnX = screenWidth/2
+	coin.spawnChance = 0.999
+	coin.visible = false
+	
+' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
+	
+
+	
 	ball = CreateVisObj("ball", screen, screenWidth/2, screenHeight/2, bitmapset, "idle2", BallVisObjUpdate)
 	
 	ball.ballCurrentSpeedX = BALL_SPEEDS[0]
@@ -254,6 +281,10 @@ GAME_LOOP:
 				for i=0 to lifeCount-1
 					LivesObj[i].Update(deltaTime)
 				end for
+				if ((Rnd(0) > coin.spawnChance) AND (coin.state = coin.STATE_DEATH) )
+					coin.state = coin.STATE_INTRO_PREPARING
+				end if
+				coin.Update(deltaTime, heroObj1)
 
 								
 				backObj.Draw()
@@ -267,6 +298,8 @@ GAME_LOOP:
 				for i=0 to lifeCount-1
 					LivesObj[i].Draw()
 				end for
+				coin.Draw()
+				
                 screen.SwapBuffers()
 				
 				if (ball.Hero1Miss = true) 
@@ -668,6 +701,43 @@ function VisObjDraw() as void
 end function
 
 '/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object) as void
+	if (m.state = m.STATE_DEATH) return
+	
+	if (m.state = m.STATE_INTRO_PREPARING)
+		m.state = m.STATE_INTRO
+		m.y = Rnd(0) * (m.maxY - m.minY) + m.minY
+		m.x = m.spawnX 
+		m.visible = true
+	end if
+	
+	
+	if (m.state = m.STATE_INTRO)
+		if (Sin(m.flashingTimer * m.FLASHING_SPEED) < 0) 
+			m.visible = false
+		else 
+			m.visible = true
+		end if
+		m.flashingTimer -= _deltatime
+		if (m.flashingTimer < 0) 
+			m.state = m.STATE_GAME
+			m.visible = true
+		end if
+	end if
+	
+	if (m.state = m.STATE_GAME)
+		m.x -= m.speedX
+		if (m.x < m.minX) 
+			m.state = m.STATE_DEATH
+			m.visible = false
+		end if
+	end if
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
 function HeroVisObjUpdate(_deltatime=0 as float) as void
 	if (m.active = false) return
 	
@@ -684,11 +754,8 @@ function AIHeroVisObjUpdate(_deltatime=0 as float, _ball=invalid as object) as v
 	if (m.active = false) return
 	if (_ball = invalid) Goto SPRITES_UPDATE
 	
-	ballDistance = Abs(m.y - _ball.y)
-	if (ballDistance > m.heroSpeed)
-		if (m.y < _ball.y) m.heroCurrentSpeed = m.heroSpeed
-		if (m.y > _ball.y) m.heroCurrentSpeed = -m.heroSpeed
-	end if
+	m.heroCurrentSpeed = (_ball.y - m.y) * 0.4
+	if (Abs(m.heroCurrentSpeed) > m.heroSpeed) m.heroCurrentSpeed = Sgn(m.heroCurrentSpeed) * m.heroSpeed
 
 	m.y += m.heroCurrentSpeed
 	if (m.y > m.maxY) m.y = m.maxY
