@@ -1,73 +1,83 @@
 Library "v30/bslDefender.brs"
 
 function Main() as void
-    screen = CreateObject("roScreen", true)
-    port = CreateObject("roMessagePort")
-	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     bitmapset = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/bitmapset.xml"))
 	hero1AnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/platform.xml"))
 	textAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/text.xml"))
 	coinGoldAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_gold_anim.xml"))
-    screenWidth = screen.GetWidth()
+    
+	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
+    screen = CreateObject("roScreen", true)
+    port = CreateObject("roMessagePort")
+	screenWidth = screen.GetWidth()
     screenHeight= screen.GetHeight()
     clock = CreateObject("roTimespan")
     screen.SetMessagePort(port)
     screen.SetAlphaEnable(true)
     codes = bslUniversalControlEventCodes()
 	
-	STABLE_FPS = 33.0 / 1000.0
+	GAME_VARS = {
+' --------- GLOBAL VARS ---------------------------------------------------------------------------------
+		STABLE_FPS		: (1000.0 / 30.0) / 1000.0 	'stable 30 fps
+		PI				: 3.14159
 	
-	GAME_FIELD_MAX_X = screenWidth - 80.0
-	GAME_FIELD_MIN_X = 80
-	GAME_FIELD_MAX_Y = screenHeight - 80
-	GAME_FIELD_MIN_Y = 200
+		HIT_BALL_SCORE	: 50
+		AI_FAIL_SCORE	: 100
+		BALL_SPEEDS 	: [5, 10, 15] 'speed depends on game difficulty
+
+		AI_HERO_SPEEDS	: [3.3, 7, 13] 'speed depends on game difficulty
+	
+		HERO_SPEED		: 10
+	
+		bestScore		: 0
 		
-	GAME_STATE_MENU_L1 = 0
-	GAME_STATE_MENU_L2 = 1
-	GAME_STATE_MENU_L3 = 2
+' --------- GAME VARS ---------------------------------------------------------------------------------
+		GAME_FIELD_MAX_X	: screenWidth - 80.0
+		GAME_FIELD_MIN_X	: 80
+		GAME_FIELD_MAX_Y	: screenHeight - 80
+		GAME_FIELD_MIN_Y	: 200
 
-	GAME_STATE_MENU_Y = [ 489, 540, 600 ]
-	menuState = GAME_STATE_MENU_L1
-	
-	GAME_INTRO_DELAY = 1.0
-	GAME_OVER_DELAY = 3.0
-	
-	HIT_BALL_SCORE = 50
-	AI_FAIL_SCORE = 100
-	BALL_SPEEDS = [5, 10, 15] 'speed depends on game difficulty
+		MAX_LIFE_COUNT		: 6
+		START_LIFE_COUNT	: 4	
 
-	AI_HERO_SPEEDS = [3.3, 7, 13] 'speed depends on game difficulty
+' --------- MAIN MENU VARS ---------------------------------------------------------------------------------
+		GAME_STATE_MENU_L1	: 0
+		GAME_STATE_MENU_L2	: 1
+		GAME_STATE_MENU_L3	: 2
+
+		GAME_STATE_MENU_Y	: [ 489, 540, 600 ]
+' --------- INTRO VARS ---------------------------------------------------------------------------------	
+		GAME_INTRO_DELAY	: 1.0
+
+' --------- GAME OVER VARS ---------------------------------------------------------------------------------	
+	GAME_OVER_DELAY		: 3.0
+	}
+	GAME_VARS.menuState = GAME_VARS.GAME_STATE_MENU_L1
 	
-	HERO_SPEED = 10
-	
-	bestScore = 0
-	if ( scoreRegSection.Exists("BestScore")) bestScore = scoreRegSection.Read("BestScore").ToInt()
-	
-	MAX_LIFE_COUNT = 6
-	START_LIFE_COUNT = 4
+	if ( scoreRegSection.Exists("BestScore")) GAME_VARS.bestScore = scoreRegSection.Read("BestScore").ToInt()
 	
 	menuBackgroundRegion = textAnimDataSet.regions.menu_background
 	menuBackObj = CreateSpriteObj(menuBackgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / menuBackgroundRegion.GetWidth(), screenHeight / menuBackgroundRegion.GetHeight())
 	
 	menuCursorRegion = bitmapset.regions.menu_cursor
-	menuCursorObj = CreateSpriteObj(menuCursorRegion, screen, 270, GAME_STATE_MENU_Y[menuState], 0, 0, 1, 1)
+	menuCursorObj = CreateSpriteObj(menuCursorRegion, screen, 270, GAME_VARS.GAME_STATE_MENU_Y[GAME_VARS.menuState], 0, 0, 1, 1)
 
 	textRoundObj = CreateVisObj("Round", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "round", TextRoundObjUpdate)
 	textGameOverObj = CreateVisObj("GameOver", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "game_over", TextRoundObjUpdate)
 
 	textScoreObj = CreateSpriteObj(textAnimDataSet.animations.score[0], screen, 10, 0, -0.5, -0.5, 0.5, 0.5)	
 	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 170, 5, -0.5, -0.5, 0.5, 0.5)
-	numScoreObj.HIT_BALL_SCORE = HIT_BALL_SCORE
-	numScoreObj.AI_FAIL_SCORE = AI_FAIL_SCORE
+	numScoreObj.HIT_BALL_SCORE = GAME_VARS.HIT_BALL_SCORE
+	numScoreObj.AI_FAIL_SCORE = GAME_VARS.AI_FAIL_SCORE
 
 	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 700, 0, -0.5, -0.5, 0.5, 0.5)	
-	numBestScoreObj = CreateNumberTextObj(bestScore, textAnimDataSet.animations.numbers_anim, screen, 1000, 5, -0.5, -0.5, 0.5, 0.5)
+	numBestScoreObj = CreateNumberTextObj(GAME_VARS.bestScore, textAnimDataSet.animations.numbers_anim, screen, 1000, 5, -0.5, -0.5, 0.5, 0.5)
 
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 	
 	LivesObj = []
-	for i=0 to START_LIFE_COUNT-1
+	for i=0 to GAME_VARS.START_LIFE_COUNT-1
 		lifeObj = CreateSpriteObj(menuCursorRegion, screen, 400 + 36*i, 25)
 		LivesObj.Push(lifeObj)
 	end for
@@ -85,7 +95,7 @@ function Main() as void
 	coin.minX = 0
 	coin.maxX = screenWidth
 	coin.minY = coin.scaleY
-	coin.maxY = GAME_FIELD_MAX_Y - coin.scaleY
+	coin.maxY = GAME_VARS.GAME_FIELD_MAX_Y - coin.scaleY
 	coin.SPEED_X = 3
 	coin.SPEED_Y = 3
 	coin.speedX = coin.SPEED_X
@@ -100,27 +110,27 @@ function Main() as void
 	
 	ball = CreateVisObj("ball", screen, screenWidth/2, screenHeight/2, bitmapset, "idle2", BallVisObjUpdate)
 	
-	ball.ballCurrentSpeedX = BALL_SPEEDS[0]
-	ball.ballCurrentSpeedY = BALL_SPEEDS[0]
-	ball.maxX = GAME_FIELD_MAX_X
-	ball.minX = GAME_FIELD_MIN_X
-	ball.maxY = GAME_FIELD_MAX_Y
-	ball.minY = GAME_FIELD_MIN_Y
+	ball.ballCurrentSpeedX = GAME_VARS.BALL_SPEEDS[0]
+	ball.ballCurrentSpeedY = GAME_VARS.BALL_SPEEDS[0]
+	ball.maxX = GAME_VARS.GAME_FIELD_MAX_X
+	ball.minX = GAME_VARS.GAME_FIELD_MIN_X
+	ball.maxY = GAME_VARS.GAME_FIELD_MAX_Y
+	ball.minY = GAME_VARS.GAME_FIELD_MIN_Y
 	ball.radius = 64
 
 	
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
-	heroObj2.heroSpeed = AI_HERO_SPEEDS[0]
+	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[0]
 	heroObj2.heroCurrentSpeed = 0
-	heroObj2.maxY = GAME_FIELD_MAX_Y
-	heroObj2.minY = GAME_FIELD_MIN_Y
+	heroObj2.maxY = GAME_VARS.GAME_FIELD_MAX_Y
+	heroObj2.minY = GAME_VARS.GAME_FIELD_MIN_Y
 	heroObj2.height = 146
 	
 	heroObj1 = CreateVisObj("hero1", screen, 100, screenHeight/2, hero1AnimDataSet, "idle", HeroVisObjUpdate)
-	heroObj1.heroSpeed = HERO_SPEED
+	heroObj1.heroSpeed = GAME_VARS.HERO_SPEED
 	heroObj1.heroCurrentSpeed = 0
-	heroObj1.maxY = GAME_FIELD_MAX_Y
-	heroObj1.minY = GAME_FIELD_MIN_Y
+	heroObj1.maxY = GAME_VARS.GAME_FIELD_MAX_Y
+	heroObj1.minY = GAME_VARS.GAME_FIELD_MIN_Y
 	heroObj1.height = 146
 	
 	clock.Mark()
@@ -131,20 +141,20 @@ MENU_LOOP:
         if (type(event) = "roUniversalControlEvent")
             id = event.GetInt()
 			if (id = codes.BUTTON_UP_PRESSED)
-				menuState -= 1
-				if (menuState < 0 ) menuState = 0
+				GAME_VARS.menuState -= 1
+				if (GAME_VARS.menuState < 0 ) GAME_VARS.menuState = 0
 			endif
 			if (id = codes.BUTTON_DOWN_PRESSED)
-				menuState += 1
-				if (menuState > 2 ) menuState = 2
+				GAME_VARS.menuState += 1
+				if (GAME_VARS.menuState > 2 ) GAME_VARS.menuState = 2
 			endif
 			if (id = 6)				
 				Goto GAME_INTRO_LOOP
 			endif
         else if (event = invalid)
                 deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > STABLE_FPS)
-				menuCursorObj.y = GAME_STATE_MENU_Y[menuState]
+            if (deltaTime > GAME_VARS.STABLE_FPS)
+				menuCursorObj.y = GAME_VARS.GAME_STATE_MENU_Y[GAME_VARS.menuState]
 				menuCursorObj.Update()
 				numBestScoreObj.Update(deltaTime)
 				textBestScoreObj.Update(deltaTime)
@@ -174,7 +184,7 @@ GAME_INTRO_LOOP:
 	
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
-        if (deltaTime > STABLE_FPS)
+        if (deltaTime > GAME_VARS.STABLE_FPS)
 			heroObj1.Update(deltaTime)
 			heroObj2.Update(deltaTime)
 			textRoundObj.Update(deltaTime)
@@ -187,7 +197,7 @@ GAME_INTRO_LOOP:
 			
 			screen.SwapBuffers()
 			
-			if (gameIntroLoopTime > GAME_INTRO_DELAY) Goto NEW_GAME_LOOP
+			if (gameIntroLoopTime > GAME_VARS.GAME_INTRO_DELAY) Goto NEW_GAME_LOOP
 			gameIntroLoopTime += deltaTime
 			
             clock.Mark()
@@ -196,7 +206,7 @@ GAME_INTRO_LOOP:
 
 NEW_GAME_LOOP:
 	numScoreObj.value = 0
-	lifeCount = START_LIFE_COUNT	
+	lifeCount = GAME_VARS.START_LIFE_COUNT	
 
 NEW_LIFE_LOOP:
 	ball.x = screenWidth/2
@@ -210,11 +220,11 @@ NEW_LIFE_LOOP:
 	ball.currentAnimationName = "idle3"
 	heroObj1.heroCurrentSpeed = 0
 	heroObj2.heroCurrentSpeed = 0
-	heroObj2.heroSpeed = AI_HERO_SPEEDS[menuState]
+	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[GAME_VARS.menuState]
 
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
-		if (deltaTime > STABLE_FPS)
+		if (deltaTime > GAME_VARS.STABLE_FPS)
 			ball.Update(deltaTime, heroObj1, heroObj2, numScoreObj)
 			numScoreObj.Update(deltaTime)
 			textScoreObj.Update(deltaTime)
@@ -252,10 +262,9 @@ GAME_LOOP:
 	ball.Hero2Miss = false
 	ball.x = screenWidth/2
 	ball.y = screenHeight/2
-	PI = 3.14159
-	ballSpeedAngle = PI/4 + Rnd(0) * PI/2
-	ball.ballCurrentSpeedX = Sin(ballSpeedAngle) * BALL_SPEEDS[menuState]
-	ball.ballCurrentSpeedY = Cos(ballSpeedAngle) * BALL_SPEEDS[menuState]
+	ballSpeedAngle = GAME_VARS.PI/4 + Rnd(0) * GAME_VARS.PI/2
+	ball.ballCurrentSpeedX = Sin(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	ball.ballCurrentSpeedY = Cos(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
 
     while true
         event = port.GetMessage()
@@ -270,7 +279,7 @@ GAME_LOOP:
 			if (id = 0) Goto MENU_LOOP
         else if (event = invalid)
 			deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > STABLE_FPS)
+            if (deltaTime > GAME_VARS.STABLE_FPS)
 				heroObj1.Update(deltaTime)
 				heroObj2.Update(deltaTime, ball)
 				ball.Update(deltaTime, heroObj1, heroObj2, numScoreObj)
@@ -327,8 +336,8 @@ GAME_OVER_LOOP:
 	textGameOverObj.scale = textGameOverObj.scaleStart
 	if (numBestScoreObj.value < numScoreObj.value) 
 		numBestScoreObj.value = numScoreObj.value
-		bestScore = numBestScoreObj.value
-		scoreRegSection.Write("BestScore", bestScore.ToStr())
+		GAME_VARS.bestScore = numBestScoreObj.value
+		scoreRegSection.Write("BestScore", GAME_VARS.bestScore.ToStr())
 		scoreRegSection.Flush()
 	endif
 	
@@ -339,7 +348,7 @@ GAME_OVER_LOOP:
 			if ( (id = 0) OR (id = 6) ) Goto MENU_LOOP
         elseif (event = invalid)
 			deltaTime = clock.TotalMilliseconds() / 1000.0
-			if (deltaTime > STABLE_FPS)
+			if (deltaTime > GAME_VARS.STABLE_FPS)
 				heroObj1.Update(deltaTime)
 				heroObj2.Update(deltaTime)
 				textGameOverObj.Update(deltaTime)
@@ -358,7 +367,7 @@ GAME_OVER_LOOP:
 			
 				screen.SwapBuffers()
 			
-				if (gameOverLoopTime > GAME_OVER_DELAY) Goto MENU_LOOP
+				if (gameOverLoopTime > GAME_VARS.GAME_OVER_DELAY) Goto MENU_LOOP
 				gameOverLoopTime += deltaTime
 			
 				clock.Mark()
@@ -710,7 +719,6 @@ function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object) as vo
 		m.x = m.spawnX 
 		m.visible = true
 	end if
-	
 	
 	if (m.state = m.STATE_INTRO)
 		if (Sin(m.flashingTimer * m.FLASHING_SPEED) < 0) 
