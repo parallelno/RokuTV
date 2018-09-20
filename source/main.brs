@@ -126,7 +126,7 @@ function Main() as void
 	coinGreen.speedX = coinGreen.SPEED_X
 	coinGreen.speedY = coinGreen.SPEED_Y
 	coinGreen.spawnX = screenWidth/2
-	coinGreen.spawnChance = 0.01
+	coinGreen.spawnChance = 0.005
 	coinGreen.visible = false
 	coinGreen.width = 20
 	coinGreen.height = 30
@@ -844,7 +844,10 @@ function CoinGreenVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, 
 end function
 
 function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _lifeCount=invalid as object, _globalVars=invalid as object) as void
-	if (m.state = m.STATE_DEATH) return
+	if (m.state = m.STATE_DEATH)
+		m.visible = false
+		return
+	end if
 	
 	if (m.state = m.STATE_INTRO_PREPARING)
 		m.state = m.STATE_INTRO
