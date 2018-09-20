@@ -5,6 +5,7 @@ function Main() as void
 	hero1AnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/platform.xml"))
 	textAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/text.xml"))
 	coinGoldAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_gold_anim.xml"))
+	coinGreenAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_green_anim.xml"))
     
 	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
@@ -32,10 +33,10 @@ function Main() as void
 		bestScore		: 0
 		
 ' --------- GAME VARS ---------------------------------------------------------------------------------
-		GAME_FIELD_MAX_X	: screenWidth - 80.0
-		GAME_FIELD_MIN_X	: 80
-		GAME_FIELD_MAX_Y	: screenHeight - 80
-		GAME_FIELD_MIN_Y	: 200
+		GAME_FIELD_MAX_X	: screenWidth
+		GAME_FIELD_MIN_X	: 0
+		GAME_FIELD_MAX_Y	: screenHeight
+		GAME_FIELD_MIN_Y	: 80
 
 		MAX_LIFE_COUNT		: 6
 		START_LIFE_COUNT	: 4	
@@ -77,7 +78,7 @@ function Main() as void
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 	
 	LivesObj = []
-	for i=0 to GAME_VARS.START_LIFE_COUNT-1
+	for i=0 to GAME_VARS.MAX_LIFE_COUNT-1
 		lifeObj = CreateSpriteObj(menuCursorRegion, screen, 400 + 36*i, 25)
 		LivesObj.Push(lifeObj)
 	end for
@@ -94,15 +95,42 @@ function Main() as void
 	coin.flashingTimer = 1
 	coin.minX = 0
 	coin.maxX = screenWidth
-	coin.minY = coin.scaleY
+	coin.minY = GAME_VARS.GAME_FIELD_MIN_Y + coin.scaleY
 	coin.maxY = GAME_VARS.GAME_FIELD_MAX_Y - coin.scaleY
 	coin.SPEED_X = 3
 	coin.SPEED_Y = 3
 	coin.speedX = coin.SPEED_X
 	coin.speedY = coin.SPEED_Y
 	coin.spawnX = screenWidth/2
-	coin.spawnChance = 0.999
+	coin.spawnChance = 0.001
 	coin.visible = false
+	coin.width = 20
+	coin.height = 30
+
+	coinGreen = CreateVisObj("coinGreen", screen, screenWidth/2, screenHeight/2, coinGreenAnimDataSet, "idle", CoinGreenVisObjUpdate)
+	coinGreen.scaleX = 64
+	coinGreen.scaleY = 64
+	coinGreen.STATE_INTRO_PREPARING = 0
+	coinGreen.STATE_INTRO = 1
+	coinGreen.STATE_GAME = 2
+	coinGreen.STATE_DEATH = 3
+	coinGreen.state = coinGreen.STATE_DEATH
+	coinGreen.FLASHING_SPEED = 15
+	coinGreen.flashingTimer = 1
+	coinGreen.minX = 0
+	coinGreen.maxX = screenWidth
+	coinGreen.minY = GAME_VARS.GAME_FIELD_MIN_Y + coinGreen.scaleY
+	coinGreen.maxY = GAME_VARS.GAME_FIELD_MAX_Y - coinGreen.scaleY
+	coinGreen.SPEED_X = 3
+	coinGreen.SPEED_Y = 3
+	coinGreen.speedX = coinGreen.SPEED_X
+	coinGreen.speedY = coinGreen.SPEED_Y
+	coinGreen.spawnX = screenWidth/2
+	coinGreen.spawnChance = 0.01
+	coinGreen.visible = false
+	coinGreen.width = 20
+	coinGreen.height = 30
+
 	
 ' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
 	
@@ -112,26 +140,37 @@ function Main() as void
 	
 	ball.ballCurrentSpeedX = GAME_VARS.BALL_SPEEDS[0]
 	ball.ballCurrentSpeedY = GAME_VARS.BALL_SPEEDS[0]
+	ball.radius = 64
 	ball.maxX = GAME_VARS.GAME_FIELD_MAX_X
 	ball.minX = GAME_VARS.GAME_FIELD_MIN_X
-	ball.maxY = GAME_VARS.GAME_FIELD_MAX_Y
-	ball.minY = GAME_VARS.GAME_FIELD_MIN_Y
-	ball.radius = 64
+	ball.maxY = GAME_VARS.GAME_FIELD_MAX_Y - ball.radius
+	ball.minY = GAME_VARS.GAME_FIELD_MIN_Y + ball.radius
+
 
 	
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
 	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[0]
 	heroObj2.heroCurrentSpeed = 0
-	heroObj2.maxY = GAME_VARS.GAME_FIELD_MAX_Y
-	heroObj2.minY = GAME_VARS.GAME_FIELD_MIN_Y
-	heroObj2.height = 146
+	heroObj2.height = 73
+	heroObj2.width = 24
+	heroObj2.maxY = GAME_VARS.GAME_FIELD_MAX_Y - heroObj2.height
+	heroObj2.minY = GAME_VARS.GAME_FIELD_MIN_Y + heroObj2.height
+
 	
 	heroObj1 = CreateVisObj("hero1", screen, 100, screenHeight/2, hero1AnimDataSet, "idle", HeroVisObjUpdate)
 	heroObj1.heroSpeed = GAME_VARS.HERO_SPEED
 	heroObj1.heroCurrentSpeed = 0
-	heroObj1.maxY = GAME_VARS.GAME_FIELD_MAX_Y
-	heroObj1.minY = GAME_VARS.GAME_FIELD_MIN_Y
-	heroObj1.height = 146
+	heroObj1.maxY = GAME_VARS.GAME_FIELD_MAX_Y - heroObj1.height
+	heroObj1.minY = GAME_VARS.GAME_FIELD_MIN_Y + heroObj1.height
+	heroObj1.commonAnim = "idle"
+	heroObj1.commonHeight = 73
+	heroObj1.isBig = false
+	heroObj1.bigHeight = 132
+	heroObj1.bigAnim = "idle2"
+	heroObj1.bigTimer = 0
+	heroObj1.BIG_TIME = 5 
+	heroObj1.height = heroObj1.commonHeight
+	heroObj1.width = 24
 	
 	clock.Mark()
 
@@ -221,6 +260,12 @@ NEW_LIFE_LOOP:
 	heroObj1.heroCurrentSpeed = 0
 	heroObj2.heroCurrentSpeed = 0
 	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[GAME_VARS.menuState]
+	coin.state = coin.STATE_DEATH
+	coinGreen.state = coinGreen.STATE_DEATH
+	heroObj1.currentAnimationName = heroObj1.commonAnim
+	heroObj1.height = heroObj1.commonHeight
+	heroObj1.maxY = GAME_VARS.GAME_FIELD_MAX_Y - heroObj1.height
+	heroObj1.minY = GAME_VARS.GAME_FIELD_MIN_Y + heroObj1.height
 
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
@@ -280,7 +325,7 @@ GAME_LOOP:
         else if (event = invalid)
 			deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS)
-				heroObj1.Update(deltaTime)
+				heroObj1.Update(deltaTime, GAME_VARS)
 				heroObj2.Update(deltaTime, ball)
 				ball.Update(deltaTime, heroObj1, heroObj2, numScoreObj)
 				numScoreObj.Update(deltaTime)
@@ -290,10 +335,18 @@ GAME_LOOP:
 				for i=0 to lifeCount-1
 					LivesObj[i].Update(deltaTime)
 				end for
-				if ((Rnd(0) > coin.spawnChance) AND (coin.state = coin.STATE_DEATH) )
+				if ((Rnd(0) < coin.spawnChance) AND (coin.state = coin.STATE_DEATH) )
 					coin.state = coin.STATE_INTRO_PREPARING
 				end if
-				coin.Update(deltaTime, heroObj1)
+
+				if ((Rnd(0) < coinGreen.spawnChance) AND (coinGreen.state = coinGreen.STATE_DEATH) )
+					coinGreen.state = coinGreen.STATE_INTRO_PREPARING
+				end if
+				
+				lifeCountObj = [lifeCount]
+				coin.Update(deltaTime, heroObj1, lifeCountObj, GAME_VARS)
+				coinGreen.Update(deltaTime, heroObj1, GAME_VARS)
+				lifeCount = lifeCountObj[0]
 
 								
 				backObj.Draw()
@@ -308,6 +361,7 @@ GAME_LOOP:
 					LivesObj[i].Draw()
 				end for
 				coin.Draw()
+				coinGreen.Draw()
 				
                 screen.SwapBuffers()
 				
@@ -388,6 +442,16 @@ function MaxF(_x as float, _y as float) as float
 	return _y
 end function
 
+function MinI(_x as integer, _y as integer) as integer
+	if (_x > _y) return _y
+	return _x
+end function
+
+function MaxI(_x as integer, _y as integer) as integer
+	if (_x > _y) return _x
+	return _y
+end function
+
 function ClampF(_v as float, _min=0 as float, _max=1 as float) as float
 	min = MinF(_min, _max)
 	max = MaxF(_min, _max)
@@ -398,8 +462,11 @@ function ClampF(_v as float, _min=0 as float, _max=1 as float) as float
 end function
 
 function ClampI(_v as integer, _min as integer, _max as integer) as integer
-	if (_v > _max) _v = _max
-	if (_v < _min) _v = _min
+	min = MinI(_min, _max)
+	max = MaxI(_min, _max)
+	
+	if (_v > max) _v = max
+	if (_v < min) _v = min
 	return _v
 end function
 
@@ -495,6 +562,18 @@ function CollisionUpdate() as void
 	' if it is, remove object from list in collided and add collided object to collided list
 	' finaly we will have list only with collided objects
 	
+end function
+
+function CollisionBoxCheck(player1 as object, player2 as object) as boolean
+	if ((player1 = invalid) OR (player2 = invalid)) return false
+	
+	dx = Abs(player1.x - player2.x)
+	dy = Abs(player1.y - player2.y)
+	bx = player1.width + player2.width
+	by = player1.height + player2.height
+	
+	if ( (dx < bx) AND (dy < by) ) return true
+	return false
 end function
 
 ' GRAPHICS API /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -675,6 +754,8 @@ function CreateVisObj(_name as String, _screen as object, _x as float, _y as flo
 		screen	: _screen
 		x		: _x
 		y		: _y
+		width	: 64
+		height	: 64
 		spriteObjArray	: {}
 		currentAnimationName	: _currentAnimationName
 				
@@ -710,7 +791,59 @@ function VisObjDraw() as void
 end function
 
 '/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object) as void
+function CoinGreenVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _globalVars=invalid as object) as void
+	if (m.state = m.STATE_DEATH) 
+		m.visible = false
+		return
+	end if
+	
+	if (m.state = m.STATE_INTRO_PREPARING)
+		m.state = m.STATE_INTRO
+		m.y = Rnd(0) * (m.maxY - m.minY) + m.minY
+		m.x = m.spawnX 
+		m.visible = true
+	end if
+	
+	if (m.state = m.STATE_INTRO)
+		if (Sin(m.flashingTimer * m.FLASHING_SPEED) < 0) 
+			m.visible = false
+		else 
+			m.visible = true
+		end if
+		m.flashingTimer -= _deltatime
+		if (m.flashingTimer < 0) 
+			m.state = m.STATE_GAME
+			m.visible = true
+		end if
+	end if
+	
+	if (m.state = m.STATE_GAME)
+		m.x -= m.speedX
+		if (m.x < m.minX) 
+			m.state = m.STATE_DEATH
+			m.visible = false
+		end if
+	end if
+	
+	if ((_hero1 <> invalid) AND (_globalVars <> invalid))
+		isCollided = CollisionBoxCheck(m, _hero1)
+		if ( (isCollided = true) AND (m.state = m.STATE_GAME) )
+				m.state = m.STATE_DEATH
+				m.visible = false
+				_hero1.currentAnimationName = _hero1.bigAnim
+				_hero1.height = _hero1.bigHeight
+				_hero1.maxY = _globalVars.GAME_FIELD_MAX_Y - _hero1.height
+				_hero1.minY = _globalVars.GAME_FIELD_MIN_Y + _hero1.height
+				_hero1.bigTimer = _hero1.BIG_TIME
+		end if
+	end if
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
+function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _lifeCount=invalid as object, _globalVars=invalid as object) as void
 	if (m.state = m.STATE_DEATH) return
 	
 	if (m.state = m.STATE_INTRO_PREPARING)
@@ -741,18 +874,41 @@ function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object) as vo
 		end if
 	end if
 	
+	if ((_hero1 <> invalid) AND (_lifeCount <> invalid) AND (_globalVars <> invalid))
+		isCollided = CollisionBoxCheck(m, _hero1)
+		if ((isCollided = true) AND (m.state = m.STATE_GAME) )
+				m.state = m.STATE_DEATH
+				m.visible = false
+				_lifeCount[0] = _lifeCount[0] + 1
+				_lifeCount[0] = ClampF(_lifeCount[0], 0, _globalVars.MAX_LIFE_COUNT)
+		end if
+	end if
+	
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
 	end for
 end function
 
-function HeroVisObjUpdate(_deltatime=0 as float) as void
+function HeroVisObjUpdate(_deltatime=0 as float, _globalVars=invalid as object) as void
 	if (m.active = false) return
 	
 	m.y += m.heroCurrentSpeed
 	if (m.y > m.maxY) m.y = m.maxY
 	if (m.y < m.minY) m.y = m.minY
 	
+	if (_globalVars <> invalid)
+		if (m.currentAnimationName = m.bigAnim) 
+			m.bigTimer -= _deltatime
+			if (m.bigTimer <= 0)
+				m.currentAnimationName = m.commonAnim
+				m.height = m.commonHeight
+				m.maxY = _globalVars.GAME_FIELD_MAX_Y - m.height
+				m.minY = _globalVars.GAME_FIELD_MIN_Y + m.height
+				m.bigTimer = 0
+			end if
+		end if
+	end if
+				
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
 	end for
@@ -792,7 +948,7 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	
 	toHero1distanceX = Abs(_hero1.x - m.x)
 	if (toHero1distanceX < m.radius)
-		if ( (m.y < _hero1.y + _hero1.height / 2 ) AND (m.y > _hero1.y - _hero1.height / 2 ) ) 
+		if ( (m.y < _hero1.y + _hero1.height ) AND (m.y > _hero1.y - _hero1.height ) ) 
 			m.ballCurrentSpeedX *= -1
 			m.ballCurrentSpeedY += _hero1.heroCurrentSpeed * 0.3
 			m.ballCurrentSpeedX *= 1.1
@@ -807,7 +963,7 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	isHero2HitBall = false
 	toHero2distanceX = Abs(_hero2.x - m.x)
 	if (toHero2distanceX < m.radius)
-		if ( (m.y < _hero2.y + _hero2.height / 2 ) AND (m.y > _hero2.y - _hero2.height / 2 ) ) 
+		if ( (m.y < _hero2.y + _hero2.height ) AND (m.y > _hero2.y - _hero2.height ) ) 
 			m.ballCurrentSpeedX *= -1
 			m.ballCurrentSpeedY += _hero2.heroCurrentSpeed * 0.3
 			m.ballCurrentSpeedX *= 1.1
