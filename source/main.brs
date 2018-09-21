@@ -6,6 +6,7 @@ function Main() as void
 	textAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/text.xml"))
 	coinGoldAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_gold_anim.xml"))
 	coinGreenAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_green_anim.xml"))
+	coinRedAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_red_anim.xml"))
     
 	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
@@ -83,6 +84,7 @@ function Main() as void
 		LivesObj.Push(lifeObj)
 	end for
 	
+	
 	coin = CreateVisObj("coin", screen, screenWidth/2, screenHeight/2, coinGoldAnimDataSet, "idle", CoinVisObjUpdate)
 	coin.scaleX = 64
 	coin.scaleY = 64
@@ -107,6 +109,8 @@ function Main() as void
 	coin.width = 20
 	coin.height = 30
 
+	' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
+	
 	coinGreen = CreateVisObj("coinGreen", screen, screenWidth/2, screenHeight/2, coinGreenAnimDataSet, "idle", CoinGreenVisObjUpdate)
 	coinGreen.scaleX = 64
 	coinGreen.scaleY = 64
@@ -131,8 +135,29 @@ function Main() as void
 	coinGreen.width = 20
 	coinGreen.height = 30
 
-	
-' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
+	coinRed = CreateVisObj("CoinRed", screen, screenWidth/2, screenHeight/2, coinRedAnimDataSet, "idle", CoinRedVisObjUpdate)
+	coinRed.scaleX = 64
+	coinRed.scaleY = 64
+	coinRed.STATE_INTRO_PREPARING = 0
+	coinRed.STATE_INTRO = 1
+	coinRed.STATE_GAME = 2
+	coinRed.STATE_DEATH = 3
+	coinRed.state = coinRed.STATE_DEATH
+	coinRed.FLASHING_SPEED = 15
+	coinRed.flashingTimer = 1
+	coinRed.minX = 0
+	coinRed.maxX = screenWidth
+	coinRed.minY = GAME_VARS.GAME_FIELD_MIN_Y + coinRed.scaleY
+	coinRed.maxY = GAME_VARS.GAME_FIELD_MAX_Y - coinRed.scaleY
+	coinRed.SPEED_X = 3
+	coinRed.SPEED_Y = 3
+	coinRed.speedX = coinRed.SPEED_X
+	coinRed.speedY = coinRed.SPEED_Y
+	coinRed.spawnX = screenWidth/2
+	coinRed.spawnChance = 0.005
+	coinRed.visible = false
+	coinRed.width = 20
+	coinRed.height = 30
 	
 
 	
@@ -791,6 +816,58 @@ function VisObjDraw() as void
 end function
 
 '/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function CoinRedVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _globalVars=invalid as object) as void
+	if (m.state = m.STATE_DEATH) 
+		m.visible = false
+		return
+	end if
+	
+	if (m.state = m.STATE_INTRO_PREPARING)
+		m.state = m.STATE_INTRO
+		m.y = Rnd(0) * (m.maxY - m.minY) + m.minY
+		m.x = m.spawnX 
+		m.visible = true
+	end if
+	
+	if (m.state = m.STATE_INTRO)
+		if (Sin(m.flashingTimer * m.FLASHING_SPEED) < 0) 
+			m.visible = false
+		else 
+			m.visible = true
+		end if
+		m.flashingTimer -= _deltatime
+		if (m.flashingTimer < 0) 
+			m.state = m.STATE_GAME
+			m.visible = true
+		end if
+	end if
+	
+	if (m.state = m.STATE_GAME)
+		m.x -= m.speedX
+		if (m.x < m.minX) 
+			m.state = m.STATE_DEATH
+			m.visible = false
+		end if
+	end if
+	
+	if ((_hero1 <> invalid) AND (_globalVars <> invalid))
+		isCollided = CollisionBoxCheck(m, _hero1)
+		if ( (isCollided = true) AND (m.state = m.STATE_GAME) )
+				m.state = m.STATE_DEATH
+				m.visible = false
+				_hero1.currentAnimationName = _hero1.bigAnim
+				_hero1.height = _hero1.bigHeight
+				_hero1.maxY = _globalVars.GAME_FIELD_MAX_Y - _hero1.height
+				_hero1.minY = _globalVars.GAME_FIELD_MIN_Y + _hero1.height
+				_hero1.bigTimer = _hero1.BIG_TIME
+		end if
+	end if
+	
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
 function CoinGreenVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _globalVars=invalid as object) as void
 	if (m.state = m.STATE_DEATH) 
 		m.visible = false
