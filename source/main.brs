@@ -33,6 +33,7 @@ function Main() as void
 		bestScore		: 0
 		
 ' --------- GAME VARS ---------------------------------------------------------------------------------
+		NEW_LIFE_LOOP_DELAY	: 1
 		GAME_FIELD_MAX_X	: screenWidth
 		GAME_FIELD_MIN_X	: 0
 		GAME_FIELD_MAX_Y	: screenHeight
@@ -184,9 +185,14 @@ function Main() as void
 		ball.flashingTimer = 1
 		ball.INTRO_ANIMATION = "idle3"
 		ball.GAME_ANIMATION = "idle2"
+		ball.spawnX = screenWidth/2
+		ball.spawnY = screenHeight/2
+		ball.Hero1Miss = false
+		ball.Hero2Miss = false
+	
 		balls.Push(ball)
 	end for
-	balls[0].state = coinRed.STATE_INTRO_PREPARING
+	balls[0].state = balls[0].STATE_INTRO_PREPARING
 	
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
 	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[0]
@@ -285,18 +291,20 @@ GAME_INTRO_LOOP:
 
 NEW_GAME_LOOP:
 	numScoreObj.value = 0
-	lifeCount = GAME_VARS.START_LIFE_COUNT	
+	lifeCount = GAME_VARS.START_LIFE_COUNT
 
 NEW_LIFE_LOOP:
-	balls[0].x = screenWidth/2
-	balls[0].y = screenHeight/2
-	balls[0].ballCurrentSpeedX = 0
-	balls[0].ballCurrentSpeedY = 0
-	BALL_FLASHING_TIME = 1
-	BALL_FLASHING_SPEED = 15
+	newLifeLoopTime = 0.0
 	
-	ballFlashingTimer = BALL_FLASHING_TIME
-	balls[0].currentAnimationName = "idle3"
+	for i=0 to GAME_VARS.MAX_BALL_COUNT-1	
+		balls[i].state = balls[i].STATE_DEATH
+		balls[i].x = screenWidth/2
+		balls[i].y = screenHeight/2
+		balls[i].ballCurrentSpeedX = 0
+		balls[i].ballCurrentSpeedY = 0
+	end for
+	balls[0].state = balls[0].STATE_INTRO_PREPARING
+	
 	heroObj1.heroCurrentSpeed = 0
 	heroObj2.heroCurrentSpeed = 0
 	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[GAME_VARS.menuState]
@@ -326,16 +334,16 @@ NEW_LIFE_LOOP:
 			numBestScoreObj.Draw()
 			heroObj1.Draw()
 			heroObj2.Draw()
-			if (Sin(ballFlashingTimer * BALL_FLASHING_SPEED) > 0)
-				balls[0].Draw()
+			for i=0 to GAME_VARS.MAX_BALL_COUNT-1
+				balls[i].Draw()
 			endif
 			for i=0 to lifeCount-1
 				LivesObj[i].Draw()
 			end for
 			screen.SwapBuffers()
 
-			if (ballFlashingTimer < 0) Goto GAME_LOOP
-			ballFlashingTimer -= deltaTime
+			if (newLifeLoopTime > GAME_VARS.NEW_LIFE_LOOP_DELAY) Goto GAME_LOOP
+			newLifeLoopTime += deltaTime
 
 			clock.Mark()
 		endif        
@@ -350,6 +358,21 @@ GAME_LOOP:
 	ballSpeedAngle = GAME_VARS.PI/4 + Rnd(0) * GAME_VARS.PI/2
 	balls[0].ballCurrentSpeedX = Sin(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
 	balls[0].ballCurrentSpeedY = Cos(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	
+	for i=0 to GAME_VARS.MAX_BALL_COUNT-1
+		balls[i].Hero1Miss = false
+		balls[i].Hero2Miss = false
+		balls[i].state = balls[i].STATE_DEATH
+		balls[i].x = screenWidth/2
+		balls[i].y = screenHeight/2
+		ballSpeedAngle = GAME_VARS.PI/4 + Rnd(0) * GAME_VARS.PI/2
+		balls[i].ballCurrentSpeedX = Sin(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+		balls[i].ballCurrentSpeedY = Cos(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	end for
+	balls[0].state = balls[0].STATE_GAME
+	balls[0].visible = true
+	balls[0].currentAnimationName = balls[0].GAME_ANIMATION
+
 
     while true
         event = port.GetMessage()
@@ -1029,46 +1052,74 @@ end function
 function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _numScoreObj as object) as void
 	if (m.active = false) return
 	
-	m.x += m.ballCurrentSpeedX
-	m.y += m.ballCurrentSpeedY
+	if (m.state = m.STATE_DEATH)
+		m.visible = false
+		return
+	end if
 	
-	if (m.x < m.minX) m.Hero1Miss = true
-	if (m.x > m.maxX) 
-		m.Hero2Miss = true
-		_numScoreObj.value += _numScoreObj.AI_FAIL_SCORE
-	endif
-	if ( (m.y > m.maxY) OR (m.y < m.minY) ) m.ballCurrentSpeedY *= -1
+	if (m.state = m.STATE_INTRO_PREPARING)
+		m.state = m.STATE_INTRO
+		m.x = m.spawnX
+		m.y = m.spawnY
+		m.currentAnimationName = m.INTRO_ANIMATION
+		m.visible = true
+	end if
 	
-	isHero1HitBall = false
+	if (m.state = m.STATE_INTRO)
+		if (Sin(m.flashingTimer * m.FLASHING_SPEED) < 0) 
+			m.visible = false
+		else 
+			m.visible = true
+		end if
+		m.flashingTimer -= _deltatime
+		if (m.flashingTimer < 0) 
+			m.state = m.STATE_GAME
+			m.visible = true
+			m.currentAnimationName = m.GAME_ANIMATION
+		end if
+	end if
 	
-	toHero1distanceX = Abs(_hero1.x - m.x)
-	if (toHero1distanceX < m.radius)
-		if ( (m.y < _hero1.y + _hero1.height ) AND (m.y > _hero1.y - _hero1.height ) ) 
-			m.ballCurrentSpeedX *= -1
-			m.ballCurrentSpeedY += _hero1.heroCurrentSpeed * 0.3
-			m.ballCurrentSpeedX *= 1.1
+	if (m.state = m.STATE_GAME)
+		m.x += m.ballCurrentSpeedX
+		m.y += m.ballCurrentSpeedY
+		if (m.x < m.minX) m.Hero1Miss = true
+		if (m.x > m.maxX) 
+			m.Hero2Miss = true
+			_numScoreObj.value += _numScoreObj.AI_FAIL_SCORE
+		end if
+		if ( (m.y > m.maxY) OR (m.y < m.minY) ) m.ballCurrentSpeedY *= -1
+	
+		isHero1HitBall = false
+	
+		toHero1distanceX = Abs(_hero1.x - m.x)
+		if (toHero1distanceX < m.radius)
+			if ( (m.y < _hero1.y + _hero1.height ) AND (m.y > _hero1.y - _hero1.height ) ) 
+				m.ballCurrentSpeedX *= -1
+				m.ballCurrentSpeedY += _hero1.heroCurrentSpeed * 0.3
+				m.ballCurrentSpeedX *= 1.1
 			
-			m.x = _hero1.x + m.radius
-			isHero1HitBall = true
+				m.x = _hero1.x + m.radius
+				isHero1HitBall = true
+			endif
 		endif
-	endif
 	
-	if (isHero1HitBall = true) _numScoreObj.value += _numScoreObj.HIT_BALL_SCORE
+		if (isHero1HitBall = true) _numScoreObj.value += _numScoreObj.HIT_BALL_SCORE
 
-	isHero2HitBall = false
-	toHero2distanceX = Abs(_hero2.x - m.x)
-	if (toHero2distanceX < m.radius)
-		if ( (m.y < _hero2.y + _hero2.height ) AND (m.y > _hero2.y - _hero2.height ) ) 
-			m.ballCurrentSpeedX *= -1
-			m.ballCurrentSpeedY += _hero2.heroCurrentSpeed * 0.3
-			m.ballCurrentSpeedX *= 1.1
+		isHero2HitBall = false
+		toHero2distanceX = Abs(_hero2.x - m.x)
+		if (toHero2distanceX < m.radius)
+			if ( (m.y < _hero2.y + _hero2.height ) AND (m.y > _hero2.y - _hero2.height ) ) 
+				m.ballCurrentSpeedX *= -1
+				m.ballCurrentSpeedY += _hero2.heroCurrentSpeed * 0.3
+				m.ballCurrentSpeedX *= 1.1
 			
-			m.x = _hero2.x - m.radius
-			isHero2HitBall = true
-		else
-			isHero2HitBall = false
-		endif
-	endif
+				m.x = _hero2.x - m.radius
+				isHero2HitBall = true
+			else
+				isHero2HitBall = false
+			end if
+		end if
+	end if
 	
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
