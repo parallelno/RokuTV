@@ -25,10 +25,9 @@ function Main() as void
 	
 		HIT_BALL_SCORE	: 50
 		AI_FAIL_SCORE	: 100
+		
 		BALL_SPEEDS 	: [5, 10, 15] 'speed depends on game difficulty
-
 		AI_HERO_SPEEDS	: [3.3, 7, 13] 'speed depends on game difficulty
-	
 		HERO_SPEED		: 10
 	
 		bestScore		: 0
@@ -40,7 +39,10 @@ function Main() as void
 		GAME_FIELD_MIN_Y	: 80
 
 		MAX_LIFE_COUNT		: 6
-		START_LIFE_COUNT	: 4	
+		START_LIFE_COUNT	: 4
+		
+		MAX_BALL_COUNT		: 4
+		ballCount			: 1
 
 ' --------- MAIN MENU VARS ---------------------------------------------------------------------------------
 		GAME_STATE_MENU_L1	: 0
@@ -84,7 +86,8 @@ function Main() as void
 		LivesObj.Push(lifeObj)
 	end for
 	
-	
+	' it gives a life
+	' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
 	coin = CreateVisObj("coin", screen, screenWidth/2, screenHeight/2, coinGoldAnimDataSet, "idle", CoinVisObjUpdate)
 	coin.scaleX = 64
 	coin.scaleY = 64
@@ -104,13 +107,13 @@ function Main() as void
 	coin.speedX = coin.SPEED_X
 	coin.speedY = coin.SPEED_Y
 	coin.spawnX = screenWidth/2
-	coin.spawnChance = 0.001
+	coin.spawnChance = 0.0005
 	coin.visible = false
 	coin.width = 20
 	coin.height = 30
 
-	' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
-	
+	' expand a desk length	
+	' make additional small expantion.
 	coinGreen = CreateVisObj("coinGreen", screen, screenWidth/2, screenHeight/2, coinGreenAnimDataSet, "idle", CoinGreenVisObjUpdate)
 	coinGreen.scaleX = 64
 	coinGreen.scaleY = 64
@@ -130,11 +133,12 @@ function Main() as void
 	coinGreen.speedX = coinGreen.SPEED_X
 	coinGreen.speedY = coinGreen.SPEED_Y
 	coinGreen.spawnX = screenWidth/2
-	coinGreen.spawnChance = 0.005
+	coinGreen.spawnChance = 0.004
 	coinGreen.visible = false
 	coinGreen.width = 20
 	coinGreen.height = 30
 
+	' gives two rockets
 	coinRed = CreateVisObj("CoinRed", screen, screenWidth/2, screenHeight/2, coinRedAnimDataSet, "idle", CoinRedVisObjUpdate)
 	coinRed.scaleX = 64
 	coinRed.scaleY = 64
@@ -161,17 +165,28 @@ function Main() as void
 	
 
 	
-	ball = CreateVisObj("ball", screen, screenWidth/2, screenHeight/2, bitmapset, "idle2", BallVisObjUpdate)
-	
-	ball.ballCurrentSpeedX = GAME_VARS.BALL_SPEEDS[0]
-	ball.ballCurrentSpeedY = GAME_VARS.BALL_SPEEDS[0]
-	ball.radius = 64
-	ball.maxX = GAME_VARS.GAME_FIELD_MAX_X
-	ball.minX = GAME_VARS.GAME_FIELD_MIN_X
-	ball.maxY = GAME_VARS.GAME_FIELD_MAX_Y - ball.radius
-	ball.minY = GAME_VARS.GAME_FIELD_MIN_Y + ball.radius
-
-
+	balls =  []
+	for i=0 to GAME_VARS.MAX_BALL_COUNT-1
+		ball = CreateVisObj("ball", screen, screenWidth/2, screenHeight/2, bitmapset, "idle2", BallVisObjUpdate)
+		ball.ballCurrentSpeedX = GAME_VARS.BALL_SPEEDS[0]
+		ball.ballCurrentSpeedY = GAME_VARS.BALL_SPEEDS[0]
+		ball.radius = 64
+		ball.maxX = GAME_VARS.GAME_FIELD_MAX_X
+		ball.minX = GAME_VARS.GAME_FIELD_MIN_X
+		ball.maxY = GAME_VARS.GAME_FIELD_MAX_Y - ball.radius
+		ball.minY = GAME_VARS.GAME_FIELD_MIN_Y + ball.radius
+		ball.STATE_INTRO_PREPARING = 0
+		ball.STATE_INTRO = 1
+		ball.STATE_GAME = 2
+		ball.STATE_DEATH = 3
+		ball.state = ball.STATE_DEATH
+		ball.FLASHING_SPEED = 15
+		ball.flashingTimer = 1
+		ball.INTRO_ANIMATION = "idle3"
+		ball.GAME_ANIMATION = "idle2"
+		balls.Push(ball)
+	end for
+	balls[0].state = coinRed.STATE_INTRO_PREPARING
 	
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
 	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[0]
@@ -193,7 +208,7 @@ function Main() as void
 	heroObj1.bigHeight = 132
 	heroObj1.bigAnim = "idle2"
 	heroObj1.bigTimer = 0
-	heroObj1.BIG_TIME = 5 
+	heroObj1.BIG_TIME = 7
 	heroObj1.height = heroObj1.commonHeight
 	heroObj1.width = 24
 	
@@ -273,15 +288,15 @@ NEW_GAME_LOOP:
 	lifeCount = GAME_VARS.START_LIFE_COUNT	
 
 NEW_LIFE_LOOP:
-	ball.x = screenWidth/2
-	ball.y = screenHeight/2
-	ball.ballCurrentSpeedX = 0
-	ball.ballCurrentSpeedY = 0
+	balls[0].x = screenWidth/2
+	balls[0].y = screenHeight/2
+	balls[0].ballCurrentSpeedX = 0
+	balls[0].ballCurrentSpeedY = 0
 	BALL_FLASHING_TIME = 1
 	BALL_FLASHING_SPEED = 15
 	
 	ballFlashingTimer = BALL_FLASHING_TIME
-	ball.currentAnimationName = "idle3"
+	balls[0].currentAnimationName = "idle3"
 	heroObj1.heroCurrentSpeed = 0
 	heroObj2.heroCurrentSpeed = 0
 	heroObj2.heroSpeed = GAME_VARS.AI_HERO_SPEEDS[GAME_VARS.menuState]
@@ -295,7 +310,7 @@ NEW_LIFE_LOOP:
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
 		if (deltaTime > GAME_VARS.STABLE_FPS)
-			ball.Update(deltaTime, heroObj1, heroObj2, numScoreObj)
+			balls[0].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
 			numScoreObj.Update(deltaTime)
 			textScoreObj.Update(deltaTime)
 			numBestScoreObj.Update(deltaTime)
@@ -312,7 +327,7 @@ NEW_LIFE_LOOP:
 			heroObj1.Draw()
 			heroObj2.Draw()
 			if (Sin(ballFlashingTimer * BALL_FLASHING_SPEED) > 0)
-				ball.Draw()
+				balls[0].Draw()
 			endif
 			for i=0 to lifeCount-1
 				LivesObj[i].Draw()
@@ -327,14 +342,14 @@ NEW_LIFE_LOOP:
 	end while
 
 GAME_LOOP:
-	ball.currentAnimationName = "idle2"
-	ball.Hero1Miss = false
-	ball.Hero2Miss = false
-	ball.x = screenWidth/2
-	ball.y = screenHeight/2
+	balls[0].currentAnimationName = "idle2"
+	balls[0].Hero1Miss = false
+	balls[0].Hero2Miss = false
+	balls[0].x = screenWidth/2
+	balls[0].y = screenHeight/2
 	ballSpeedAngle = GAME_VARS.PI/4 + Rnd(0) * GAME_VARS.PI/2
-	ball.ballCurrentSpeedX = Sin(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
-	ball.ballCurrentSpeedY = Cos(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	balls[0].ballCurrentSpeedX = Sin(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	balls[0].ballCurrentSpeedY = Cos(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
 
     while true
         event = port.GetMessage()
@@ -351,8 +366,8 @@ GAME_LOOP:
 			deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS)
 				heroObj1.Update(deltaTime, GAME_VARS)
-				heroObj2.Update(deltaTime, ball)
-				ball.Update(deltaTime, heroObj1, heroObj2, numScoreObj)
+				heroObj2.Update(deltaTime, balls[0])
+				balls[0].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
 				numScoreObj.Update(deltaTime)
 				textScoreObj.Update(deltaTime)
 				numBestScoreObj.Update(deltaTime)
@@ -381,7 +396,7 @@ GAME_LOOP:
 				numBestScoreObj.Draw()
 				heroObj1.Draw()
 				heroObj2.Draw()
-				ball.Draw()
+				balls[0].Draw()
 				for i=0 to lifeCount-1
 					LivesObj[i].Draw()
 				end for
@@ -390,7 +405,7 @@ GAME_LOOP:
 				
                 screen.SwapBuffers()
 				
-				if (ball.Hero1Miss = true) 
+				if (balls[0].Hero1Miss = true) 
 					lifeCount -= 1
 					if (lifeCount < 0) 
 						Goto GAME_OVER_LOOP
@@ -398,7 +413,7 @@ GAME_LOOP:
 						Goto NEW_LIFE_LOOP
 					endif
 				end if
-				if (ball.Hero2Miss = true) 
+				if (balls[0].Hero2Miss = true) 
 					Goto NEW_LIFE_LOOP
 				endif
 				clock.Mark()
