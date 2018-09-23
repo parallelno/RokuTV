@@ -96,55 +96,24 @@ function Main() as void
 	
 	' it gives a life
 	' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
+'-------------------------------------	
+' m.width, m.height  - need to rename it to collisionWidth and collisionHeight
+'-------------------------------------
+ 
 	coin = CreateVisObj("coin", screen, screenWidth/2, screenHeight/2, coinGoldAnimDataSet, "idle", CoinVisObjUpdate)
-	coin.scaleX = 64
-	coin.scaleY = 64
-	coin.STATE_INTRO_PREPARING = 0
-	coin.STATE_INTRO = 1
-	coin.STATE_GAME = 2
-	coin.STATE_DEATH = 3
-	coin.state = coin.STATE_DEATH
-	coin.FLASHING_SPEED = 15.0
-	coin.flashingTimer = 1
-	coin.minX = 0
-	coin.maxX = screenWidth
-	coin.minY = GAME_VARS.GAME_FIELD_MIN_Y + coin.scaleY
-	coin.maxY = GAME_VARS.GAME_FIELD_MAX_Y - coin.scaleY
-	coin.SPEED_X = 3
-	coin.SPEED_Y = 3
-	coin.speedX = coin.SPEED_X
-	coin.speedY = coin.SPEED_Y
-	coin.spawnX = screenWidth/2
-	coin.spawnChance = 0.0005
-	coin.visible = false
-	coin.width = 20
-	coin.height = 30
+	coin.Init = CoinVisObjInit
+	coin.Reset = CoinVisObjReset
+	coin.Spawn = CoinVisObjSpawn
+	coin.Init(GAME_VARS)
+	
 	
 	' expand a desk length	
 	' make additional small expantion.
 	coinGreen = CreateVisObj("coinGreen", screen, screenWidth/2, screenHeight/2, coinGreenAnimDataSet, "idle", CoinGreenVisObjUpdate)
-	coinGreen.scaleX = 64
-	coinGreen.scaleY = 64
-	coinGreen.STATE_INTRO_PREPARING = 0
-	coinGreen.STATE_INTRO = 1
-	coinGreen.STATE_GAME = 2
-	coinGreen.STATE_DEATH = 3
-	coinGreen.state = coinGreen.STATE_DEATH
-	coinGreen.FLASHING_SPEED = 15
-	coinGreen.flashingTimer = 1
-	coinGreen.minX = 0
-	coinGreen.maxX = screenWidth
-	coinGreen.minY = GAME_VARS.GAME_FIELD_MIN_Y + coinGreen.scaleY
-	coinGreen.maxY = GAME_VARS.GAME_FIELD_MAX_Y - coinGreen.scaleY
-	coinGreen.SPEED_X = 3
-	coinGreen.SPEED_Y = 3
-	coinGreen.speedX = coinGreen.SPEED_X
-	coinGreen.speedY = coinGreen.SPEED_Y
-	coinGreen.spawnX = screenWidth/2
-	coinGreen.spawnChance = 0.004
-	coinGreen.visible = false
-	coinGreen.width = 20
-	coinGreen.height = 30
+	coinGreen.Init = CoinGreenVisObjInit
+	coinGreen.Reset = CoinGreenVisObjReset
+	coinGreen.Spawn = CoinGreenVisObjSpawn
+	coinGreen.Init(GAME_VARS)
 	
 	' gives two rockets
 	coinRed = CreateVisObj("CoinRed", screen, screenWidth/2, screenHeight/2, coinRedAnimDataSet, "idle", CoinRedVisObjUpdate)
@@ -267,17 +236,20 @@ NEW_LIFE_LOOP:
 		balls[i].Reset(GAME_VARS)
 	end for
 	balls[0].state = balls[0].STATE_INTRO_PREPARING
+	GAME_VARS.ballCount = 1
 	
 	heroObj1.Reset(GAME_VARS)
 	heroObj2.Reset(GAME_VARS)
 	
-	coin.state = coin.STATE_DEATH
-	coinGreen.state = coinGreen.STATE_DEATH
+	coin.Reset(GAME_VARS)
+	coinGreen.Reset(GAME_VARS)
 
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
 		if (deltaTime > GAME_VARS.STABLE_FPS)
-			balls[0].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
+			for i=0 to GAME_VARS.MAX_BALL_COUNT-1
+				balls[i].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
+			endfor
 			numScoreObj.Update(deltaTime)
 			textScoreObj.Update(deltaTime)
 			numBestScoreObj.Update(deltaTime)
@@ -309,6 +281,101 @@ NEW_LIFE_LOOP:
 	end while
 
 GAME_LOOP:
+	balls[0].currentAnimationName = "idle2"
+	balls[0].Hero1Miss = false
+	balls[0].Hero2Miss = false
+	balls[0].x = screenWidth/2
+	balls[0].y = screenHeight/2
+	ballSpeedAngle = GAME_VARS.PI/4 + Rnd(0) * GAME_VARS.PI/2
+	balls[0].ballCurrentSpeedX = Sin(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	balls[0].ballCurrentSpeedY = Cos(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	
+	for i=0 to GAME_VARS.MAX_BALL_COUNT-1
+		balls[i].Hero1Miss = false
+		balls[i].Hero2Miss = false
+		balls[i].state = balls[i].STATE_DEATH
+		balls[i].x = screenWidth/2
+		balls[i].y = screenHeight/2
+		ballSpeedAngle = GAME_VARS.PI/4 + Rnd(0) * GAME_VARS.PI/2
+		balls[i].ballCurrentSpeedX = Sin(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+		balls[i].ballCurrentSpeedY = Cos(ballSpeedAngle) * GAME_VARS.BALL_SPEEDS[GAME_VARS.menuState]
+	end for
+	balls[0].state = balls[0].STATE_GAME
+	balls[0].visible = true
+	balls[0].currentAnimationName = balls[0].GAME_ANIMATION
+
+
+    while true
+        event = port.GetMessage()
+        if (type(event) = "roUniversalControlEvent")
+            id = event.GetInt()
+			if (id = codes.BUTTON_UP_PRESSED)
+				heroObj1.heroCurrentSpeed = -heroObj1.heroSpeed
+			endif
+			if (id = codes.BUTTON_DOWN_PRESSED)
+				heroObj1.heroCurrentSpeed = heroObj1.heroSpeed
+			endif
+			if (id = 0) Goto MENU_LOOP
+        else if (event = invalid)
+			deltaTime = clock.TotalMilliseconds() / 1000.0
+            if (deltaTime > GAME_VARS.STABLE_FPS)
+				heroObj1.Update(deltaTime, GAME_VARS)
+				heroObj2.Update(deltaTime, balls[0])
+				balls[0].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
+				numScoreObj.Update(deltaTime)
+				textScoreObj.Update(deltaTime)
+				numBestScoreObj.Update(deltaTime)
+				textBestScoreObj.Update(deltaTime)
+				for i=0 to lifeCount-1
+					LivesObj[i].Update(deltaTime)
+				end for
+				if ((Rnd(0) < coin.spawnChance) AND (coin.state = coin.STATE_DEATH) )
+					coin.state = coin.STATE_INTRO_PREPARING
+				end if
+
+				if ((Rnd(0) < coinGreen.spawnChance) AND (coinGreen.state = coinGreen.STATE_DEATH) )
+					coinGreen.state = coinGreen.STATE_INTRO_PREPARING
+				end if
+				
+				lifeCountObj = [lifeCount]
+				coin.Update(deltaTime, heroObj1, lifeCountObj, GAME_VARS)
+				coinGreen.Update(deltaTime, heroObj1, GAME_VARS)
+				lifeCount = lifeCountObj[0]
+
+								
+				backObj.Draw()
+				textScoreObj.Draw()
+				numScoreObj.Draw()
+				textBestScoreObj.Draw()
+				numBestScoreObj.Draw()
+				heroObj1.Draw()
+				heroObj2.Draw()
+				balls[0].Draw()
+				for i=0 to lifeCount-1
+					LivesObj[i].Draw()
+				end for
+				coin.Draw()
+				coinGreen.Draw()
+				
+                screen.SwapBuffers()
+				
+				if (balls[0].Hero1Miss = true) 
+					lifeCount -= 1
+					if (lifeCount < 0) 
+						Goto GAME_OVER_LOOP
+					else
+						Goto NEW_LIFE_LOOP
+					endif
+				end if
+				if (balls[0].Hero2Miss = true) 
+					Goto NEW_LIFE_LOOP
+				endif
+				clock.Mark()
+            endif        
+        endif
+    end while
+
+GAME_OVER_LOOP:
 EXIT_GAME:
 	
 end function
@@ -697,6 +764,39 @@ function TextRoundObjReset(_globalVars as object) as void
 	m.scale = m.scaleStart
 end function
 
+function CoinVisObjInit(_globalVars as object) as void
+	m.width = 20
+	m.height = 30
+	m.STATE_INTRO_PREPARING = 0
+	m.STATE_INTRO = 1
+	m.STATE_GAME = 2
+	m.STATE_DEATH = 3
+	m.state = m.STATE_DEATH
+	m.FLASHING_SPEED = 15
+	m.flashingTimer = 1
+	m.minX = 0
+	m.maxX = _globalVars.GAME_FIELD_MAX_X
+	m.minY = _globalVars.GAME_FIELD_MIN_Y + m.height
+	m.maxY = _globalVars.GAME_FIELD_MAX_Y - m.height
+	m.SPEED_X = 3
+	m.SPEED_Y = 3
+	m.speedX = m.SPEED_X
+	m.speedY = m.SPEED_Y
+	m.spawnX = _globalVars.GAME_FIELD_MAX_X / 2
+	m.spawnChance = 0.0005
+	m.visible = false
+end function
+
+function CoinVisObjReset(_globalVars as object) as void
+	m.state = m.STATE_DEATH
+end function
+
+function CoinVisObjSpawn(_globalVars as object) as void
+	if ((Rnd(0) < m.spawnChance) AND (m.state = m.STATE_DEATH) )
+		m.state = m.STATE_INTRO_PREPARING
+	end if
+end function
+
 function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _lifeCount=invalid as object, _globalVars=invalid as object) as void
 	if (m.state = m.STATE_DEATH)
 		m.visible = false
@@ -744,6 +844,39 @@ function CoinVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _life
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
 	end for
+end function
+
+function CoinGreenVisObjInit(_globalVars as object) as void
+	m.width = 20
+	m.height = 30
+	m.STATE_INTRO_PREPARING = 0
+	m.STATE_INTRO = 1
+	m.STATE_GAME = 2
+	m.STATE_DEATH = 3
+	m.state = m.STATE_DEATH
+	m.FLASHING_SPEED = 15
+	m.flashingTimer = 1
+	m.minX = 0
+	m.maxX = _globalVars.GAME_FIELD_MAX_X
+	m.minY = _globalVars.GAME_FIELD_MIN_Y + m.height
+	m.maxY = _globalVars.GAME_FIELD_MAX_Y - m.height
+	m.SPEED_X = 3
+	m.SPEED_Y = 3
+	m.speedX = m.SPEED_X
+	m.speedY = m.SPEED_Y
+	m.spawnX = _globalVars.GAME_FIELD_MAX_Y / 2
+	m.spawnChance = 0.004
+	m.visible = false
+end function
+
+function CoinGreenVisObjReset(_globalVars as object) as void
+	m.state = m.STATE_DEATH
+end function
+
+function CoinGreenVisObjSpawn(_globalVars as object) as void
+	if ((Rnd(0) < m.spawnChance) AND (m.state = m.STATE_DEATH) )
+		m.state = m.STATE_INTRO_PREPARING
+	end if
 end function
 
 function CoinGreenVisObjUpdate(_deltatime=0 as float, _hero1=invalid as object, _globalVars=invalid as object) as void
@@ -879,6 +1012,17 @@ function BallVisObjReset(_globalVars as object) as void
 		m.y = m.spawnY
 		m.ballCurrentSpeedX = 0
 		m.ballCurrentSpeedY = 0
+		m.Hero1Miss = false
+		m.Hero2Miss = false
+end function
+
+function BallVisObjSetStartSpeed(_globalVars as object) as void
+	ballSpeedAngle = _globalVars.PI/4 + Rnd(0) * _globalVars.PI/2
+	m.ballCurrentSpeedX = Sin(ballSpeedAngle) * _globalVars.BALL_SPEEDS[_globalVars.menuState]
+	m.ballCurrentSpeedY = Cos(ballSpeedAngle) * _globalVars.BALL_SPEEDS[_globalVars.menuState]
+	m.state = m.STATE_GAME
+	m.visible = true
+	m.currentAnimationName = m.GAME_ANIMATION
 end function
 
 function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _numScoreObj as object) as void
