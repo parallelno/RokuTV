@@ -95,11 +95,6 @@ function Main() as void
 	end for
 	
 	' it gives a life
-	' chance has to be dependent on expirience, level and life count. the core idea - keep player surviving
-'-------------------------------------	
-' m.width, m.height  - need to rename it to collisionWidth and collisionHeight
-'-------------------------------------
- 
 	coin = CreateVisObj("coin", screen, screenWidth/2, screenHeight/2, coinGoldAnimDataSet, "idle", CoinVisObjUpdate)
 	coin.Init = CoinVisObjInit
 	coin.Reset = CoinVisObjReset
@@ -108,7 +103,6 @@ function Main() as void
 	
 	
 	' expand a desk length	
-	' make additional small expantion.
 	coinGreen = CreateVisObj("coinGreen", screen, screenWidth/2, screenHeight/2, coinGreenAnimDataSet, "idle", CoinGreenVisObjUpdate)
 	coinGreen.Init = CoinGreenVisObjInit
 	coinGreen.Reset = CoinGreenVisObjReset
