@@ -106,7 +106,7 @@ function Main() as void
 	coin.state = coin.STATE_DEATH
 	coin.FLASHING_SPEED = 15
 	coin.flashingTimer = 1
-	coin.minX = 0
+	coin.minX = 1
 	coin.maxX = screenWidth
 	coin.minY = GAME_VARS.GAME_FIELD_MIN_Y + coin.scaleY
 	coin.maxY = GAME_VARS.GAME_FIELD_MAX_Y - coin.scaleY
