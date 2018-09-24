@@ -1,5 +1,5 @@
 <BitmapSet>
-	<ExtraInfo idle_speed = "1" />
+	<ExtraInfo idle_speed = "2" />
 	<Bitmap name="cube_red_anim" filespec="pkg:/assets/cube_red_anim.png">
 		<Region name="r1" x="0" y="0" w="64" h="64" />
 		<Region name="r2" x="64" y="0" w="64" h="64" />
