@@ -77,25 +77,31 @@ function Main() as void
 	menuCursorRegion = bitmapset.regions.menu_cursor
 	menuCursorObj = CreateSpriteObj(menuCursorRegion, screen, 270, GAME_VARS.GAME_STATE_MENU_Y[GAME_VARS.menuState], 0, 0, 1, 1)
 
-	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 700, 0, -0.5, -0.5, 0.5, 0.5)	
-	numBestScoreObj = CreateNumberTextObj(GAME_VARS.bestScore, textAnimDataSet.animations.numbers_anim, screen, 1000, 5, -0.5, -0.5, 0.5, 0.5)
+	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 600, 0, -0.5, -0.5, 0.5, 0.5)	
+	numBestScoreObj = CreateNumberTextObj(GAME_VARS.bestScore, textAnimDataSet.animations.numbers_anim, screen, 900, 5, -0.5, -0.5, 0.5, 0.5)
 
 	textRoundObj = CreateVisObj("Round", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "round", TextRoundObjUpdate)
 	textRoundObj.Reset = TextRoundObjReset
 	textGameOverObj = CreateVisObj("GameOver", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "game_over", TextRoundObjUpdate)
 
-	textScoreObj = CreateSpriteObj(textAnimDataSet.animations.score[0], screen, 10, 0, -0.5, -0.5, 0.5, 0.5)	
-	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 170, 5, -0.5, -0.5, 0.5, 0.5)
+	textScoreObj = CreateSpriteObj(textAnimDataSet.animations.score[0], screen, 36*6 + 30, 0, -0.5, -0.5, 0.5, 0.5)	
+	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 36*6 + 195, 5, -0.5, -0.5, 0.5, 0.5)
 	numScoreObj.HIT_BALL_SCORE = GAME_VARS.HIT_BALL_SCORE
 	numScoreObj.AI_FAIL_SCORE = GAME_VARS.AI_FAIL_SCORE
 
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 
-	LivesObj = []
+	hero1LivesObj = []
 	for i=0 to GAME_VARS.MAX_LIFE_COUNT-1
-		lifeObj = CreateSpriteObj(menuCursorRegion, screen, 400 + 36*i, 25)
-		LivesObj.Push(lifeObj)
+		lifeObj = CreateSpriteObj(menuCursorRegion, screen, 20 + 36*i, 25)
+		hero1LivesObj.Push(lifeObj)
+	end for
+
+	hero2LivesObj = []
+	for i=0 to GAME_VARS.MAX_LIFE_COUNT-1
+		lifeObj = CreateSpriteObj(menuCursorRegion, screen, screenWidth-200 + 36*i, 25)
+		hero2LivesObj.Push(lifeObj)
 	end for
 	
 	' it gives a life
@@ -270,7 +276,10 @@ NEW_LIFE_LOOP:
 			numBestScoreObj.Update(deltaTime)
 			textBestScoreObj.Update(deltaTime)
 			for i=0 to GAME_VARS.hero1lifeCount-1
-				LivesObj[i].Update(deltaTime)
+				hero1LivesObj[i].Update(deltaTime)
+			end for
+			for i=0 to GAME_VARS.hero2lifeCount-1
+				hero2LivesObj[i].Update(deltaTime)
 			end for
 								
 			backObj.Draw()
@@ -284,7 +293,10 @@ NEW_LIFE_LOOP:
 				balls[i].Draw()
 			endfor
 			for i=0 to GAME_VARS.hero1lifeCount-1
-				LivesObj[i].Draw()
+				hero1LivesObj[i].Draw()
+			end for
+			for i=0 to GAME_VARS.hero2lifeCount-1
+				hero2LivesObj[i].Draw()
 			end for
 			screen.SwapBuffers()
 
@@ -342,7 +354,10 @@ GAME_LOOP:
 				numBestScoreObj.Update(deltaTime)
 				textBestScoreObj.Update(deltaTime)
 				for i=0 to GAME_VARS.hero1lifeCount-1
-					LivesObj[i].Update(deltaTime)
+					hero1LivesObj[i].Update(deltaTime)
+				end for
+				for i=0 to GAME_VARS.hero2lifeCount-1
+					hero2LivesObj[i].Update(deltaTime)
 				end for
 
 				coin.Spawn()
@@ -368,7 +383,10 @@ GAME_LOOP:
 					balls[i].Draw()
 				end for
 				for i=0 to GAME_VARS.hero1lifeCount-1
-					LivesObj[i].Draw()
+					hero1LivesObj[i].Draw()
+				end for
+				for i=0 to GAME_VARS.hero2lifeCount-1
+					hero2LivesObj[i].Draw()
 				end for
 				coin.Draw()
 				coinGreen.Draw()
