@@ -6,10 +6,16 @@
 	<Bitmap name="platform_long" filespec="pkg:/assets/hill_long_long.png">
 		<Region name="r1" x="0" y="0" w="48" h="265" />
 	</Bitmap>
+	<Bitmap name="platform_small" filespec="pkg:/assets/hill.png">
+		<Region name="r1" x="0" y="0" w="48" h="265" />
+	</Bitmap>
 	<Animation name="idle">
 		<frame use="platform.r1" />
 	</Animation>
 	<Animation name="idle2">
 		<frame use="platform_long.r1" />
+	</Animation>
+	<Animation name="idle3">
+		<frame use="platform_small.r1" />
 	</Animation>
 </BitmapSet>
