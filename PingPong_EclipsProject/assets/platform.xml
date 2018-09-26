@@ -7,7 +7,7 @@
 		<Region name="r1" x="0" y="0" w="48" h="265" />
 	</Bitmap>
 	<Bitmap name="platform_small" filespec="pkg:/assets/hill.png">
-		<Region name="r1" x="0" y="0" w="48" h="265" />
+		<Region name="r1" x="0" y="0" w="48" h="91" />
 	</Bitmap>
 	<Animation name="idle">
 		<frame use="platform.r1" />
