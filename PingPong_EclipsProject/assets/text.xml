@@ -27,6 +27,9 @@
 	<Animation name="game_over">
 		<frame use="game_text.r3" />
 	</Animation>
+	<Animation name="win">
+		<frame use="game_text.r5" />
+	</Animation>
 	<Animation name="score">
 		<frame use="game_text.r4" />
 	</Animation>
