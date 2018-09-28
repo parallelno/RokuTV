@@ -6,7 +6,7 @@
 		<Region name="r2" x="0" y="96" w="292" h="100" />
 		<Region name="r3" x="0" y="209" w="663" h="93" />
 		<Region name="r4" x="269" y="310" w="313" h="96" />
-		<Region name="r5" x="0" y="388" w="343" h="97" />
+		<Region name="r5" x="0" y="413" w="337" h="95" />
 		<Region name="r6" x="0" y="310" w="581" h="97" />
 	</Bitmap>
 	<Bitmap name="numbers" filespec="pkg:/assets/Numbers.png">

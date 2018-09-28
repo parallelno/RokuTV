@@ -21,7 +21,7 @@ function Main() as void
 
 	GAME_VARS = {
 ' --------- GLOBAL VARS ---------------------------------------------------------------------------------
-		STABLE_FPS		: (1000.0 / 30.0) / 1000.0 	'stable 30 fps
+		STABLE_FPS		: 1.0 / 30.0 	'stable 30 fps
 		PI				: 3.14159
 	
 		HIT_BALL_SCORE	: 50
@@ -50,6 +50,8 @@ function Main() as void
 		
 		HERO1_ID			: 0
 		HERO2_ID			: 1
+		
+		COIN_SPEED_X		: 3
 
 ' --------- MAIN MENU VARS ---------------------------------------------------------------------------------
 		GAME_STATE_MENU_L1	: 0
@@ -168,12 +170,13 @@ function Main() as void
 	heroObj1 = CreateVisObj("hero1", screen, 100, screenHeight/2, hero1AnimDataSet, "idle", HeroVisObjUpdate)
 	heroObj1.Init = HeroVisObjInit
 	heroObj1.Reset = HeroVisObjReset
-	heroObj1.Init(GAME_VARS.HERO1_ID, GAME_VARS, Hero1RocketLaunchers)
 			
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
 	heroObj2.Init = HeroVisObjInit
 	heroObj2.Reset = HeroVisObjReset
-	heroObj2.Init(GAME_VARS.HERO2_ID, GAME_VARS, Hero2RocketLaunchers) 
+	
+	heroObj1.Init(GAME_VARS.HERO1_ID, GAME_VARS, Hero1RocketLaunchers, heroObj2)
+	heroObj2.Init(GAME_VARS.HERO2_ID, GAME_VARS, Hero2RocketLaunchers, heroObj1) 
 
 	clock.Mark()
 
@@ -340,13 +343,13 @@ ROCKET_CHOSEN:
 			deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS)
 				heroObj1.Update(deltaTime)
-				heroObj2.Update(deltaTime, balls)
+				heroObj2.Update(deltaTime, balls, rockets)
 				for i=0 to GAME_VARS.MAX_BALL_COUNT-1
 					balls[i].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
 				end for
 				
 				for i=0 to GAME_VARS.MAX_ROCKET_COUNT-1	
-					rockets[i].Update(deltaTime, heroObj1, heroObj2)
+					rockets[i].Update(deltaTime, heroObj1, heroObj2, balls)
 				end for
 				
 				numScoreObj.Update(deltaTime)
@@ -398,7 +401,7 @@ ROCKET_CHOSEN:
 				end for
                 screen.SwapBuffers()
 				
-				isAllBallsMissed = isAllBallsDead(balls, GAME_VARS)
+				isAllBallsMissed = isAllBallsDead(balls)
 				
 				if (isAllBallsMissed = true)
 					if (GAME_VARS.isLastMissedBallHeroes  = true) 
@@ -931,8 +934,8 @@ function CoinVisObjInit(_coin as object, _globalVars as object) as void
 	_coin.maxX = _globalVars.GAME_FIELD_MAX_X
 	_coin.minY = _globalVars.GAME_FIELD_MIN_Y + _coin.height
 	_coin.maxY = _globalVars.GAME_FIELD_MAX_Y - _coin.height
-	_coin.SPEED_X = 3
-	_coin.SPEED_Y = 3
+	_coin.SPEED_X = _globalVars.COIN_SPEED_X
+	_coin.SPEED_Y = _globalVars.COIN_SPEED_Y
 	_coin.speedX = _coin.SPEED_X
 	_coin.speedY = _coin.SPEED_Y
 	_coin.spawnX = _globalVars.GAME_FIELD_MAX_X / 2
@@ -944,19 +947,19 @@ end function
 
 function CoinYellowVisObjInit(_globalVars as object) as void
 	 CoinVisObjInit(m, _globalVars)
-	 m.spawnChance = 1 ' 0.0003
+	 m.spawnChance = 0.0003
 	 m.CollidedUpdate = CoinYellowCollidedUpdate
 end function
 
 function CoinGreenVisObjInit(_globalVars as object) as void
 	CoinVisObjInit(m, _globalVars)
-	m.spawnChance = 1 ' 0.004
+	m.spawnChance = 0.004
 	m.CollidedUpdate = CoinGreenCollidedUpdate
 end function
 
 function CoinRedVisObjInit(_globalVars as object) as void
 	CoinVisObjInit(m, _globalVars)
-	m.spawnChance = 1 ' '0.003
+	m.spawnChance = 0.003
 	m.CollidedUpdate = CoinRedCollidedUpdate
 end function
 
@@ -1064,10 +1067,10 @@ function CoinRedCollidedUpdate(hero as object, _globalVars as object) as void
 	for each rocketLauncher in hero.rocketLaunchers
 		if (rocketLauncher.state = rocketLauncher.STATE_DEATH) 
 			rocketLauncher.Spawn(hero)
-			Goto ROCKET_LAUNCHER_CHOSEN
+'			Goto ROCKET_LAUNCHER_CHOSEN
 		end if
 	end for
-ROCKET_LAUNCHER_CHOSEN:
+'ROCKET_LAUNCHER_CHOSEN:
 end function
 
 function RocketLauncherVisObjInit(_globalVars as object, _slotID as integer) as void
@@ -1085,7 +1088,6 @@ function RocketLauncherVisObjInit(_globalVars as object, _slotID as integer) as 
 	m.globalVars = _globalVars
 	m.parent = invalid
 	m.spawnPosOffsetX = 0
-	m.spawnPosOffsetY = 0
 	m.slotID = _slotID
 end function
 
@@ -1097,8 +1099,7 @@ function RocketLauncherVisObjSpawn(_hero as object) as void
 	if ( (m.state = m.STATE_DEATH))
 		m.state = m.STATE_INTRO_PREPARING
 		m.parent = _hero
-		m.spawnPosOffsetX = (m.parent.heroID * 2 - 1) * m.parent.width - m.width 
-		m.spawnPosOffsetY = (m.parent.height - m.height) * m.slotID
+		m.spawnPosOffsetX = ( m.parent.width + m.width ) * (m.parent.heroID * 2 - 1) 
 	end if
 end function
 
@@ -1116,7 +1117,7 @@ function RocketLauncherVisObjUpdate(_deltatime as float) as void
 	end if
 	
 	if (m.state = m.STATE_GAME)
-		m.y = m.parent.y + m.spawnPosOffsetY
+		m.y = m.parent.y + (m.parent.height - m.height) * m.slotID
 		m.time += _deltatime
 		if (m.time > m.LIFETIME) m.state = m.STATE_DEATH
 	end if
@@ -1161,7 +1162,7 @@ function RocketVisObjSpawn(_rocketLauncher as object, _owner as integer) as void
 	end if
 end function
 
-function RocketVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object) as void
+function RocketVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _balls as object) as void
 	if (m.state = m.STATE_DEATH) 
 		m.visible = false
 		return
@@ -1190,6 +1191,22 @@ function RocketVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as obj
 			m.visible = false
 			HeroChangeSize(targetHero, m.globalVars, -1)
 		end if
+		for each ball in _balls
+			if (ball.state = ball.STATE_GAME)
+				isBallCollided = CollisionBoxCheck(m, ball)
+				if (isBallCollided = true)
+					m.state = m.STATE_DEATH
+					m.visible = false
+					ball.Reset()
+					BallVisObjSplits(m.globalVars, ball, m)
+					ball2 = GetDeadBall(_balls)
+					if (ball2 <> invalid) 
+						ball2.Reset()			
+						BallVisObjSplits(m.globalVars, ball2, m)
+					end if
+				end if
+			end if
+		end for
 	end if
 	
 	for each spriteObjName in m.spriteObjArray
@@ -1210,7 +1227,9 @@ end function
 function BallVisObjInit(_globalVars as object) as void
 	m.ballCurrentSpeedX = _globalVars.BALL_SPEEDS[_globalVars.menuState]
 	m.ballCurrentSpeedY = _globalVars.BALL_SPEEDS[_globalVars.menuState]
-	m.radius = 64
+	m.SMALL_RADIUS = 32
+	m.DEFAULT_RADIUS = 64
+	m.radius = m.DEFAULT_RADIUS
 	m.maxX = _globalVars.GAME_FIELD_MAX_X
 	m.minX = _globalVars.GAME_FIELD_MIN_X
 	m.maxY = _globalVars.GAME_FIELD_MAX_Y - m.radius
@@ -1229,6 +1248,7 @@ function BallVisObjInit(_globalVars as object) as void
 	m.Hero1Miss = false
 	m.Hero2Miss = false
 	m.globalVars = _globalVars
+	m.isBallSmall = false
 end function
 
 function BallVisObjReset() as void
@@ -1248,6 +1268,17 @@ function BallVisObjStart() as void
 	m.state = m.STATE_GAME
 	m.visible = true
 	m.currentAnimationName = m.GAME_ANIMATION
+end function
+
+function BallVisObjSplits(_globalVars as object, _ball as object, _pivot as object) as void
+	ballSpeedAngle = _globalVars.PI/4 + Rnd(0) * _globalVars.PI/2
+	_ball.ballCurrentSpeedX = Sin(ballSpeedAngle) * _globalVars.BALL_SPEEDS[_globalVars.menuState]
+	_ball.ballCurrentSpeedY = Cos(ballSpeedAngle) * _globalVars.BALL_SPEEDS[_globalVars.menuState]
+	_ball.state = _ball.STATE_GAME
+	_ball.visible = true
+	_ball.currentAnimationName = _ball.GAME_ANIMATION
+	_ball.x = _pivot.x
+	_ball.y = _pivot.y
 end function
 
 function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _numScoreObj as object) as void
@@ -1336,14 +1367,21 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	end for
 end function
 
-function isAllBallsDead(_balls as object, _globalVars as object) as boolean
-	for i=0 to _globalVars.MAX_BALL_COUNT-1
-		if (_balls[i].state <> _balls[i].STATE_DEATH) return false
+function isAllBallsDead(_balls as object) as boolean
+	for each ball in _balls
+		if (ball.state <> ball.STATE_DEATH) return false
 	endfor
 	return true
 end function
 
-function HeroVisObjInit(_heroID as integer,_globalVars as object, _rocketLaunchers as object) as void
+function GetDeadBall(_balls as object) as object
+	for each ball in _balls
+		if (ball.state = ball.STATE_DEATH) return ball
+	endfor
+	return invalid
+end function
+
+function HeroVisObjInit(_heroID as integer, _globalVars as object, _rocketLaunchers as object, _enemy as object) as void
 	m.heroID = _heroID 
 	m.lifeCount = _globalVars.START_LIFE_COUNT
 	m.width = 24
@@ -1359,6 +1397,7 @@ function HeroVisObjInit(_heroID as integer,_globalVars as object, _rocketLaunche
 	m.state = m.STATE_INTRO_PREPARING
 	m.SIZE_STATE_DEFAULT = 1
 	m.globalVars = _globalVars
+	m.enemy = _enemy
 end function
 
 function HeroVisObjReset(_speed) as void
@@ -1405,7 +1444,7 @@ function HeroVisObjUpdate(_deltatime as float) as void
 	end for
 end function
 
-function AIHeroVisObjUpdate(_deltatime as float, _balls=invalid as object) as void
+function AIHeroVisObjUpdate(_deltatime as float, _balls=invalid as object, _rockets=invalid as object) as void
 	if (m.active = false) return
 	if (_balls = invalid) Goto SPRITES_UPDATE
 	
@@ -1440,6 +1479,25 @@ function AIHeroVisObjUpdate(_deltatime as float, _balls=invalid as object) as vo
 			end if
 		end if
 	end if
+	
+	ememyDistance = Abs(m.enemy.y - m.y)
+	if (ememyDistance < m.height + m.enemy.height)
+		for each rocketLauncher in m.rocketLaunchers
+			if (rocketLauncher.state = rocketLauncher.STATE_GAME)
+				rocket = GetDeadRocket(_rockets, m.globalVars)
+					if (rocket <> invalid) 
+						rocket.Spawn(rocketLauncher, rocket.OWNER_HERO2)
+						rocketLauncher.state = rocketLauncher.STATE_DEATH
+						Goto AI_ROCKET_CHOSEN
+					end if
+				end if
+			end for
+	end if
+AI_ROCKET_CHOSEN:
+	
+	for each rocketLauncher in m.rocketLaunchers
+		rocketLauncher.Update(_deltatime)
+	end for
 	
 SPRITES_UPDATE:
 	for each spriteObjName in m.spriteObjArray
