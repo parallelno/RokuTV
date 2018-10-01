@@ -1438,8 +1438,8 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 		distanceHero1Y = (_hero1.y - m.y) * _hero1.magnetObj.FORCE_Y
 		distanceHero2Y = (_hero2.y - m.y) * _hero2.magnetObj.FORCE_Y
 		
-		if ( (_hero1.magnetTimer > 0) AND (distanceHero1X < _hero1.FORCE_DISTANCE) ) m.y += distanceHero1Y
-		if ( (_hero2.magnetTimer > 0) AND (distanceHero2X < _hero2.FORCE_DISTANCE) ) m.y += distanceHero2Y
+		if ( (_hero1.magnetTimer > 0) AND (distanceHero1X < _hero1.magnetObj.FORCE_DISTANCE) ) m.y += distanceHero1Y
+		if ( (_hero2.magnetTimer > 0) AND (distanceHero2X < _hero2.magnetObj.FORCE_DISTANCE) ) m.y += distanceHero2Y
 		if (m.x < m.minX) 
 			m.Hero1Miss = true
 			m.state = m.STATE_DEATH
