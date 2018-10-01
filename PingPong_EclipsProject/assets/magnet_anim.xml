@@ -1,0 +1,9 @@
+<BitmapSet>
+	<ExtraInfo idle_speed = "2" />
+	<Bitmap name="magnet_anim" filespec="pkg:/assets/magnet_anim.png">
+		<Region name="r1" x="0" y="0" w="64" h="64" />
+	</Bitmap>
+	<Animation name="idle">
+		<frame use="magnet_anim.r1" />
+	</Animation>
+</BitmapSet>

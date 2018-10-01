@@ -8,6 +8,11 @@ function Main() as void
 	coinGreenAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_green_anim.xml"))
 	coinRedAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_red_anim.xml"))
 	cubeRedAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/cube_red_anim.xml"))
+	coinBlackAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_black_anim.xml"))
+	coinWhiteAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_white_anim.xml"))
+	coinPinkAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_pink_anim.xml"))
+	coinBlueAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_blue_anim.xml"))
+	magnetAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/magnet_anim.xml"))
     
 	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
@@ -26,12 +31,14 @@ function Main() as void
 	
 		HIT_BALL_SCORE	: 50
 		AI_FAIL_SCORE	: 100
+		COIN_WHITE_SCORE: 500
 		
 		BALL_SPEEDS 	: [5, 10, 15] 'speed depends on game difficulty
 		AI_HERO_SPEEDS	: [3.3, 7, 13] 'speed depends on game difficulty
 		HERO_SPEED		: 10
 	
 		bestScore		: 0
+		numScoreObj		: invalid
 		
 ' --------- GAME VARS ---------------------------------------------------------------------------------
 		NEW_LIFE_LOOP_DELAY	: 1
@@ -52,6 +59,14 @@ function Main() as void
 		HERO2_ID			: 1
 		
 		COIN_SPEED_X		: 3
+		
+		COIN_YELLOW_SPAWN_RATE	: 0.0003
+		COIN_GREEN_SPAWN_RATE	: 0.01	
+		COIN_RED_SPAWN_RATE		: 0.004
+		COIN_WHITE_SPAWN_RATE	: 0.1
+		COIN_PINK_SPAWN_RATE	: 0.1	
+		COIN_BLACK_SPAWN_RATE	: 0.0003
+		COIN_BLUE_SPAWN_RATE	: 0.03
 
 ' --------- MAIN MENU VARS ---------------------------------------------------------------------------------
 		GAME_STATE_MENU_L1	: 0
@@ -92,7 +107,16 @@ function Main() as void
 	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 36*6 + 195, 5, -0.5, -0.5, 0.5, 0.5)
 	numScoreObj.HIT_BALL_SCORE = GAME_VARS.HIT_BALL_SCORE
 	numScoreObj.AI_FAIL_SCORE = GAME_VARS.AI_FAIL_SCORE
+	numScoreObj.COIN_WHITE_SCORE = GAME_VARS.COIN_WHITE_SCORE
+	GAME_VARS.numScoreObj = numScoreObj
 
+	magnetObj1 = CreateVisObj("magnet1", screen, screenWidth/2, screenHeight/2, magnetAnimDataSet, "idle", MagnetObUpdate)
+	magnetObj2 = CreateVisObj("magnet2", screen, screenWidth/2, screenHeight/2, magnetAnimDataSet, "idle", MagnetObUpdate)
+	magnetObj1.Init = MagnetObInit
+	magnetObj1.Init(GAME_VARS, 1)
+	magnetObj2.Init = MagnetObInit
+	magnetObj2.Init(GAME_VARS, -1)
+	
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
 
@@ -129,6 +153,34 @@ function Main() as void
 	coinRed.Reset = CoinVisObjReset
 	coinRed.Spawn = CoinVisObjSpawn
 	coinRed.Init(GAME_VARS)
+
+	' takes life
+	coinBlack = CreateVisObj("CoinBlack", screen, screenWidth/2, screenHeight/2, coinBlackAnimDataSet, "idle", CoinVisObjUpdate)
+	coinBlack.Init = CoinBlackVisObjInit
+	coinBlack.Reset = CoinVisObjReset
+	coinBlack.Spawn = CoinVisObjSpawn
+	coinBlack.Init(GAME_VARS)
+
+	' give points
+	coinWhite = CreateVisObj("CoinWhite", screen, screenWidth/2, screenHeight/2, coinWhiteAnimDataSet, "idle", CoinVisObjUpdate)
+	coinWhite.Init = CoinWhiteVisObjInit
+	coinWhite.Reset = CoinVisObjReset
+	coinWhite.Spawn = CoinVisObjSpawn
+	coinWhite.Init(GAME_VARS)
+
+	' give speed
+	coinPink = CreateVisObj("CoinPink", screen, screenWidth/2, screenHeight/2, coinPinkAnimDataSet, "idle", CoinVisObjUpdate)
+	coinPink.Init = CoinPinkVisObjInit
+	coinPink.Reset = CoinVisObjReset
+	coinPink.Spawn = CoinVisObjSpawn
+	coinPink.Init(GAME_VARS)
+
+	' give magnet
+	coinBlue = CreateVisObj("CoinBlue", screen, screenWidth/2, screenHeight/2, coinBlueAnimDataSet, "idle", CoinVisObjUpdate)
+	coinBlue.Init = CoinBlueVisObjInit
+	coinBlue.Reset = CoinVisObjReset
+	coinBlue.Spawn = CoinVisObjSpawn
+	coinBlue.Init(GAME_VARS)
 
 	balls = []
 	for i=0 to GAME_VARS.MAX_BALL_COUNT-1
@@ -170,10 +222,12 @@ function Main() as void
 	heroObj1 = CreateVisObj("hero1", screen, 100, screenHeight/2, hero1AnimDataSet, "idle", HeroVisObjUpdate)
 	heroObj1.Init = HeroVisObjInit
 	heroObj1.Reset = HeroVisObjReset
+	heroObj1.magnetObj = magnetObj1
 			
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
 	heroObj2.Init = HeroVisObjInit
 	heroObj2.Reset = HeroVisObjReset
+	heroObj2.magnetObj = magnetObj2
 	
 	heroObj1.Init(GAME_VARS.HERO1_ID, GAME_VARS, Hero1RocketLaunchers, heroObj2)
 	heroObj2.Init(GAME_VARS.HERO2_ID, GAME_VARS, Hero2RocketLaunchers, heroObj1) 
@@ -269,6 +323,10 @@ NEW_LIFE_LOOP:
 	coin.Reset()
 	coinGreen.Reset()
 	coinRed.Reset()
+	coinBlack.Reset()
+	coinWhite.Reset()
+	coinPink.Reset()
+	coinBlue.Reset()
 
     while true
 		deltaTime = clock.TotalMilliseconds() / 1000.0
@@ -366,10 +424,18 @@ ROCKET_CHOSEN:
 				coin.Spawn()
 				coinGreen.Spawn()
 				coinRed.Spawn()
+				coinBlack.Spawn()
+				coinWhite.Spawn()
+				coinPink.Spawn()
+				coinBlue.Spawn()
 				
 				coin.Update(deltaTime, balls, heroObj1, heroObj2)
 				coinGreen.Update(deltaTime, balls, heroObj1, heroObj2)
 				coinRed.Update(deltaTime, balls, heroObj1, heroObj2)
+				coinBlack.Update(deltaTime, balls, heroObj1, heroObj2)
+				coinWhite.Update(deltaTime, balls, heroObj1, heroObj2)
+				coinPink.Update(deltaTime, balls, heroObj1, heroObj2)
+				coinBlue.Update(deltaTime, balls, heroObj1, heroObj2)
 																
 				backObj.Draw()
 				textScoreObj.Draw()
@@ -390,6 +456,10 @@ ROCKET_CHOSEN:
 				coin.Draw()
 				coinGreen.Draw()
 				coinRed.Draw()
+				coinBlack.Draw()
+				coinWhite.Draw()
+				coinPink.Draw()
+				coinBlue.Draw()
 				for each rocketLauncher in heroObj1.rocketLaunchers
 					rocketLauncher.Draw()
 				end for
@@ -399,6 +469,8 @@ ROCKET_CHOSEN:
 				for i=0 to GAME_VARS.MAX_ROCKET_COUNT-1	
 					rockets[i].Draw()
 				end for
+				heroObj1.magnetObj.Draw()
+				heroObj2.magnetObj.Draw()
                 screen.SwapBuffers()
 				
 				isAllBallsMissed = isAllBallsDead(balls)
@@ -680,6 +752,14 @@ function CollisionBoxCheck(player1 as object, player2 as object) as boolean
 	return false
 end function
 
+function CollisionBoxAndSphereCheck(_box as object, _sphere as object) as boolean
+	if ((_box = invalid) OR (_sphere = invalid)) return false
+	
+	BSdistance = Distance(_box, _sphere) + MinF(_box.width, _box.height)  	
+	if (BSdistance < _sphere.radius) return true
+	return false
+end function
+
 ' GRAPHICS API /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateNumberTextObj(_value as integer, _regions as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _AnimationUpdate=SimpleNumTextAnimationUpdate as object ) as object
 	obj = {
@@ -947,20 +1027,44 @@ end function
 
 function CoinYellowVisObjInit(_globalVars as object) as void
 	 CoinVisObjInit(m, _globalVars)
-	 m.spawnChance = 0.0003
+	 m.spawnChance = _globalVars.COIN_YELLOW_SPAWN_RATE
 	 m.CollidedUpdate = CoinYellowCollidedUpdate
 end function
 
 function CoinGreenVisObjInit(_globalVars as object) as void
 	CoinVisObjInit(m, _globalVars)
-	m.spawnChance = 0.004
+	m.spawnChance = _globalVars.COIN_GREEN_SPAWN_RATE
 	m.CollidedUpdate = CoinGreenCollidedUpdate
 end function
 
 function CoinRedVisObjInit(_globalVars as object) as void
 	CoinVisObjInit(m, _globalVars)
-	m.spawnChance = 0.003
+	m.spawnChance = _globalVars.COIN_RED_SPAWN_RATE
 	m.CollidedUpdate = CoinRedCollidedUpdate
+end function
+
+function CoinBlackVisObjInit(_globalVars as object) as void
+	CoinVisObjInit(m, _globalVars)
+	m.spawnChance = _globalVars.COIN_BLACK_SPAWN_RATE
+	m.CollidedUpdate = CoinBlackCollidedUpdate
+end function
+
+function CoinWhiteVisObjInit(_globalVars as object) as void
+	CoinVisObjInit(m, _globalVars)
+	m.spawnChance = _globalVars.COIN_WHITE_SPAWN_RATE
+	m.CollidedUpdate = CoinWhiteCollidedUpdate
+end function
+
+function CoinPinkVisObjInit(_globalVars as object) as void
+	CoinVisObjInit(m, _globalVars)
+	m.spawnChance = _globalVars.COIN_PINK_SPAWN_RATE
+	m.CollidedUpdate = CoinPinkCollidedUpdate
+end function
+
+function CoinBlueVisObjInit(_globalVars as object) as void
+	CoinVisObjInit(m, _globalVars)
+	m.spawnChance = _globalVars.COIN_BLUE_SPAWN_RATE
+	m.CollidedUpdate = CoinBlueCollidedUpdate
 end function
 
 function CoinVisObjReset() as void
@@ -1054,23 +1158,28 @@ function CoinGreenCollidedUpdate(hero as object, _globalVars as object) as void
 	HeroChangeSize(hero, _globalVars, 1)
 end function
 
-function HeroChangeSize(hero as object, _globalVars as object, sizeChanger as float) as void
-	hero.sizeState = ClampI(hero.sizeState + sizeChanger, 0, hero.SIZE_STATE_MAX)
-	hero.currentAnimationName = hero.ANIMS[hero.sizeState]
-	hero.height = hero.HEIGHTS[hero.sizeState]
-	hero.maxY = _globalVars.GAME_FIELD_MAX_Y - hero.height
-	hero.minY = _globalVars.GAME_FIELD_MIN_Y + hero.height
-	hero.sizeTimer = hero.SIZE_STATE_TIMES[hero.sizeState]
-end function
-
 function CoinRedCollidedUpdate(hero as object, _globalVars as object) as void
 	for each rocketLauncher in hero.rocketLaunchers
 		if (rocketLauncher.state = rocketLauncher.STATE_DEATH) 
 			rocketLauncher.Spawn(hero)
-'			Goto ROCKET_LAUNCHER_CHOSEN
 		end if
 	end for
-'ROCKET_LAUNCHER_CHOSEN:
+end function
+
+function CoinBlackCollidedUpdate(hero as object, _globalVars as object) as void
+	hero.lifeCount = ClampF(hero.lifeCount - 1, 0, _globalVars.MAX_LIFE_COUNT)
+end function
+
+function CoinWhiteCollidedUpdate(hero as object, _globalVars as object) as void
+	_globalVars.numScoreObj.value += _globalVars.numScoreObj.COIN_WHITE_SCORE
+end function
+
+function CoinPinkCollidedUpdate(hero as object, _globalVars as object) as void
+	hero.isFaster = true
+end function
+
+function CoinBlueCollidedUpdate(hero as object, _globalVars as object) as void
+	hero.hasMagnet = true
 end function
 
 function RocketLauncherVisObjInit(_globalVars as object, _slotID as integer) as void
@@ -1192,17 +1301,15 @@ function RocketVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as obj
 			HeroChangeSize(targetHero, m.globalVars, -1)
 		end if
 		for each ball in _balls
-			if (ball.state = ball.STATE_GAME)
-				isBallCollided = CollisionBoxCheck(m, ball)
+			if ((ball.state = ball.STATE_GAME) AND (ball.isBallSmall = false))
+				isBallCollided = CollisionBoxAndSphereCheck(m, ball)
 				if (isBallCollided = true)
 					m.state = m.STATE_DEATH
 					m.visible = false
-					ball.Reset()
-					BallVisObjSplits(m.globalVars, ball, m)
+					BallVisObjSplits(m.globalVars, ball, ball, 1)
 					ball2 = GetDeadBall(_balls)
-					if (ball2 <> invalid) 
-						ball2.Reset()			
-						BallVisObjSplits(m.globalVars, ball2, m)
+					if (ball2 <> invalid)			
+						BallVisObjSplits(m.globalVars, ball2, ball, -1)
 					end if
 				end if
 			end if
@@ -1243,22 +1350,29 @@ function BallVisObjInit(_globalVars as object) as void
 	m.flashingTimer = 1
 	m.INTRO_ANIMATION = "idle3"
 	m.GAME_ANIMATION = "idle2"
+	m.GAME_SMALL_ANIMATION = "idle4"
 	m.spawnX = _globalVars.GAME_FIELD_MAX_X / 2
 	m.spawnY = _globalVars.GAME_FIELD_MAX_Y / 2
 	m.Hero1Miss = false
 	m.Hero2Miss = false
 	m.globalVars = _globalVars
-	m.isBallSmall = false
 end function
 
 function BallVisObjReset() as void
-		m.state = m.STATE_DEATH
-		m.x = m.spawnX
-		m.y = m.spawnY
-		m.ballCurrentSpeedX = 0
-		m.ballCurrentSpeedY = 0
-		m.Hero1Miss = false
-		m.Hero2Miss = false
+	m.state = m.STATE_DEATH
+	m.x = m.spawnX
+	m.y = m.spawnY
+	m.ballCurrentSpeedX = 0
+	m.ballCurrentSpeedY = 0
+	m.Hero1Miss = false
+	m.Hero2Miss = false
+	m.isBallSmall = false
+	m.flashingTimer = 1
+	m.radius = m.DEFAULT_RADIUS
+	m.maxX = m.globalVars.GAME_FIELD_MAX_X
+	m.minX = m.globalVars.GAME_FIELD_MIN_X
+	m.maxY = m.globalVars.GAME_FIELD_MAX_Y - m.radius
+	m.minY = m.globalVars.GAME_FIELD_MIN_Y + m.radius
 end function
 
 function BallVisObjStart() as void
@@ -1270,15 +1384,20 @@ function BallVisObjStart() as void
 	m.currentAnimationName = m.GAME_ANIMATION
 end function
 
-function BallVisObjSplits(_globalVars as object, _ball as object, _pivot as object) as void
-	ballSpeedAngle = _globalVars.PI/4 + Rnd(0) * _globalVars.PI/2
-	_ball.ballCurrentSpeedX = Sin(ballSpeedAngle) * _globalVars.BALL_SPEEDS[_globalVars.menuState]
-	_ball.ballCurrentSpeedY = Cos(ballSpeedAngle) * _globalVars.BALL_SPEEDS[_globalVars.menuState]
+function BallVisObjSplits(_globalVars as object, _ball as object, _pivot as object, direction as float) as void
+	_ball.ballCurrentSpeedX = _pivot.ballCurrentSpeedX * direction * 1.2
+	_ball.ballCurrentSpeedY = _pivot.ballCurrentSpeedY * direction * Sgn(Rnd(0) - 0.5) * 1.2
 	_ball.state = _ball.STATE_GAME
 	_ball.visible = true
-	_ball.currentAnimationName = _ball.GAME_ANIMATION
+	_ball.currentAnimationName = _ball.GAME_SMALL_ANIMATION
 	_ball.x = _pivot.x
 	_ball.y = _pivot.y
+	_ball.isBallSmall = true
+	_ball.radius = _ball.SMALL_RADIUS
+	_ball.maxX = _globalVars.GAME_FIELD_MAX_X
+	_ball.minX = _globalVars.GAME_FIELD_MIN_X
+	_ball.maxY = _globalVars.GAME_FIELD_MAX_Y - _ball.radius
+	_ball.minY = _globalVars.GAME_FIELD_MIN_Y + _ball.radius
 end function
 
 function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _numScoreObj as object) as void
@@ -1314,6 +1433,13 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	if (m.state = m.STATE_GAME)
 		m.x += m.ballCurrentSpeedX
 		m.y += m.ballCurrentSpeedY
+		distanceHero1X = Abs(_hero1.x - m.x)
+		distanceHero2X = Abs(_hero2.x - m.x)
+		distanceHero1Y = (_hero1.y - m.y) * _hero1.magnetObj.FORCE_Y
+		distanceHero2Y = (_hero2.y - m.y) * _hero2.magnetObj.FORCE_Y
+		
+		if ( (_hero1.magnetTimer > 0) AND (distanceHero1X < _hero1.FORCE_DISTANCE) ) m.y += distanceHero1Y
+		if ( (_hero2.magnetTimer > 0) AND (distanceHero2X < _hero2.FORCE_DISTANCE) ) m.y += distanceHero2Y
 		if (m.x < m.minX) 
 			m.Hero1Miss = true
 			m.state = m.STATE_DEATH
@@ -1398,6 +1524,9 @@ function HeroVisObjInit(_heroID as integer, _globalVars as object, _rocketLaunch
 	m.SIZE_STATE_DEFAULT = 1
 	m.globalVars = _globalVars
 	m.enemy = _enemy
+	m.FAST_TIME = 10
+	m.FAST_SPEED_MODIFIER = 1.5
+	m.MAGNET_TIME = 7
 end function
 
 function HeroVisObjReset(_speed) as void
@@ -1414,12 +1543,39 @@ function HeroVisObjReset(_speed) as void
 	for each rocketLauncher in m.rocketLaunchers
 		rocketLauncher.Reset()
 	end for
+	m.isFaster = false
+	m.fastTimer = 0
+	m.hasMagnet = false
+	m.magnetTimer = 0
 end function
 
 function HeroVisObjUpdate(_deltatime as float) as void
 	if (m.active = false) return
 	
-	m.y += m.heroCurrentSpeed
+	if (m.isFaster = true) 
+		m.fastTimer = m.FAST_TIME
+		m.isFaster = false
+	end if
+	speed_modifier = 1
+	if (m.fastTimer >0) 
+		speed_modifier = m.FAST_SPEED_MODIFIER
+		m.fastTimer -= _deltatime
+	end if
+
+	if (m.hasMagnet = true) 
+		m.magnetTimer = m.MAGNET_TIME
+		m.hasMagnet = false
+	end if
+	if (m.magnetTimer >0) 
+		m.magnetObj.active = true
+		m.magnetObj.visible = true
+		m.magnetTimer -= _deltatime
+	else
+		m.magnetObj.active = false
+		m.magnetObj.visible = false	
+	end if
+	
+	m.y += m.heroCurrentSpeed * speed_modifier
 	if (m.y > m.maxY) m.y = m.maxY
 	if (m.y < m.minY) m.y = m.minY
 	
@@ -1438,6 +1594,8 @@ function HeroVisObjUpdate(_deltatime as float) as void
 	for each rocketLauncher in m.rocketLaunchers
 		rocketLauncher.Update(_deltatime)
 	end for
+	
+	m.magnetObj.Update(_deltatime, m)
 				
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
@@ -1447,6 +1605,29 @@ end function
 function AIHeroVisObjUpdate(_deltatime as float, _balls=invalid as object, _rockets=invalid as object) as void
 	if (m.active = false) return
 	if (_balls = invalid) Goto SPRITES_UPDATE
+	
+	if (m.isFaster = true) 
+		m.fastTimer = m.FAST_TIME
+		m.isFaster = false
+	end if
+	speed_modifier = 1
+	if (m.fastTimer >0)
+		speed_modifier = m.FAST_SPEED_MODIFIER
+		m.fastTimer -= _deltatime
+	end if
+
+	if (m.hasMagnet = true) 
+		m.magnetTimer = m.MAGNET_TIME
+		m.hasMagnet = false
+	end if
+	if (m.magnetTimer >0) 
+		m.magnetObj.active = true
+		m.magnetObj.visible = true
+		m.magnetTimer -= _deltatime
+	else
+		m.magnetObj.active = false
+		m.magnetObj.visible = false	
+	end if
 	
 	nearestBallDistance = m.globalVars.GAME_FIELD_MAX_Y + m.globalVars.GAME_FIELD_MAX_X
 	nearestBallNum = 0
@@ -1462,7 +1643,7 @@ function AIHeroVisObjUpdate(_deltatime as float, _balls=invalid as object, _rock
 	
 	m.heroCurrentSpeed = ClampF((_balls[nearestBallNum].y - m.y) * 0.4, -m.SPEED, m.SPEED)
 
-	m.y += m.heroCurrentSpeed
+	m.y += m.heroCurrentSpeed * speed_modifier
 	if (m.y > m.maxY) m.y = m.maxY
 	if (m.y < m.minY) m.y = m.minY
 	
@@ -1499,7 +1680,39 @@ AI_ROCKET_CHOSEN:
 		rocketLauncher.Update(_deltatime)
 	end for
 	
+	m.magnetObj.Update(_deltatime, m)
+	
 SPRITES_UPDATE:
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
+function HeroChangeSize(hero as object, _globalVars as object, sizeChanger as float) as void
+	hero.sizeState = ClampI(hero.sizeState + sizeChanger, 0, hero.SIZE_STATE_MAX)
+	hero.currentAnimationName = hero.ANIMS[hero.sizeState]
+	hero.height = hero.HEIGHTS[hero.sizeState]
+	hero.maxY = _globalVars.GAME_FIELD_MAX_Y - hero.height
+	hero.minY = _globalVars.GAME_FIELD_MIN_Y + hero.height
+	hero.sizeTimer = hero.SIZE_STATE_TIMES[hero.sizeState]
+end function
+
+function MagnetObInit(_globalVars as object, _offset as float) as void
+	m.width = 32
+	m.height = 32
+	m.active = false
+	m.visible = false
+	m.globalVars = _globalVars
+	m.offsetX = _offset
+	m.FORCE_Y = 0.02
+	m.FORCE_DISTANCE = (_globalVars.GAME_FIELD_MAX_Y - _globalVars.GAME_FIELD_MIN_Y) * 0.5
+end function
+
+function MagnetObUpdate(_deltatime as float, _hero as object) as void
+	if (m.active = false) return
+	m.x = _hero.x - (_hero.width + m.width) * m.offsetX
+	m.y = _hero.y
+
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
 	end for
