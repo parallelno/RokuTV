@@ -66,7 +66,7 @@ function Main() as void
 		COIN_WHITE_SPAWN_RATE	: 0.1
 		COIN_PINK_SPAWN_RATE	: 0.1	
 		COIN_BLACK_SPAWN_RATE	: 0.0003
-		COIN_BLUE_SPAWN_RATE	: 0.03
+		COIN_BLUE_SPAWN_RATE	: 1 '0.01
 
 ' --------- MAIN MENU VARS ---------------------------------------------------------------------------------
 		GAME_STATE_MENU_L1	: 0
@@ -650,6 +650,10 @@ function Distance(_obj1 as object, _obj2 as object) as float
 	return res
 end function
 
+function VectorLength(_obj1 as object) as float
+	res = Sqr(_obj1.x * _obj1.x + _obj1.y * _obj1.y )
+	return res
+end function
 ' COLLISION API /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateCollisionEngine() as object
 	obj = {
@@ -1120,6 +1124,13 @@ BREAK_LOOP:
 			m.state = m.STATE_GAME
 			m.speedX = m.SPEED_X * speedDirection
 		end if
+		speedDirection = 0
+		if ( (_hero1.magnetTimer > 0 ) AND (_hero1.y - _hero1.height < m.y ) AND (_hero1.y + _hero1.height > m.y ) ) speedDirection -= 1 
+		if (_hero2.magnetTimer > 0 ) speedDirection += 1
+		if (speedDirection <> 0)
+			m.state = m.STATE_GAME
+			m.speedX = m.SPEED_X * speedDirection
+		end if
 	end if
 
 	if (m.state = m.STATE_GAME)
@@ -1431,15 +1442,40 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 	end if
 	
 	if (m.state = m.STATE_GAME)
+		ballSpeedOld = {
+			x : m.ballCurrentSpeedX
+			y : m.ballCurrentSpeedY
+		}
+		distanceHero1X = _hero1.x - m.x
+		distanceHero2X = _hero2.x - m.x
+		distanceHero1Y = _hero1.y - m.y
+		distanceHero2Y = _hero2.y - m.y
+		
+		if ( (_hero1.magnetTimer > 0) AND (Abs(distanceHero1X) < _hero1.magnetObj.FORCE_DISTANCE) ) 
+			m.ballCurrentSpeedX += distanceHero1X * _hero1.magnetObj.FORCE_X
+			m.ballCurrentSpeedY += distanceHero1Y * _hero1.magnetObj.FORCE_Y
+		end if
+		if ( (_hero2.magnetTimer > 0) AND (Abs(distanceHero2X) < _hero2.magnetObj.FORCE_DISTANCE) )
+			m.ballCurrentSpeedX += distanceHero2X * _hero2.magnetObj.FORCE_X
+			m.ballCurrentSpeedY += distanceHero2Y * _hero2.magnetObj.FORCE_Y
+		end if
+		
+		
+		' need to check ball speed direction
+		ballSpeed = {
+			x : m.ballCurrentSpeedX
+			y : m.ballCurrentSpeedY
+		}
+		
+		ballSpeedLengthOld = VectorLength(ballSpeedOld)
+		ballSpeedLength = VectorLength(ballSpeed) 
+		if (ballSpeedLength <> 0 AND ballSpeedLengthOld <> 0 ) 
+			m.ballCurrentSpeedX = m.ballCurrentSpeedX / ballSpeedLength * ballSpeedLengthOld 
+			m.ballCurrentSpeedY = m.ballCurrentSpeedY / ballSpeedLength * ballSpeedLengthOld
+		end if
+		
 		m.x += m.ballCurrentSpeedX
 		m.y += m.ballCurrentSpeedY
-		distanceHero1X = Abs(_hero1.x - m.x)
-		distanceHero2X = Abs(_hero2.x - m.x)
-		distanceHero1Y = (_hero1.y - m.y) * _hero1.magnetObj.FORCE_Y
-		distanceHero2Y = (_hero2.y - m.y) * _hero2.magnetObj.FORCE_Y
-		
-		if ( (_hero1.magnetTimer > 0) AND (distanceHero1X < _hero1.magnetObj.FORCE_DISTANCE) ) m.y += distanceHero1Y
-		if ( (_hero2.magnetTimer > 0) AND (distanceHero2X < _hero2.magnetObj.FORCE_DISTANCE) ) m.y += distanceHero2Y
 		if (m.x < m.minX) 
 			m.Hero1Miss = true
 			m.state = m.STATE_DEATH
@@ -1704,8 +1740,14 @@ function MagnetObInit(_globalVars as object, _offset as float) as void
 	m.visible = false
 	m.globalVars = _globalVars
 	m.offsetX = _offset
+	m.FORCE_X = 0.02
 	m.FORCE_Y = 0.02
 	m.FORCE_DISTANCE = (_globalVars.GAME_FIELD_MAX_Y - _globalVars.GAME_FIELD_MIN_Y) * 0.5
+	if (_offset > 0 ) 
+		m.currentAnimationName = "idle"
+	else 
+		m.currentAnimationName = "idle2"
+	end if
 end function
 
 function MagnetObUpdate(_deltatime as float, _hero as object) as void
