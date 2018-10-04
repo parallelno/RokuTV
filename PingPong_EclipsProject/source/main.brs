@@ -13,6 +13,7 @@ function Main() as void
 	coinPinkAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_pink_anim.xml"))
 	coinBlueAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_blue_anim.xml"))
 	magnetAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/magnet_anim.xml"))
+	speedIconAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/speed_icon_anim.xml"))
     
 	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
@@ -60,12 +61,14 @@ function Main() as void
 		
 		COIN_SPEED_X		: 3
 		
+		SLOW_TIME			: 10
+		
 		COIN_YELLOW_SPAWN_RATE	: 0.0003
 		COIN_GREEN_SPAWN_RATE	: 0.01	
 		COIN_RED_SPAWN_RATE		: 0.004
 		COIN_WHITE_SPAWN_RATE	: 0.1
 		COIN_PINK_SPAWN_RATE	: 0.1	
-		COIN_BLACK_SPAWN_RATE	: 0.0003
+		COIN_BLACK_SPAWN_RATE	: 1 '0.0003
 		COIN_BLUE_SPAWN_RATE	: 1 '0.01
 
 ' --------- MAIN MENU VARS ---------------------------------------------------------------------------------
@@ -78,7 +81,8 @@ function Main() as void
 		GAME_INTRO_DELAY	: 1.0
 
 ' --------- GAME OVER VARS ---------------------------------------------------------------------------------	
-	GAME_OVER_DELAY		: 3.0
+		GAME_OVER_DELAY		: 3.0
+		GOAL_DELAY			: 1.0
 	}
 	GAME_VARS.menuState = GAME_VARS.GAME_STATE_MENU_L1
 
@@ -102,6 +106,7 @@ function Main() as void
 	textRoundObj.Reset = TextRoundObjReset
 	textGameOverObj = CreateVisObj("GameOver", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "game_over", TextRoundObjUpdate)
 	textWinObj = CreateVisObj("Win", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "win", TextRoundObjUpdate)
+	textGoalObj = CreateVisObj("Goal", screen, screenWidth/2, screenHeight/2, textAnimDataSet, "goal", TextRoundObjUpdate)
 
 	textScoreObj = CreateSpriteObj(textAnimDataSet.animations.score[0], screen, 36*6 + 30, 0, -0.5, -0.5, 0.5, 0.5)	
 	numScoreObj = CreateNumberTextObj(0, textAnimDataSet.animations.numbers_anim, screen, 36*6 + 195, 5, -0.5, -0.5, 0.5, 0.5)
@@ -110,12 +115,19 @@ function Main() as void
 	numScoreObj.COIN_WHITE_SCORE = GAME_VARS.COIN_WHITE_SCORE
 	GAME_VARS.numScoreObj = numScoreObj
 
-	magnetObj1 = CreateVisObj("magnet1", screen, screenWidth/2, screenHeight/2, magnetAnimDataSet, "idle", MagnetObUpdate)
-	magnetObj2 = CreateVisObj("magnet2", screen, screenWidth/2, screenHeight/2, magnetAnimDataSet, "idle", MagnetObUpdate)
-	magnetObj1.Init = MagnetObInit
+	magnetObj1 = CreateVisObj("magnet1", screen, 0, 0, magnetAnimDataSet, "idle", MagnetObjUpdate)
+	magnetObj2 = CreateVisObj("magnet2", screen, 0, 0, magnetAnimDataSet, "idle", MagnetObjUpdate)
+	magnetObj1.Init = MagnetObjInit
 	magnetObj1.Init(GAME_VARS, 1)
-	magnetObj2.Init = MagnetObInit
+	magnetObj2.Init = MagnetObjInit
 	magnetObj2.Init(GAME_VARS, -1)
+	
+	speedIconObj1 = CreateVisObj("speedIcon", screen, 0, 0, speedIconAnimDataSet, "idle", SpeedIconObjUpdate)
+	speedIconObj2 = CreateVisObj("speedIcon", screen, 0, 0, speedIconAnimDataSet, "idle", SpeedIconObjUpdate)
+	speedIconObj1.Init = SpeedIconObjInit
+	speedIconObj1.Init(GAME_VARS)
+	speedIconObj2.Init = SpeedIconObjInit
+	speedIconObj2.Init(GAME_VARS)
 	
 	backgroundRegion = bitmapset.regions.background
 	backObj = CreateSpriteObj(backgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / backgroundRegion.GetWidth(), screenHeight / backgroundRegion.GetHeight())
@@ -223,11 +235,13 @@ function Main() as void
 	heroObj1.Init = HeroVisObjInit
 	heroObj1.Reset = HeroVisObjReset
 	heroObj1.magnetObj = magnetObj1
+	heroObj1.speedIconObj = speedIconObj1
 			
 	heroObj2 = CreateVisObj("hero2", screen, screenWidth - 100, screenHeight/2, hero1AnimDataSet, "idle", AIHeroVisObjUpdate)
 	heroObj2.Init = HeroVisObjInit
 	heroObj2.Reset = HeroVisObjReset
 	heroObj2.magnetObj = magnetObj2
+	heroObj2.speedIconObj = speedIconObj2
 	
 	heroObj1.Init(GAME_VARS.HERO1_ID, GAME_VARS, Hero1RocketLaunchers, heroObj2)
 	heroObj2.Init(GAME_VARS.HERO2_ID, GAME_VARS, Hero2RocketLaunchers, heroObj1) 
@@ -471,6 +485,8 @@ ROCKET_CHOSEN:
 				end for
 				heroObj1.magnetObj.Draw()
 				heroObj2.magnetObj.Draw()
+				heroObj1.speedIconObj.Draw()
+				heroObj2.speedIconObj.Draw()
                 screen.SwapBuffers()
 				
 				isAllBallsMissed = isAllBallsDead(balls)
@@ -488,7 +504,7 @@ ROCKET_CHOSEN:
 						if (heroObj2.lifeCount < 0) 
 							Goto GAME_WIN_LOOP
 						else
-							Goto NEW_LIFE_LOOP
+							Goto GAME_GOAL_LOOP
 						endif
 					endif
 				end if
@@ -496,6 +512,54 @@ ROCKET_CHOSEN:
             endif        
         endif
     end while
+    
+GAME_GOAL_LOOP:
+	gameOverLoopTime = 0.0
+	textGoalObj.currentTime = 0.0
+	textGoalObj.time = 0.5
+	textGoalObj.scaleStart = 1.7
+	textGoalObj.scaleEnd = 1.0
+	textGoalObj.scale = textGoalObj.scaleStart
+	if (numBestScoreObj.value < numScoreObj.value) 
+		numBestScoreObj.value = numScoreObj.value
+		GAME_VARS.bestScore = numBestScoreObj.value
+		scoreRegSection.Write("BestScore", GAME_VARS.bestScore.ToStr())
+		scoreRegSection.Flush()
+	endif
+	
+    while true
+		event = port.GetMessage()
+        if (type(event) = "roUniversalControlEvent")
+            id = event.GetInt()
+			if ( (id = 0) OR (id = 6) ) Goto MENU_LOOP
+        else if (event = invalid)
+			deltaTime = clock.TotalMilliseconds() / 1000.0
+			if (deltaTime > GAME_VARS.STABLE_FPS)
+				heroObj1.Update(0)
+				heroObj2.Update(0)
+				textGoalObj.Update(deltaTime)
+				numBestScoreObj.Update(deltaTime)
+				textBestScoreObj.Update(deltaTime)
+			
+				backObj.Draw()
+				textBestScoreObj.Draw()
+				numBestScoreObj.Draw()
+				textScoreObj.Draw()
+				numScoreObj.Draw()
+				heroObj1.Draw()
+				heroObj2.Draw()
+			
+				textGoalObj.Draw()
+			
+				screen.SwapBuffers()
+			
+				if (gameOverLoopTime > GAME_VARS.GOAL_DELAY) Goto NEW_LIFE_LOOP
+				gameOverLoopTime += deltaTime
+			
+				clock.Mark()
+			endif
+		end if
+	end while
 
 GAME_OVER_LOOP:
 	gameOverLoopTime = 0.0
@@ -1022,7 +1086,7 @@ function CoinVisObjInit(_coin as object, _globalVars as object) as void
 	_coin.SPEED_Y = _globalVars.COIN_SPEED_Y
 	_coin.speedX = _coin.SPEED_X
 	_coin.speedY = _coin.SPEED_Y
-	_coin.spawnX = _globalVars.GAME_FIELD_MAX_X / 2
+	_coin.spawnX = _globalVars.GAME_FIELD_MAX_X / 2 + Sgn(Rnd(0)-0.5) * _coin.width 
 	_coin.spawnChance = 0.0001
 	_coin.visible = false
 	_coin.CollidedUpdate = invalid
@@ -1179,6 +1243,7 @@ end function
 
 function CoinBlackCollidedUpdate(hero as object, _globalVars as object) as void
 	hero.lifeCount = ClampF(hero.lifeCount - 1, 0, _globalVars.MAX_LIFE_COUNT)
+	hero.isLifeLost = true
 end function
 
 function CoinWhiteCollidedUpdate(hero as object, _globalVars as object) as void
@@ -1450,28 +1515,32 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 		distanceHero2X = _hero2.x - m.x
 		distanceHero1Y = _hero1.y - m.y
 		distanceHero2Y = _hero2.y - m.y
+		changeSpeed = false
 		
-		if ( (_hero1.magnetTimer > 0) AND (Abs(distanceHero1X) < _hero1.magnetObj.FORCE_DISTANCE) ) 
+		if ( (_hero1.magnetTimer > 0) AND (Abs(distanceHero1X) < _hero1.magnetObj.FORCE_DISTANCE) AND (m.ballCurrentSpeedX<0) ) 
 			m.ballCurrentSpeedX += distanceHero1X * _hero1.magnetObj.FORCE_X
 			m.ballCurrentSpeedY += distanceHero1Y * _hero1.magnetObj.FORCE_Y
+			changeSpeed = true
 		end if
-		if ( (_hero2.magnetTimer > 0) AND (Abs(distanceHero2X) < _hero2.magnetObj.FORCE_DISTANCE) )
+		if ( (_hero2.magnetTimer > 0) AND (Abs(distanceHero2X) < _hero2.magnetObj.FORCE_DISTANCE) AND (m.ballCurrentSpeedX>0))
 			m.ballCurrentSpeedX += distanceHero2X * _hero2.magnetObj.FORCE_X
 			m.ballCurrentSpeedY += distanceHero2Y * _hero2.magnetObj.FORCE_Y
+			changeSpeed = true
 		end if
 		
-		
-		' need to check ball speed direction
 		ballSpeed = {
 			x : m.ballCurrentSpeedX
 			y : m.ballCurrentSpeedY
 		}
-		
-		ballSpeedLengthOld = VectorLength(ballSpeedOld)
-		ballSpeedLength = VectorLength(ballSpeed) 
-		if (ballSpeedLength <> 0 AND ballSpeedLengthOld <> 0 ) 
+		if (changeSpeed = true)
+			ballSpeedLengthOld = VectorLength(ballSpeedOld)
+			ballSpeedLength = VectorLength(ballSpeed)  
 			m.ballCurrentSpeedX = m.ballCurrentSpeedX / ballSpeedLength * ballSpeedLengthOld 
 			m.ballCurrentSpeedY = m.ballCurrentSpeedY / ballSpeedLength * ballSpeedLengthOld
+			if (Abs(m.ballCurrentSpeedY) > Abs(m.ballCurrentSpeedX))
+				m.ballCurrentSpeedX = ballSpeedOld.x
+				m.ballCurrentSpeedY = ballSpeedOld.y
+			end if
 		end if
 		
 		m.x += m.ballCurrentSpeedX
@@ -1563,6 +1632,11 @@ function HeroVisObjInit(_heroID as integer, _globalVars as object, _rocketLaunch
 	m.FAST_TIME = 10
 	m.FAST_SPEED_MODIFIER = 1.5
 	m.MAGNET_TIME = 7
+	m.LIFE_LOST_SHACKING_TIME = _globalVars.SLOW_TIME
+	m.LIFE_LOST_SHACKING_SPEED = 30
+	m.LIFE_LOST_SHACKING_AMPLITUDE = 5
+	m.SPAWN_X = m.x
+	m.SLOW_SPEED_MODIFIER = 0.5
 end function
 
 function HeroVisObjReset(_speed) as void
@@ -1583,22 +1657,43 @@ function HeroVisObjReset(_speed) as void
 	m.fastTimer = 0
 	m.hasMagnet = false
 	m.magnetTimer = 0
+	m.isLifeLost = false
+	m.lifeLostShackingTimer = 0
+	m.x = m.SPAWN_X
 end function
 
 function HeroVisObjUpdate(_deltatime as float) as void
 	if (m.active = false) return
 	
+	speed_modifier = 1
+	if (m.isLifeLost = true)
+		m.isLifeLost = false
+		m.lifeLostShackingTimer = m.LIFE_LOST_SHACKING_TIME
+	end if
+	
+	if (m.lifeLostShackingTimer > 0)
+		m.lifeLostShackingTimer -= _deltatime
+		m.x = m.SPAWN_X + Sin(m.lifeLostShackingTimer * m.LIFE_LOST_SHACKING_SPEED) * m.LIFE_LOST_SHACKING_AMPLITUDE
+		m.isFaster = false
+		speed_modifier = m.SLOW_SPEED_MODIFIER
+		m.fastTimer = 0
+	end if
+	
 	if (m.isFaster = true) 
 		m.fastTimer = m.FAST_TIME
 		m.isFaster = false
 	end if
-	speed_modifier = 1
 	if (m.fastTimer >0) 
 		speed_modifier = m.FAST_SPEED_MODIFIER
 		m.fastTimer -= _deltatime
+		m.speedIconObj.active = true
+		m.speedIconObj.visible = true
+	else
+		m.speedIconObj.active = false
+		m.speedIconObj.visible = false	
 	end if
 
-	if (m.hasMagnet = true) 
+	if (m.hasMagnet = true)
 		m.magnetTimer = m.MAGNET_TIME
 		m.hasMagnet = false
 	end if
@@ -1608,7 +1703,7 @@ function HeroVisObjUpdate(_deltatime as float) as void
 		m.magnetTimer -= _deltatime
 	else
 		m.magnetObj.active = false
-		m.magnetObj.visible = false	
+		m.magnetObj.visible = false
 	end if
 	
 	m.y += m.heroCurrentSpeed * speed_modifier
@@ -1632,6 +1727,7 @@ function HeroVisObjUpdate(_deltatime as float) as void
 	end for
 	
 	m.magnetObj.Update(_deltatime, m)
+	m.speedIconObj.Update(_deltatime, m)
 				
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
@@ -1642,14 +1738,33 @@ function AIHeroVisObjUpdate(_deltatime as float, _balls=invalid as object, _rock
 	if (m.active = false) return
 	if (_balls = invalid) Goto SPRITES_UPDATE
 	
+	speed_modifier = 1
+	if (m.isLifeLost = true)
+		m.isLifeLost = false
+		m.lifeLostShackingTimer = m.LIFE_LOST_SHACKING_TIME
+	end if
+	
+	if (m.lifeLostShackingTimer > 0)
+		m.lifeLostShackingTimer -= _deltatime
+		m.x = m.SPAWN_X + Sin(m.lifeLostShackingTimer * m.LIFE_LOST_SHACKING_SPEED) * m.LIFE_LOST_SHACKING_AMPLITUDE
+		m.isFaster = false
+		speed_modifier = m.SLOW_SPEED_MODIFIER
+		m.fastTimer = 0
+	end if
+	
 	if (m.isFaster = true) 
 		m.fastTimer = m.FAST_TIME
 		m.isFaster = false
 	end if
-	speed_modifier = 1
+	
 	if (m.fastTimer >0)
 		speed_modifier = m.FAST_SPEED_MODIFIER
 		m.fastTimer -= _deltatime
+		m.speedIconObj.active = true
+		m.speedIconObj.visible = true
+	else
+		m.speedIconObj.active = false
+		m.speedIconObj.visible = false	
 	end if
 
 	if (m.hasMagnet = true) 
@@ -1717,6 +1832,7 @@ AI_ROCKET_CHOSEN:
 	end for
 	
 	m.magnetObj.Update(_deltatime, m)
+	m.speedIconObj.Update(_deltatime, m)
 	
 SPRITES_UPDATE:
 	for each spriteObjName in m.spriteObjArray
@@ -1733,7 +1849,7 @@ function HeroChangeSize(hero as object, _globalVars as object, sizeChanger as fl
 	hero.sizeTimer = hero.SIZE_STATE_TIMES[hero.sizeState]
 end function
 
-function MagnetObInit(_globalVars as object, _offset as float) as void
+function MagnetObjInit(_globalVars as object, _offset as float) as void
 	m.width = 32
 	m.height = 32
 	m.active = false
@@ -1750,9 +1866,25 @@ function MagnetObInit(_globalVars as object, _offset as float) as void
 	end if
 end function
 
-function MagnetObUpdate(_deltatime as float, _hero as object) as void
+function MagnetObjUpdate(_deltatime as float, _hero as object) as void
 	if (m.active = false) return
 	m.x = _hero.x - (_hero.width + m.width) * m.offsetX
+	m.y = _hero.y
+
+	for each spriteObjName in m.spriteObjArray
+		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
+	end for
+end function
+
+function SpeedIconObjInit(_globalVars as object) as void
+	m.active = false
+	m.visible = false
+	m.globalVars = _globalVars
+end function
+
+function SpeedIconObjUpdate(_deltatime as float, _hero as object) as void
+	if (m.active = false) return
+	m.x = _hero.x
 	m.y = _hero.y
 
 	for each spriteObjName in m.spriteObjArray

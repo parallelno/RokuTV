@@ -3,7 +3,7 @@
 	<Bitmap name="menu_background" filespec="pkg:/assets/Menu01.png" />
 	<Bitmap name="game_text" filespec="pkg:/assets/GameText.png">
 		<Region name="r1" x="0" y="0" w="370" h="95" />
-		<Region name="r2" x="0" y="96" w="292" h="100" />
+		<Region name="r2" x="0" y="103" w="287" h="97" />
 		<Region name="r3" x="0" y="209" w="663" h="93" />
 		<Region name="r4" x="269" y="310" w="313" h="96" />
 		<Region name="r5" x="0" y="413" w="337" h="95" />
@@ -24,14 +24,17 @@
 	<Animation name="round">
 		<frame use="game_text.r1" />
 	</Animation>
+	<Animation name="goal">
+		<frame use="game_text.r2" />
+	</Animation>
 	<Animation name="game_over">
 		<frame use="game_text.r3" />
 	</Animation>
-	<Animation name="win">
-		<frame use="game_text.r5" />
-	</Animation>
 	<Animation name="score">
 		<frame use="game_text.r4" />
+	</Animation>
+	<Animation name="win">
+		<frame use="game_text.r5" />
 	</Animation>
 	<Animation name="best_score">
 		<frame use="game_text.r6" />
