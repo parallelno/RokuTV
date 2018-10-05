@@ -14,6 +14,9 @@ function Main() as void
 	coinBlueAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/coin_blue_anim.xml"))
 	magnetAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/magnet_anim.xml"))
 	speedIconAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/speed_icon_anim.xml"))
+	
+	mainMenuBackAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/main_menu_back.xml"))
+	
     
 	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
@@ -93,11 +96,26 @@ function Main() as void
 		scoreRegSection.Flush()
 	end if
 	
-	menuBackgroundRegion = textAnimDataSet.regions.menu_background
-	menuBackObj = CreateSpriteObj(menuBackgroundRegion, screen, 0, 0, -0.5, -0.5, screenWidth / menuBackgroundRegion.GetWidth(), screenHeight / menuBackgroundRegion.GetHeight())
+	mainMenuBack1Region = mainMenuBackAnimDataSet.regions.main_menu_back1
+	mainMenuBack1Obj = CreateSpriteObj(mainMenuBack1Region, screen, 0, 0, -0.5, -0.5, screenWidth / mainMenuBack1Region.GetWidth(), screenHeight / mainMenuBack1Region.GetHeight())
+	mainMenuBack2Region = mainMenuBackAnimDataSet.regions.main_menu_back2
+	mainMenuBack2Obj = CreateSpriteObj(mainMenuBack2Region, screen, screenWidth/2, 375, 0, 0.5, 0.999, 0.999)
+	mainMenuBack3Region = mainMenuBackAnimDataSet.regions.main_menu_back3
+	mainMenuBack3Obj = CreateSpriteObj(mainMenuBack3Region, screen, screenWidth/2, 378, 0, 0.5, 0.999, 0.999)
+	mainMenuBack4Region = mainMenuBackAnimDataSet.regions.main_menu_back4
+	mainMenuBack4Obj = CreateSpriteObj(mainMenuBack4Region, screen, screenWidth/2, 477, 0, 0.5, 0.999, 0.999)
+	mainMenuBack5Region = mainMenuBackAnimDataSet.regions.main_menu_back5
+	mainMenuBack5Obj = CreateSpriteObj(mainMenuBack5Region, screen, 0, screenHeight, -0.5, 0.5, 0.999, 0.999)
 
+	menuPinballTextRegion = mainMenuBackAnimDataSet.regions.menu_pinball_text
+	menuPinballTextObj = CreateSpriteObj(menuPinballTextRegion, screen, screenWidth/2, 402, 0, 0.5, 0.999, 0.999)
+
+	menuDifficultyTextRegion = mainMenuBackAnimDataSet.regions.menu_difficulty_text
+	menuDifficultyTextObj = CreateSpriteObj(menuDifficultyTextRegion, screen, screenWidth/2, 636, 0, 0.5, 0.999, 0.999)
+	menuDifficultyTextObj.Draw = ScrolledSpriteDraw
+	
 	menuCursorRegion = bitmapset.regions.menu_cursor
-	menuCursorObj = CreateSpriteObj(menuCursorRegion, screen, 270, GAME_VARS.GAME_STATE_MENU_Y[GAME_VARS.menuState], 0, 0, 1, 1)
+	menuCursorObj = CreateSpriteObj(menuCursorRegion, screen, 270, GAME_VARS.GAME_STATE_MENU_Y[GAME_VARS.menuState], 0, 0, 0.999, 0.999)
 
 	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 600, 0, -0.5, -0.5, 0.5, 0.5)	
 	numBestScoreObj = CreateNumberTextObj(GAME_VARS.bestScore, textAnimDataSet.animations.numbers_anim, screen, 900, 5, -0.5, -0.5, 0.5, 0.5)
@@ -134,13 +152,13 @@ function Main() as void
 
 	hero1LivesObj = []
 	for i=0 to GAME_VARS.MAX_LIFE_COUNT-1
-		lifeObj = CreateSpriteObj(menuCursorRegion, screen, 20 + 36*i, 25)
+		lifeObj = CreateSpriteObj(menuCursorRegion, screen, 20 + 36*i, 25, 0, 0, 0.999, 0.999)
 		hero1LivesObj.Push(lifeObj)
 	end for
 
 	hero2LivesObj = []
 	for i=0 to GAME_VARS.MAX_LIFE_COUNT-1
-		lifeObj = CreateSpriteObj(menuCursorRegion, screen, screenWidth-200 + 36*i, 25)
+		lifeObj = CreateSpriteObj(menuCursorRegion, screen, screenWidth-200 + 36*i, 25, 0, 0, 0.999, 0.999)
 		hero2LivesObj.Push(lifeObj)
 	end for
 	
@@ -272,9 +290,23 @@ MENU_LOOP:
 				menuCursorObj.Update()
 				numBestScoreObj.Update(deltaTime)
 				textBestScoreObj.Update(deltaTime)
-
+				mainMenuBack1Obj.Update()
+				mainMenuBack2Obj.Update()
+				mainMenuBack3Obj.Update()
+				mainMenuBack4Obj.Update()
+				mainMenuBack5Obj.Update()
+				menuDifficultyTextObj.Update()
+				menuPinballTextObj.Update()
 				
-				menuBackObj.Draw()
+				
+				mainMenuBack1Obj.Draw()
+				mainMenuBack2Obj.Draw()
+				mainMenuBack3Obj.Draw()
+				mainMenuBack4Obj.Draw()
+				mainMenuBack5Obj.Draw()
+				menuDifficultyTextObj.Draw()
+				menuPinballTextObj.Draw()
+				
 				textBestScoreObj.Draw()
 				numBestScoreObj.Draw()
                 menuCursorObj.Draw()
@@ -518,7 +550,7 @@ GAME_GOAL_LOOP:
 	textGoalObj.currentTime = 0.0
 	textGoalObj.time = 0.5
 	textGoalObj.scaleStart = 1.7
-	textGoalObj.scaleEnd = 1.0
+	textGoalObj.scaleEnd = 0.999
 	textGoalObj.scale = textGoalObj.scaleStart
 	if (numBestScoreObj.value < numScoreObj.value) 
 		numBestScoreObj.value = numScoreObj.value
@@ -566,7 +598,7 @@ GAME_OVER_LOOP:
 	textGameOverObj.currentTime = 0.0
 	textGameOverObj.time = 1
 	textGameOverObj.scaleStart = 1.7
-	textGameOverObj.scaleEnd = 1.0
+	textGameOverObj.scaleEnd = 0.999
 	textGameOverObj.scale = textGameOverObj.scaleStart
 	if (numBestScoreObj.value < numScoreObj.value) 
 		numBestScoreObj.value = numScoreObj.value
@@ -857,7 +889,10 @@ function CreateNumberTextObj(_value as integer, _regions as object, _screen as o
 		Update			: SimpleNumberTextUpdate
 		AnimationUpdate	: _AnimationUpdate
 	}
-		
+	
+	for each region in obj.regions
+		region.SetScaleMode(1)
+	end for
 	return obj
 end function
 
@@ -950,16 +985,18 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 		currentRegion	: _region
 		currentRegionNum	: 0
 		screen	: _screen
+		scroolSpeedX	: 0
+		scroolSpeedY	: 0
 		
-		Draw	: DrawSprite
+		Draw	: SpriteDraw
 		Update	: SimpleSpriteUpdate
 		AnimationUpdate	: _AnimationUpdate
 	}
-	
+	obj.currentRegion.SetScaleMode(1)
 	return obj
 end function
 
-function DrawSprite() as void
+function SpriteDraw() as void
 	if (m.visible = false) return
 	m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
 end function
@@ -996,6 +1033,18 @@ function SimpleSpriteAnimationUpdate(_deltatime=0 as float) as void
 	
 	currentRegion = m.regions[m.currentRegionNum]
 	if ( currentRegion <> invalid) m.currentRegion = currentRegion
+end function
+
+function ScrolledSpriteDraw() as void
+	if (m.visible = false) return
+	m.screen.DrawScaledObject(m.drawX, m.drawY, 0.998, 0.998, m.currentRegion)
+end function
+
+function ScrolledSpriteUpdate(_deltatime=0 as float, _x=0 as float, _y=0 as float) as void
+	if (m.active = false) return
+	m.AnimationUpdate(_deltatime)
+	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + _x
+	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY + _y
 end function
 
 function CreateVisObj(_name as String, _screen as object, _x as float, _y as float, _animsData as object, _currentAnimationName="idle" as String, _Update=SimpleVisObjUpdate as object) as object
@@ -1063,7 +1112,7 @@ function TextRoundObjReset() as void
 	m.currentTime = 0.0
 	m.time = 0.3
 	m.scaleStart = 1.7
-	m.scaleEnd = 1.0
+	m.scaleEnd = 0.999
 	m.scale = m.scaleStart
 end function
 

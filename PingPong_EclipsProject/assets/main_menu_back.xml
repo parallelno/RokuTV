@@ -1,0 +1,9 @@
+<BitmapSet>
+	<Bitmap name="main_menu_back1" filespec="pkg:/assets/main_menu_back1.png" />
+	<Bitmap name="main_menu_back2" filespec="pkg:/assets/main_menu_back2.png" />
+	<Bitmap name="main_menu_back3" filespec="pkg:/assets/main_menu_back3.png" />
+	<Bitmap name="main_menu_back4" filespec="pkg:/assets/main_menu_back4.png" />
+	<Bitmap name="main_menu_back5" filespec="pkg:/assets/main_menu_back5.png" />
+	<Bitmap name="menu_pinball_text" filespec="pkg:/assets/Menu_PinballText.png" />
+	<Bitmap name="menu_difficulty_text" filespec="pkg:/assets/Menu_DifficultyText.png" />
+</BitmapSet>
