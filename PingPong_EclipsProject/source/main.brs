@@ -79,7 +79,8 @@ function Main() as void
 		GAME_STATE_MENU_L2	: 1
 		GAME_STATE_MENU_L3	: 2
 
-		GAME_STATE_MENU_Y	: [ 489, 540, 600 ]
+		GAME_STATE_MENU_X	: [ 280, 560, 490 ]
+		GAME_STATE_MENU_Y	: [ 489, 550, 610 ]
 ' --------- INTRO VARS ---------------------------------------------------------------------------------	
 		GAME_INTRO_DELAY	: 1.0
 
@@ -100,10 +101,19 @@ function Main() as void
 	mainMenuBack1Obj = CreateSpriteObj(mainMenuBack1Region, screen, 0, 0, -0.5, -0.5, screenWidth / mainMenuBack1Region.GetWidth(), screenHeight / mainMenuBack1Region.GetHeight())
 	mainMenuBack2Region = mainMenuBackAnimDataSet.regions.main_menu_back2
 	mainMenuBack2Obj = CreateSpriteObj(mainMenuBack2Region, screen, screenWidth/2, 375, 0, 0.5, 0.999, 0.999)
+	mainMenuBack2Obj.Update = ScrolledSpriteUpdate
+	mainMenuBack2Obj.Init = ScrolledSpriteInit
+	mainMenuBack2Obj.Init(8,0)
 	mainMenuBack3Region = mainMenuBackAnimDataSet.regions.main_menu_back3
 	mainMenuBack3Obj = CreateSpriteObj(mainMenuBack3Region, screen, screenWidth/2, 378, 0, 0.5, 0.999, 0.999)
+	mainMenuBack3Obj.Update = ScrolledSpriteUpdate
+	mainMenuBack3Obj.Init = ScrolledSpriteInit
+	mainMenuBack3Obj.Init(10,0)
 	mainMenuBack4Region = mainMenuBackAnimDataSet.regions.main_menu_back4
 	mainMenuBack4Obj = CreateSpriteObj(mainMenuBack4Region, screen, screenWidth/2, 477, 0, 0.5, 0.999, 0.999)
+	mainMenuBack4Obj.Update = ScrolledSpriteUpdate
+	mainMenuBack4Obj.Init = ScrolledSpriteInit
+	mainMenuBack4Obj.Init(17,0)
 	mainMenuBack5Region = mainMenuBackAnimDataSet.regions.main_menu_back5
 	mainMenuBack5Obj = CreateSpriteObj(mainMenuBack5Region, screen, 0, screenHeight, -0.5, 0.5, 0.999, 0.999)
 
@@ -112,11 +122,13 @@ function Main() as void
 
 	menuDifficultyTextRegion = mainMenuBackAnimDataSet.regions.menu_difficulty_text
 	menuDifficultyTextObj = CreateSpriteObj(menuDifficultyTextRegion, screen, screenWidth/2, 636, 0, 0.5, 0.999, 0.999)
-	menuDifficultyTextObj.Draw = ScrolledSpriteDraw
 	
 	menuCursorRegion = bitmapset.regions.menu_cursor
 	menuCursorObj = CreateSpriteObj(menuCursorRegion, screen, 270, GAME_VARS.GAME_STATE_MENU_Y[GAME_VARS.menuState], 0, 0, 0.999, 0.999)
-
+	menuCursorObj.Init = menuCursorObjInit
+	menuCursorObj.Update = menuCursorObjUpdate
+	menuCursorObj.Init(GAME_VARS)
+	
 	textBestScoreObj = CreateSpriteObj(textAnimDataSet.animations.best_score[0], screen, 600, 0, -0.5, -0.5, 0.5, 0.5)	
 	numBestScoreObj = CreateNumberTextObj(GAME_VARS.bestScore, textAnimDataSet.animations.numbers_anim, screen, 900, 5, -0.5, -0.5, 0.5, 0.5)
 
@@ -285,15 +297,14 @@ MENU_LOOP:
 			if (id = 0) Goto EXIT_GAME
         else if (event = invalid)
                 deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > GAME_VARS.STABLE_FPS)
-				menuCursorObj.y = GAME_VARS.GAME_STATE_MENU_Y[GAME_VARS.menuState]
-				menuCursorObj.Update()
+            if (deltaTime > GAME_VARS.STABLE_FPS) 
+				menuCursorObj.Update(deltaTime)
 				numBestScoreObj.Update(deltaTime)
 				textBestScoreObj.Update(deltaTime)
-				mainMenuBack1Obj.Update()
-				mainMenuBack2Obj.Update()
-				mainMenuBack3Obj.Update()
-				mainMenuBack4Obj.Update()
+				mainMenuBack1Obj.Update(deltaTime)
+				mainMenuBack2Obj.Update(deltaTime)
+				mainMenuBack3Obj.Update(deltaTime)
+				mainMenuBack4Obj.Update(deltaTime)
 				mainMenuBack5Obj.Update()
 				menuDifficultyTextObj.Update()
 				menuPinballTextObj.Update()
@@ -520,6 +531,9 @@ ROCKET_CHOSEN:
 				heroObj1.speedIconObj.Draw()
 				heroObj2.speedIconObj.Draw()
                 screen.SwapBuffers()
+				
+				if (heroObj1.lifeCount < 0) Goto GAME_OVER_LOOP
+				if (heroObj2.lifeCount < 0) Goto GAME_WIN_LOOP
 				
 				isAllBallsMissed = isAllBallsDead(balls)
 				
@@ -985,8 +999,10 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
 		currentRegion	: _region
 		currentRegionNum	: 0
 		screen	: _screen
-		scroolSpeedX	: 0
-		scroolSpeedY	: 0
+		scrollSpeedX	: 0
+		scrollSpeedY	: 0
+		spriteWidth		: 0
+		spriteHeight	: 0
 		
 		Draw	: SpriteDraw
 		Update	: SimpleSpriteUpdate
@@ -1035,16 +1051,24 @@ function SimpleSpriteAnimationUpdate(_deltatime=0 as float) as void
 	if ( currentRegion <> invalid) m.currentRegion = currentRegion
 end function
 
-function ScrolledSpriteDraw() as void
-	if (m.visible = false) return
-	m.screen.DrawScaledObject(m.drawX, m.drawY, 0.998, 0.998, m.currentRegion)
+function ScrolledSpriteInit(_scrollSpeedX as float, _scrollSpeedY as float)
+	m.scrollSpeedX = _scrollSpeedX
+	m.scrollSpeedY = _scrollSpeedY
+	m.currentRegion.SetWrap(true)
+	m.spriteWidth = m.currentRegion.GetWidth()
+	m.spriteHeight = m.currentRegion.GetHeight()
 end function
 
 function ScrolledSpriteUpdate(_deltatime=0 as float, _x=0 as float, _y=0 as float) as void
 	if (m.active = false) return
-	m.AnimationUpdate(_deltatime)
+
 	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + _x
 	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY + _y
+	currentSpriteOffsetX = _deltatime * m.scrollSpeedX
+	currentSpriteOffsetY = _deltatime * m.scrollSpeedY
+	currentSpriteOffsetX -= Int(currentSpriteOffsetX / m.spriteWidth) * m.spriteWidth
+	currentSpriteOffsetY -= Int(currentSpriteOffsetY / m.spriteHeight) * m.spriteHeight
+	m.currentRegion.Offset(currentSpriteOffsetX, currentSpriteOffsetY, 0, 0)
 end function
 
 function CreateVisObj(_name as String, _screen as object, _x as float, _y as float, _animsData as object, _currentAnimationName="idle" as String, _Update=SimpleVisObjUpdate as object) as object
@@ -1939,4 +1963,32 @@ function SpeedIconObjUpdate(_deltatime as float, _hero as object) as void
 	for each spriteObjName in m.spriteObjArray
 		m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
 	end for
+end function
+
+function menuCursorObjInit(_globalVars as object) as void
+	m.globalVars = _globalVars
+	m.JUMP_TIME = m.globalVars.PI
+	m.jumpTimer = m.JUMP_TIME
+	m.JumpSpeedX = 5
+	m.offsetAmplitudeX = 40
+	m.offsetSpeedX = 0.4
+	m.offsetSpeedY = 0.25
+	m.lastMenuState = m.globalVars.menuState
+end function
+
+function menuCursorObjUpdate(_deltatime as float) as void
+	if (m.active = false) return
+	m.AnimationUpdate(_deltatime)
+	
+	if (m.lastMenuState <> m.globalVars.menuState)
+		m.jumpTimer = Abs(m.jumpTimer - m.JUMP_TIME / 2) + m.JUMP_TIME / 2 
+		m.lastMenuState = m.globalVars.menuState
+	end if
+	m.jumpTimer -= _deltatime * m.JumpSpeedX
+	if (m.jumpTimer < 0 ) m.jumpTimer += m.JUMP_TIME
+	offsetX = -Abs(Sin(m.jumpTimer)) * m.offsetAmplitudeX 
+	m.y += (m.globalVars.GAME_STATE_MENU_Y[m.globalVars.menuState] - m.y) * m.offsetSpeedY 
+	m.x += (m.globalVars.GAME_STATE_MENU_X[m.globalVars.menuState] - m.x) * m.offsetSpeedX
+	m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + offsetX
+	m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY
 end function
