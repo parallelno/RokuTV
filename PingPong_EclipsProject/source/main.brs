@@ -28,6 +28,27 @@ function Main() as void
     screen.SetAlphaEnable(true)
     codes = bslUniversalControlEventCodes()
 
+	audioPlayer = CreateObject("roAudioPlayer")
+    audioPlayer.SetMessagePort(port)
+    song = CreateObject("roAssociativeArray")
+    song.url = "http://www.theflute.co.uk/media/BachCPE_SonataAmin_1.wma"
+    audioplayer.addcontent(song)
+    audioplayer.setloop(true)
+    'audioPlayer.play()
+    
+    Sound_MainMenu_Intro = CreateObject("roAudioResource", "pkg:/sounds/main_menu_intro.wav")
+    Sound_GameOver = CreateObject("roAudioResource", "pkg:/sounds/game_over.wav")
+    Sound_goal = CreateObject("roAudioResource", "pkg:/sounds/goal.wav")
+    Sound_gun_shoot = CreateObject("roAudioResource", "pkg:/sounds/gun_shoot.wav")
+    Sound_hit = CreateObject("roAudioResource", "pkg:/sounds/hit.wav")
+    Sound_magnet = CreateObject("roAudioResource", "pkg:/sounds/magnet.wav")
+    Sound_score = CreateObject("roAudioResource", "pkg:/sounds/score.wav")
+    Sound_slow = CreateObject("roAudioResource", "pkg:/sounds/slow.wav")
+    Sound_speed = CreateObject("roAudioResource", "pkg:/sounds/speed.wav")
+    Sound_wide = CreateObject("roAudioResource", "pkg:/sounds/wide.wav")
+    Sound_win = CreateObject("roAudioResource", "pkg:/sounds/win.wav")
+
+
 	GAME_VARS = {
 ' --------- GLOBAL VARS ---------------------------------------------------------------------------------
 		STABLE_FPS		: 1.0 / 30.0 	'stable 30 fps
@@ -279,6 +300,7 @@ function Main() as void
 	clock.Mark()
 
 MENU_LOOP:
+	Sound_MainMenu_Intro.Trigger(50)
     while true
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
@@ -560,6 +582,7 @@ ROCKET_CHOSEN:
     end while
     
 GAME_GOAL_LOOP:
+	Sound_Win.Trigger(50)
 	gameOverLoopTime = 0.0
 	textGoalObj.currentTime = 0.0
 	textGoalObj.time = 0.5
@@ -608,6 +631,7 @@ GAME_GOAL_LOOP:
 	end while
 
 GAME_OVER_LOOP:
+	Sound_GameOver.Trigger(50)
 	gameOverLoopTime = 0.0
 	textGameOverObj.currentTime = 0.0
 	textGameOverObj.time = 1
