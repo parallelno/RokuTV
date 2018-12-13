@@ -27,16 +27,15 @@ function Main() as void
     screen.SetMessagePort(port)
     screen.SetAlphaEnable(true)
     codes = bslUniversalControlEventCodes()
-
-	audioPlayer = CreateObject("roAudioPlayer")
+    
+    audioPlayer = CreateObject("roAudioPlayer")
     audioPlayer.SetMessagePort(port)
     song = CreateObject("roAssociativeArray")
-    song.url = "http://www.theflute.co.uk/media/BachCPE_SonataAmin_1.wma
-    'song.url = "pkg:/sounds/level_ambient.wma"
+    song.url = "pkg:/sounds/level01.mp3"
     audioplayer.addcontent(song)
     audioplayer.setloop(true)
     audioPlayer.play()
-    
+
 	GAME_VARS = {
 ' --------- GLOBAL VARS ---------------------------------------------------------------------------------
 		STABLE_FPS		: 1.0 / 30.0 	'stable 30 fps
@@ -105,12 +104,12 @@ function Main() as void
 		scoreRegSection.write("BestScore", GAME_VARS.bestScore.ToStr())
 		scoreRegSection.Flush()
 	end if
-
+	
 ' --------- SOUNDS ---------------------------------------------------------------------------------
-	GAME_VARS.Sound_MainMenu_Intro = CreateObject("roAudioResource", "pkg:/sounds/main_menu_intro.wav")
-	GAME_VARS.Sound_GameOver = CreateObject("roAudioResource", "pkg:/sounds/game_over.wav")
-   	GAME_VARS.Sound_goal = CreateObject("roAudioResource", "pkg:/sounds/goal.wav")
-   	GAME_VARS.Sound_gun_shoot = CreateObject("roAudioResource", "pkg:/sounds/gun_shoot.wav")
+    GAME_VARS.Sound_MainMenu_Intro = CreateObject("roAudioResource", "pkg:/sounds/main_menu_intro.wav")
+    GAME_VARS.Sound_GameOver = CreateObject("roAudioResource", "pkg:/sounds/game_over.wav")
+    GAME_VARS.Sound_goal = CreateObject("roAudioResource", "pkg:/sounds/goal.wav")
+    GAME_VARS.Sound_gun_shoot = CreateObject("roAudioResource", "pkg:/sounds/gun_shoot.wav")
     GAME_VARS.Sound_hit = CreateObject("roAudioResource", "pkg:/sounds/hit.wav")
     GAME_VARS.Sound_magnet = CreateObject("roAudioResource", "pkg:/sounds/magnet.wav")
     GAME_VARS.Sound_score = CreateObject("roAudioResource", "pkg:/sounds/score.wav")
@@ -120,7 +119,7 @@ function Main() as void
     GAME_VARS.Sound_win = CreateObject("roAudioResource", "pkg:/sounds/win.wav")
     GAME_VARS.Sound_shorten = CreateObject("roAudioResource", "pkg:/sounds/shorten.wav")
     GAME_VARS.Sound_levelup = CreateObject("roAudioResource", "pkg:/sounds/levelup.wav")
-    'GAME_VARS.Sound_new_round = CreateObject("roAudioResource", "pkg:/sounds/new_round.wav")
+    GAME_VARS.Sound_new_round = CreateObject("roAudioResource", "pkg:/sounds/new_round.wav")
 
 	
 	mainMenuBack1Region = mainMenuBackAnimDataSet.regions.main_menu_back1
@@ -305,7 +304,7 @@ function Main() as void
 	clock.Mark()
 
 MENU_LOOP:
-	GAME_VARS.Sound_MainMenu_Intro.Trigger(50)
+    GAME_VARS.Sound_MainMenu_Intro.Trigger(50)
     while true
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
@@ -355,7 +354,7 @@ MENU_LOOP:
     end while
 
 GAME_INTRO_LOOP:
-	'GAME_VARS.Sound_new_round.Trigger(50)
+    GAME_VARS.Sound_new_round.Trigger(30)
 	loopTime = 0.0
 	textRoundObj.Reset()
 	heroObj1.Reset(GAME_VARS.HERO_SPEED)
@@ -473,10 +472,10 @@ GAME_LOOP:
 				for each rocketLauncher in heroObj1.rocketLaunchers
 					if (rocketLauncher.state = rocketLauncher.STATE_GAME)
 						rocket = GetDeadRocket(rockets, GAME_VARS)
-						if (rocket <> invalid) 
+						if (rocket <> invalid)
 							rocket.Spawn(rocketLauncher, rocket.OWNER_HERO1)
-							GAME_VARS.Sound_gun_shoot.Trigger(50)
 							rocketLauncher.state = rocketLauncher.STATE_DEATH
+							GAME_VARS.Sound_gun_shoot.Trigger(50)
 							Goto ROCKET_CHOSEN
 						end if
 					end if
@@ -561,22 +560,22 @@ ROCKET_CHOSEN:
 				heroObj2.speedIconObj.Draw()
                 screen.SwapBuffers()
 				
-				if (heroObj1.lifeCount < 0) Goto GAME_OVER_LOOP
-				if (heroObj2.lifeCount < 0) Goto GAME_WIN_LOOP
+				if (heroObj1.lifeCount <= 0) Goto GAME_OVER_LOOP
+				if (heroObj2.lifeCount <= 0) Goto GAME_WIN_LOOP
 				
 				isAllBallsMissed = isAllBallsDead(balls)
 				
 				if (isAllBallsMissed = true)
 					if (GAME_VARS.isLastMissedBallHeroes  = true) 
 						heroObj1.lifeCount -= 1
-						if (heroObj1.lifeCount <= 0) 
+						if (heroObj1.lifeCount < 0) 
 							Goto GAME_OVER_LOOP
 						else
 							Goto NEW_LIFE_LOOP
 						endif
 					else
 						heroObj2.lifeCount -= 1
-						if (heroObj2.lifeCount <= 0) 
+						if (heroObj2.lifeCount < 0) 
 							Goto GAME_WIN_LOOP
 						else
 							Goto GAME_GOAL_LOOP
@@ -589,7 +588,7 @@ ROCKET_CHOSEN:
     end while
     
 GAME_GOAL_LOOP:
-	GAME_VARS.Sound_goal.Trigger(50)
+    GAME_VARS.Sound_goal.Trigger(50)
 	gameOverLoopTime = 0.0
 	textGoalObj.currentTime = 0.0
 	textGoalObj.time = 0.5
@@ -638,7 +637,7 @@ GAME_GOAL_LOOP:
 	end while
 
 GAME_OVER_LOOP:
-	GAME_VARS.Sound_GameOver.Trigger(50)
+    GAME_VARS.Sound_GameOver.Trigger(50)
 	gameOverLoopTime = 0.0
 	textGameOverObj.currentTime = 0.0
 	textGameOverObj.time = 1
@@ -687,7 +686,7 @@ GAME_OVER_LOOP:
 	end while
 
 GAME_WIN_LOOP:
-	GAME_VARS.Sound_win.Trigger(50)
+    GAME_VARS.Sound_win.Trigger(50)
 	gameOverLoopTime = 0.0
 	textWinObj.currentTime = 0.0
 	textWinObj.time = 1
@@ -1661,6 +1660,7 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 			m.Hero1Miss = true
 			m.state = m.STATE_DEATH
 			m.globalVars.isLastMissedBallHeroes = true
+			m.globalVars.Sound_slow.Trigger(50)
 			return
 		else if (m.x > m.maxX) 
 			m.Hero2Miss = true
