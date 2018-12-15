@@ -51,6 +51,7 @@ function Main() as void
 	
 		bestScore		: 0
 		numScoreObj		: invalid
+		MAX_SCORE       : 99999
 		
 ' --------- GAME VARS ---------------------------------------------------------------------------------
 		NEW_LIFE_LOOP_DELAY	: 1
@@ -304,7 +305,7 @@ function Main() as void
 	clock.Mark()
 
 MENU_LOOP:
-    GAME_VARS.Sound_MainMenu_Intro.Trigger(50)
+    GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
     while true
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
@@ -354,7 +355,7 @@ MENU_LOOP:
     end while
 
 GAME_INTRO_LOOP:
-    GAME_VARS.Sound_new_round.Trigger(30)
+    GAME_VARS.Sound_new_round.Trigger(60)
 	loopTime = 0.0
 	textRoundObj.Reset()
 	heroObj1.Reset(GAME_VARS.HERO_SPEED)
@@ -475,7 +476,7 @@ GAME_LOOP:
 						if (rocket <> invalid)
 							rocket.Spawn(rocketLauncher, rocket.OWNER_HERO1)
 							rocketLauncher.state = rocketLauncher.STATE_DEATH
-							GAME_VARS.Sound_gun_shoot.Trigger(50)
+							GAME_VARS.Sound_gun_shoot.Trigger(65)
 							Goto ROCKET_CHOSEN
 						end if
 					end if
@@ -559,29 +560,25 @@ ROCKET_CHOSEN:
 				heroObj1.speedIconObj.Draw()
 				heroObj2.speedIconObj.Draw()
                 screen.SwapBuffers()
-				
-				if (heroObj1.lifeCount <= 0) Goto GAME_OVER_LOOP
-				if (heroObj2.lifeCount <= 0) Goto GAME_WIN_LOOP
-				
+								
 				isAllBallsMissed = isAllBallsDead(balls)
 				
 				if (isAllBallsMissed = true)
 					if (GAME_VARS.isLastMissedBallHeroes  = true) 
 						heroObj1.lifeCount -= 1
-						if (heroObj1.lifeCount < 0) 
-							Goto GAME_OVER_LOOP
-						else
+						if (heroObj1.lifeCount > 0) 
 							Goto NEW_LIFE_LOOP
 						endif
 					else
 						heroObj2.lifeCount -= 1
-						if (heroObj2.lifeCount < 0) 
-							Goto GAME_WIN_LOOP
-						else
+						if (heroObj2.lifeCount > 0) 
 							Goto GAME_GOAL_LOOP
 						endif
 					endif
 				end if
+                if (heroObj1.lifeCount <= 0) Goto GAME_OVER_LOOP
+                if (heroObj2.lifeCount <= 0) Goto GAME_WIN_LOOP
+
 				clock.Mark()
             endif        
         endif
@@ -615,7 +612,14 @@ GAME_GOAL_LOOP:
 				textGoalObj.Update(deltaTime)
 				numBestScoreObj.Update(deltaTime)
 				textBestScoreObj.Update(deltaTime)
-			
+                for i=0 to heroObj1.lifeCount-1
+                    hero1LivesObj[i].Update(deltaTime)
+                end for
+                for i=0 to heroObj2.lifeCount-1
+                    hero2LivesObj[i].Update(deltaTime)
+                end for
+
+
 				backObj.Draw()
 				textBestScoreObj.Draw()
 				numBestScoreObj.Draw()
@@ -623,6 +627,12 @@ GAME_GOAL_LOOP:
 				numScoreObj.Draw()
 				heroObj1.Draw()
 				heroObj2.Draw()
+                for i=0 to heroObj1.lifeCount-1
+                    hero1LivesObj[i].Draw()
+                end for
+                for i=0 to heroObj2.lifeCount-1
+                    hero2LivesObj[i].Draw()
+                end for
 			
 				textGoalObj.Draw()
 			
@@ -664,7 +674,13 @@ GAME_OVER_LOOP:
 				textGameOverObj.Update(deltaTime)
 				numBestScoreObj.Update(deltaTime)
 				textBestScoreObj.Update(deltaTime)
-			
+                for i=0 to heroObj1.lifeCount-1
+                    hero1LivesObj[i].Update(deltaTime)
+                end for
+                for i=0 to heroObj2.lifeCount-1
+                    hero2LivesObj[i].Update(deltaTime)
+                end for
+
 				backObj.Draw()
 				textBestScoreObj.Draw()
 				numBestScoreObj.Draw()
@@ -672,7 +688,13 @@ GAME_OVER_LOOP:
 				numScoreObj.Draw()
 				heroObj1.Draw()
 				heroObj2.Draw()
-			
+
+                for i=0 to heroObj1.lifeCount-1
+                    hero1LivesObj[i].Draw()
+                end for
+                for i=0 to heroObj2.lifeCount-1
+                    hero2LivesObj[i].Draw()
+                end for			
 				textGameOverObj.Draw()
 			
 				screen.SwapBuffers()
@@ -686,7 +708,7 @@ GAME_OVER_LOOP:
 	end while
 
 GAME_WIN_LOOP:
-    GAME_VARS.Sound_win.Trigger(50)
+    GAME_VARS.Sound_win.Trigger(65)
 	gameOverLoopTime = 0.0
 	textWinObj.currentTime = 0.0
 	textWinObj.time = 1
@@ -713,7 +735,13 @@ GAME_WIN_LOOP:
 				textWinObj.Update(deltaTime)
 				numBestScoreObj.Update(deltaTime)
 				textBestScoreObj.Update(deltaTime)
-			
+                for i=0 to heroObj1.lifeCount-1
+                    hero1LivesObj[i].Update(deltaTime)
+                end for
+                for i=0 to heroObj2.lifeCount-1
+                    hero2LivesObj[i].Update(deltaTime)
+                end for
+                
 				backObj.Draw()
 				textBestScoreObj.Draw()
 				numBestScoreObj.Draw()
@@ -721,6 +749,12 @@ GAME_WIN_LOOP:
 				numScoreObj.Draw()
 				heroObj1.Draw()
 				heroObj2.Draw()
+                for i=0 to heroObj1.lifeCount-1
+                    hero1LivesObj[i].Draw()
+                end for
+                for i=0 to heroObj2.lifeCount-1
+                    hero2LivesObj[i].Draw()
+                end for         
 			
 				textWinObj.Draw()
 			
@@ -1331,12 +1365,12 @@ end function
 
 function CoinYellowCollidedUpdate(hero as object, _globalVars as object) as void
 	hero.lifeCount = ClampF(hero.lifeCount + 1, 0, _globalVars.MAX_LIFE_COUNT)
-	_globalVars.Sound_levelup.Trigger(50)
+	_globalVars.Sound_levelup.Trigger(65)
 end function
 
 function CoinGreenCollidedUpdate(hero as object, _globalVars as object) as void
 	HeroChangeSize(hero, _globalVars, 1)
-	_globalVars.Sound_wide.Trigger(50)
+	_globalVars.Sound_wide.Trigger(65)
 end function
 
 function CoinRedCollidedUpdate(hero as object, _globalVars as object) as void
@@ -1350,22 +1384,23 @@ end function
 function CoinBlackCollidedUpdate(hero as object, _globalVars as object) as void
 	hero.lifeCount = ClampF(hero.lifeCount - 1, 0, _globalVars.MAX_LIFE_COUNT)
 	hero.isLifeLost = true
-	_globalVars.Sound_slow.Trigger(50)
+	_globalVars.Sound_slow.Trigger(65)
 end function
 
 function CoinWhiteCollidedUpdate(hero as object, _globalVars as object) as void
 	_globalVars.numScoreObj.value += _globalVars.numScoreObj.COIN_WHITE_SCORE
-	_globalVars.Sound_score.Trigger(50)
+	_globalVars.numScoreObj.value = ClampI(_globalVars.numScoreObj.value, 0, _globalVars.MAX_SCORE)
+	_globalVars.Sound_score.Trigger(65)
 end function
 
 function CoinPinkCollidedUpdate(hero as object, _globalVars as object) as void
 	hero.isFaster = true
-	_globalVars.Sound_speed.Trigger(50)
+	_globalVars.Sound_speed.Trigger(65)
 end function
 
 function CoinBlueCollidedUpdate(hero as object, _globalVars as object) as void
 	hero.hasMagnet = true
-	_globalVars.Sound_magnet.Trigger(50)
+	_globalVars.Sound_magnet.Trigger(65)
 end function
 
 function RocketLauncherVisObjInit(_globalVars as object, _slotID as integer) as void
@@ -1485,7 +1520,7 @@ function RocketVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as obj
 			m.state = m.STATE_DEATH
 			m.visible = false
 			HeroChangeSize(targetHero, m.globalVars, -1)
-			m.globalVars.Sound_shorten.Trigger(50)
+			m.globalVars.Sound_shorten.Trigger(65)
 		end if
 		for each ball in _balls
 			if ((ball.state = ball.STATE_GAME) AND (ball.isBallSmall = false))
@@ -1660,11 +1695,12 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 			m.Hero1Miss = true
 			m.state = m.STATE_DEATH
 			m.globalVars.isLastMissedBallHeroes = true
-			m.globalVars.Sound_slow.Trigger(50)
+			m.globalVars.Sound_slow.Trigger(65)
 			return
 		else if (m.x > m.maxX) 
 			m.Hero2Miss = true
 			_numScoreObj.value += _numScoreObj.AI_FAIL_SCORE
+			_numScoreObj.value = ClampI(_numScoreObj.value, 0, m.globalVars.MAX_SCORE)
 			m.state = m.STATE_DEATH
 			m.globalVars.isLastMissedBallHeroes = false
 			return
@@ -1689,6 +1725,7 @@ function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as objec
 		endif
 	
 		if (isHero1HitBall = true) _numScoreObj.value += _numScoreObj.HIT_BALL_SCORE
+		_numScoreObj.value = ClampI(_numScoreObj.value, 0, m.globalVars.MAX_SCORE)
 
 		isHero2HitBall = false
 		toHero2distanceX = Abs(_hero2.x - m.x)
