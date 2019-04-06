@@ -1,0 +1,35 @@
+<BitmapSet>
+	<ExtraInfo idle_speed = "1" idle2_speed = "2" />
+	<Bitmap name="ball_anim" filespec="pkg:/assets/3ballset.png">
+		<Region name="r1" x="0" y="0" w="128" h="128" />
+		<Region name="r2" x="128" y="0" w="128" h="128" />
+		<Region name="r3" x="256" y="0" w="128" h="128" />
+		<Region name="r4" x="384" y="0" w="128" h="128" />
+	</Bitmap>	
+	<Bitmap name="small_ball_anim" filespec="pkg:/assets/small_ballset.png">
+		<Region name="r1" x="0" y="0" w="64" h="64" />
+		<Region name="r2" x="64" y="0" w="64" h="64" />
+		<Region name="r3" x="128" y="0" w="64" h="64" />
+		<Region name="r4" x="192" y="0" w="64" h="64" />
+	</Bitmap>	
+	<Bitmap name="background" filespec="pkg:/assets/desert_BG.png" />
+	<Bitmap name="menu_cursor" filespec="pkg:/assets/coin_gold.png" />
+	<Animation name="idle2">
+		<frame use="ball_anim.r1" />
+		<frame use="ball_anim.r2" />
+		<frame use="ball_anim.r3" />
+		<frame use="ball_anim.r4" />		
+	</Animation>
+	<Animation name="idle3">
+		<frame use="ball_anim.r1" />
+	</Animation>
+	<Animation name="idle">
+		<frame use="ball_anim.r1" />
+	</Animation>
+	<Animation name="idle4">
+		<frame use="small_ball_anim.r1" />
+		<frame use="small_ball_anim.r2" />
+		<frame use="small_ball_anim.r3" />
+		<frame use="small_ball_anim.r4" />		
+	</Animation>
+</BitmapSet>

@@ -1,0 +1,9 @@
+<BitmapSet>
+	<ExtraInfo idle_speed = "2" />
+	<Bitmap name="speed_icon_anim" filespec="pkg:/assets/speed_icon_anim.png">
+		<Region name="r1" x="0" y="0" w="48" h="91" />
+	</Bitmap>
+	<Animation name="idle">
+		<frame use="speed_icon_anim.r1" />
+	</Animation>
+</BitmapSet>

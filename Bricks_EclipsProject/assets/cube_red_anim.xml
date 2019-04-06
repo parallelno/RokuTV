@@ -1,0 +1,19 @@
+<BitmapSet>
+	<ExtraInfo idle_speed = "2" />
+	<Bitmap name="cube_red_anim" filespec="pkg:/assets/cube_red_anim.png">
+		<Region name="r1" x="0" y="0" w="64" h="64" />
+		<Region name="r2" x="64" y="0" w="64" h="64" />
+		<Region name="r3" x="128" y="0" w="64" h="64" />
+		<Region name="r4" x="192" y="0" w="64" h="64" />
+		<Region name="r5" x="256" y="0" w="64" h="64" />
+		<Region name="r6" x="320" y="0" w="64" h="64" />
+	</Bitmap>
+	<Animation name="idle">
+		<frame use="cube_red_anim.r1" />
+		<frame use="cube_red_anim.r2" />
+		<frame use="cube_red_anim.r3" />
+		<frame use="cube_red_anim.r4" />
+		<frame use="cube_red_anim.r5" />
+		<frame use="cube_red_anim.r6" />
+	</Animation>
+</BitmapSet>
