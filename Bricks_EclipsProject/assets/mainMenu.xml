@@ -1,0 +1,5 @@
+<BitmapSet>
+	<Bitmap name="mainMenu_Back" filespec="pkg:/assets/mainMenu_Back.png" />
+	<Bitmap name="mainMenu_GameTitle" filespec="pkg:/assets/mainMenu_GameTitle.png" />
+	<Bitmap name="mainMenu_Options" filespec="pkg:/assets/mainMenu_Options.png" />
+</BitmapSet>
