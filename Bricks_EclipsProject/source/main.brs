@@ -2,6 +2,10 @@
 
 function Main() as void
     mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
+    gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
+    gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
+    gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
+    
     
     scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
@@ -32,10 +36,10 @@ function Main() as void
         
 ' --------- GAME VARS ---------------------------------------------------------------------------------
         NEW_LIFE_LOOP_DELAY : 1
-        GAME_FIELD_MAX_X    : screenWidth
-        GAME_FIELD_MIN_X    : 0
+        GAME_FIELD_MAX_X    : 63+13*64-1
+        GAME_FIELD_MIN_X    : 63
         GAME_FIELD_MAX_Y    : screenHeight
-        GAME_FIELD_MIN_Y    : 80
+        GAME_FIELD_MIN_Y    : 37
 
         MAX_LIFE_COUNT      : 6
         START_LIFE_COUNT    : 4
@@ -113,10 +117,81 @@ function Main() as void
     mainMenuBackObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
     mainMenu_GameTitleObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_GameTitle, screen, screenWidth/2, screenHeight * 0.4, 0, 0, 1.0, 1.0)
 	mainMenu_OptionsObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Options, screen, screenWidth/2, screenHeight * 0.75, 0, 0, 1.0, 1.0)
+	
+' ------------------------------------------------------------------------------------------	
+	gameLevel_BackObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
+	gameLevel_BackObj.Update = ScrolledSpriteUpdate
+	gameLevel_BackObj.Init = ScrolledSpriteInit
+	gameLevel_BackObj.Init(0,-80)
+	
+	gameLevel_BorderCLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCL, screen, 9, 31, -0.5, 0, 1.0, 1.0)
+	gameLevel_BorderCLObj.Update()
+	gameLevel_BorderCRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCR, screen, 851, 31, -0.5, 0, 1.0, 1.0)
+	gameLevel_BorderCRObj.Update()
+	gameLevel_BorderHObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderH, screen, 0, 15, -0.5, 0, 1.0, 1.0)
+	gameLevel_BorderLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderL, screen, 7, 0, -0.5, -0.5, 1.0, 1.0)
+	gameLevel_BorderRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderR, screen, 881, 0, -0.5, -0.5, 1.0, 1.0)
 
+	gameUI_LogoObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_Logo, screen, 967, 14, -0.5, -0.5, 1.0, 1.0)
+	gameUI_LogoObj.Update()
+	gameUI_TextLevelObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextLevel, screen, 1045, 147, -0.5, -0.5, 1.0, 1.0)
+	gameUI_TextLevelObj.Update()
+	gameUI_PlatformObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_Platform, screen, 1023, 189, -0.5, -0.5, 1.0, 1.0)
+	gameUI_PlatformObj.Update()
+	gameUI_TextHiscoreObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextHiscore, screen, 1041, 286, -0.5, -0.5, 1.0, 1.0)
+	gameUI_TextHiscoreObj.Update()
+	gameUI_TextScoreObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextScore, screen, 1059, 386, -0.5, -0.5, 1.0, 1.0)
+	gameUI_TextScoreObj.Update()
+	gameUI_TextEnergyObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextEnergy, screen, 1054, 487, -0.5, -0.5, 1.0, 1.0)
+	gameUI_TextEnergyObj.Update()
+	gameUI_EnergyBorderObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_EnergyBorder, screen, 970, 520, -0.5, -0.5, 1.0, 1.0)
+	gameUI_EnergyBorderObj.Update()
+	gameUI_EnergyBarObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_EnergyBar, screen, 974, 518, -0.5, -0.5, 1.0, 1.0)
+	gameUI_EnergyBarObj.Update()
+	gameUI_TextBoosterObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBooster, screen, 1020, 573, -0.5, -0.5, 1.0, 1.0)
+	gameUI_TextBoosterObj.Update()
+	gameUI_TextBoosterXObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBoosterX, screen, 1072, 632, -0.5, -0.5, 1.0, 1.0)
+	gameUI_TextBoosterXObj.Update()
+	
+	brickObj = CreateSpriteObj(gameObjectsDataSet.animations.blue[0], screen, 200, 200, -0.5, -0.5, 1.0, 1.0)
+' ------------------------------------------------------------------------------------------	
     clock.Mark()
 
 MENU_LOOP:
+    GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
+    while true
+        event = port.GetMessage()
+        if (type(event) = "roUniversalControlEvent")
+            id = event.GetInt()
+            if (id = codes.BUTTON_UP_PRESSED)
+                GAME_VARS.menuState -= 1
+                if (GAME_VARS.menuState < 0 ) GAME_VARS.menuState = 0
+            endif
+            if (id = codes.BUTTON_DOWN_PRESSED)
+                GAME_VARS.menuState += 1
+                if (GAME_VARS.menuState > 2 ) GAME_VARS.menuState = 2
+            endif
+            if (id = 6)             
+                Goto GAME_TEST_LOOP
+            endif
+            if (id = 0) Goto EXIT_GAME
+        else if (event = invalid)
+                deltaTime = clock.TotalMilliseconds() / 1000.0
+            if (deltaTime > GAME_VARS.STABLE_FPS) 
+                mainMenuBackObj.Update()
+				mainMenu_GameTitleObj.Update()
+				mainMenu_OptionsObj.Update()
+
+                mainMenuBackObj.Draw()
+				mainMenu_GameTitleObj.Draw()
+				mainMenu_OptionsObj.Draw()
+                screen.SwapBuffers()
+                clock.Mark()
+            endif        
+        endif
+    end while
+
+GAME_TEST_LOOP:
     GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
     while true
         event = port.GetMessage()
@@ -137,13 +212,43 @@ MENU_LOOP:
         else if (event = invalid)
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS) 
-                mainMenuBackObj.Update()
-				mainMenu_GameTitleObj.Update()
-				mainMenu_OptionsObj.Update()
-
-                mainMenuBackObj.Draw()
-				mainMenu_GameTitleObj.Draw()
-				mainMenu_OptionsObj.Draw()
+                gameLevel_BackObj.Update(deltaTime)
+                gameLevel_BackObj.Draw()
+				for i=0 to 4
+					gameLevel_BorderLObj.y = i * gameLevel_BorderLObj.currentRegion.GetHeight() + 81 
+					gameLevel_BorderLObj.Update()
+					gameLevel_BorderLObj.Draw()
+					gameLevel_BorderRObj.y = i * gameLevel_BorderRObj.currentRegion.GetHeight() + 81 
+					gameLevel_BorderRObj.Update()
+					gameLevel_BorderRObj.Draw()
+				end for
+				for i=0 to 5
+					gameLevel_BorderHObj.x = i * gameLevel_BorderHObj.currentRegion.GetWidth() + 107 
+					gameLevel_BorderHObj.Update()
+					gameLevel_BorderHObj.Draw()
+				end for
+				gameLevel_BorderCLObj.Draw()
+				gameLevel_BorderCRObj.Draw()
+				
+				for i=0 to 12
+					for j=0 to 11
+						brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + i*64
+						brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + j*25
+						brickObj.Update()
+						brickObj.Draw()
+					end for         
+				end for
+				gameUI_LogoObj.Draw()
+				gameUI_EnergyBorderObj.Draw()
+				gameUI_EnergyBarObj.Draw()
+				gameUI_PlatformObj.Draw()
+				gameUI_TextBoosterObj.Draw()
+				gameUI_TextBoosterXObj.Draw()
+				gameUI_TextEnergyObj.Draw()
+				gameUI_TextHiscoreObj.Draw()
+				gameUI_TextLevelObj.Draw()
+				gameUI_TextScoreObj.Draw()
+				
                 screen.SwapBuffers()
                 clock.Mark()
             endif        

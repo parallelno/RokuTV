@@ -1,0 +1,12 @@
+<BitmapSet>
+	<Bitmap name="gameUI_EnergyBar" filespec="pkg:/assets/gameUI_EnergyBar.png" />
+	<Bitmap name="gameUI_EnergyBorder" filespec="pkg:/assets/gameUI_EnergyBorder.png" />
+	<Bitmap name="gameUI_Platform" filespec="pkg:/assets/gameUI_Platform.png" />
+	<Bitmap name="gameUI_TextBooster" filespec="pkg:/assets/gameUI_TextBooster.png" />
+	<Bitmap name="gameUI_TextBoosterX" filespec="pkg:/assets/gameUI_TextBoosterX.png" />
+	<Bitmap name="gameUI_TextEnergy" filespec="pkg:/assets/gameUI_TextEnergy.png" />
+	<Bitmap name="gameUI_TextHiscore" filespec="pkg:/assets/gameUI_TextHiscore.png" />
+	<Bitmap name="gameUI_TextLevel" filespec="pkg:/assets/gameUI_TextLevel.png" />
+	<Bitmap name="gameUI_TextScore" filespec="pkg:/assets/gameUI_TextScore.png" />
+	<Bitmap name="gameUI_Logo" filespec="pkg:/assets/gameUI_Logo.png" />
+</BitmapSet>

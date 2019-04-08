@@ -1,0 +1,17 @@
+<BitmapSet>
+	<ExtraInfo idleSpeed = "1" />
+	<Bitmap name="bricks" filespec="pkg:/assets/bricks.png">
+		<Region name="r1" x="0" y="0" w="64" h="25" />
+		<Region name="r2" x="64" y="0" w="64" h="25" />
+		<Region name="r3" x="128" y="0" w="64" h="25" />
+		<Region name="r4" x="0" y="25" w="64" h="25" />
+		<Region name="r5" x="64" y="25" w="64" h="25" />
+		<Region name="r6" x="128" y="25" w="64" h="25" />
+		<Region name="r7" x="0" y="50" w="64" h="25" />
+		<Region name="r8" x="64" y="50" w="64" h="25" />
+		<Region name="r9" x="128" y="50" w="64" h="25" />
+	</Bitmap>
+	<Animation name="blue">
+		<frame use="bricks.r1" />
+	</Animation>
+</BitmapSet>
