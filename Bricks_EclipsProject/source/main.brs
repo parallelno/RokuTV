@@ -20,7 +20,7 @@ function Main() as void
     GAME_VARS = {
 ' --------- GLOBAL VARS ---------------------------------------------------------------------------------
         STABLE_FPS      : 1.0 / 30.0    'stable 30 fps
-        PI              : 3.14159
+        PI              : 3.14159265359
     
         HIT_BALL_SCORE  : 50
         AI_FAIL_SCORE   : 100
@@ -152,12 +152,21 @@ function Main() as void
 	gameUI_TextBoosterObj.Update()
 	gameUI_TextBoosterXObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBoosterX, screen, 1072, 632, -0.5, -0.5, 1.0, 1.0)
 	gameUI_TextBoosterXObj.Update()
+	gameUI_BottomLineObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_BottomLine, screen, 41, 678, -0.5, 0, 875.0, 1.0)
+	gameUI_BottomLineObj.Update()
+' ------------------------------------------------------------------------------------------
+	platformSmall = CreateVisObj("platformSmall", screen, screenWidth/2, 670, gameObjectsDataSet, "platformSmall")
+		
+	testLevelASCII = ReadAsciiFile("pkg:/assets/testLevel.txt")
 	
-	brickObj = CreateSpriteObj(gameObjectsDataSet.animations.blue[0], screen, 200, 200, -0.5, -0.5, 1.0, 1.0)
+	brickObj = CreateVisObj("brick", screen, 0, 0, gameObjectsDataSet, "brickTest")
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
 
 MENU_LOOP:
+	
+	Goto GAME_TEST_LOOP  ''sssssssssssssssssssssssssss delete it is test
+	
     GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
     while true
         event = port.GetMessage()
@@ -212,8 +221,10 @@ GAME_TEST_LOOP:
         else if (event = invalid)
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS) 
+                ' uninteractive back and UI elements
                 gameLevel_BackObj.Update(deltaTime)
                 gameLevel_BackObj.Draw()
+                gameUI_BottomLineObj.Draw()
 				for i=0 to 4
 					gameLevel_BorderLObj.y = i * gameLevel_BorderLObj.currentRegion.GetHeight() + 81 
 					gameLevel_BorderLObj.Update()
@@ -230,14 +241,58 @@ GAME_TEST_LOOP:
 				gameLevel_BorderCLObj.Draw()
 				gameLevel_BorderCRObj.Draw()
 				
-				for i=0 to 12
-					for j=0 to 11
-						brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + i*64
-						brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + j*25
-						brickObj.Update()
-						brickObj.Draw()
-					end for         
-				end for
+'				brickObj.Update(deltaTime)
+'				for i=0 to 12
+'					brickAnimNumber = Mid(testLevelASCII, i+1, 1)
+'					if (Val(brickAnimNumber, 10) < 1 OR Val(brickAnimNumber, 10) > 9) 
+'						brickAnimNumber = "0"
+'					end if
+'					'print(brickAnimNumber)
+'					for j=0 to 11
+'						brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + i*64 + 32
+'						brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + j*25 + 10
+'						brickObj.currentAnimationName = "brick" + brickAnimNumber 
+'						brickObj.Update(0)
+'						brickObj.Draw()
+'					end for         
+'				end for
+				levelASCIILength = Len(testLevelASCII)
+				charPos = 1
+				brickLine = 0
+				brickColumn = 0
+				while charPos <= levelASCIILength
+					brickAnimChar = Mid(testLevelASCII, charPos, 1)
+					'print(brickAnimChar + " " + Asc(brickAnimChar).ToStr())			
+					if (brickAnimChar = Chr(13) )
+						brickColumn = 0
+						brickLine += 1
+						Goto LEVEL_PARSING_NEXT_CHAR
+					end if
+					if (brickAnimChar = Chr(10) ) 
+						Goto LEVEL_PARSING_NEXT_CHAR
+					end if
+					
+					if (Asc(brickAnimChar) < Asc("1") OR Asc(brickAnimChar) > Asc("9"))
+						brickColumn += 1
+						Goto LEVEL_PARSING_NEXT_CHAR
+					end if
+					if (brickColumn > 12)  
+						Goto LEVEL_PARSING_NEXT_CHAR
+					end if
+					if (brickLine > 11)  
+						Goto LEVEL_PARSING_NEXT_CHAR
+					end if
+					
+					brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + brickColumn * 64 + 32
+					brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + brickLine * 25 + 10
+					brickObj.currentAnimationName = "brick" + brickAnimChar 
+					brickObj.Update(0)
+					brickObj.Draw()
+					
+LEVEL_PARSING_NEXT_CHAR:
+					charPos += 1
+				end while
+				
 				gameUI_LogoObj.Draw()
 				gameUI_EnergyBorderObj.Draw()
 				gameUI_EnergyBarObj.Draw()
@@ -248,6 +303,9 @@ GAME_TEST_LOOP:
 				gameUI_TextHiscoreObj.Draw()
 				gameUI_TextLevelObj.Draw()
 				gameUI_TextScoreObj.Draw()
+				' end line for uninteractive back and UI elements
+				platformSmall.Update(deltaTime)
+				platformSmall.Draw()
 				
                 screen.SwapBuffers()
                 clock.Mark()

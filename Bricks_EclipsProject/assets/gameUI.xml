@@ -9,4 +9,5 @@
 	<Bitmap name="gameUI_TextLevel" filespec="pkg:/assets/gameUI_TextLevel.png" />
 	<Bitmap name="gameUI_TextScore" filespec="pkg:/assets/gameUI_TextScore.png" />
 	<Bitmap name="gameUI_Logo" filespec="pkg:/assets/gameUI_Logo.png" />
+	<Bitmap name="gameUI_BottomLine" filespec="pkg:/assets/gameUI_BottomLine.png" />
 </BitmapSet>

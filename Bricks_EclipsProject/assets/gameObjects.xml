@@ -1,17 +1,64 @@
 <BitmapSet>
-	<ExtraInfo idleSpeed = "1" />
+	<ExtraInfo bricks_speed = "1" brickTest_speed = "0.1"/>
 	<Bitmap name="bricks" filespec="pkg:/assets/bricks.png">
-		<Region name="r1" x="0" y="0" w="64" h="25" />
-		<Region name="r2" x="64" y="0" w="64" h="25" />
-		<Region name="r3" x="128" y="0" w="64" h="25" />
-		<Region name="r4" x="0" y="25" w="64" h="25" />
-		<Region name="r5" x="64" y="25" w="64" h="25" />
-		<Region name="r6" x="128" y="25" w="64" h="25" />
-		<Region name="r7" x="0" y="50" w="64" h="25" />
-		<Region name="r8" x="64" y="50" w="64" h="25" />
-		<Region name="r9" x="128" y="50" w="64" h="25" />
+		<Region name="r1" x="0" y="0" w="64" h="24" />
+		<Region name="r2" x="64" y="0" w="64" h="24" />
+		<Region name="r3" x="128" y="0" w="64" h="24" />
+		<Region name="r4" x="0" y="25" w="64" h="24" />
+		<Region name="r5" x="64" y="25" w="64" h="24" />
+		<Region name="r6" x="128" y="25" w="64" h="24" />
+		<Region name="r7" x="0" y="50" w="64" h="24" />
+		<Region name="r8" x="64" y="50" w="64" h="24" />
+		<Region name="r9" x="128" y="50" w="64" h="24" />
 	</Bitmap>
-	<Animation name="blue">
+	<Bitmap name="platformSmall" filespec="pkg:/assets/gameObjects_platformSmall.png">
+		<Region name="r1" x="0" y="0" w="144" h="57" />
+		<Region name="r2" x="0" y="57" w="144" h="57" />
+		<Region name="r3" x="0" y="114" w="144" h="57" />
+		<Region name="r4" x="0" y="171" w="144" h="57" />
+	</Bitmap>
+	<Animation name="brickTest">
 		<frame use="bricks.r1" />
+		<frame use="bricks.r2" />
+		<frame use="bricks.r3" />
+		<frame use="bricks.r4" />
+		<frame use="bricks.r5" />
+		<frame use="bricks.r6" />
+		<frame use="bricks.r7" />
+		<frame use="bricks.r8" />
+		<frame use="bricks.r9" />
+	</Animation>
+	<Animation name="brick1">
+		<frame use="bricks.r1" />
+	</Animation>
+	<Animation name="brick2">
+		<frame use="bricks.r2" />
+	</Animation>
+	<Animation name="brick3">
+		<frame use="bricks.r3" />
+	</Animation>
+	<Animation name="brick4">
+		<frame use="bricks.r4" />
+	</Animation>
+	<Animation name="brick5">
+		<frame use="bricks.r5" />
+	</Animation>
+	<Animation name="brick6">
+		<frame use="bricks.r6" />
+	</Animation>
+	<Animation name="brick7">
+		<frame use="bricks.r7" />
+	</Animation>
+	<Animation name="brick8">
+		<frame use="bricks.r8" />
+	</Animation>
+	<Animation name="brick9">
+		<frame use="bricks.r9" />
+	</Animation>
+	<Animation name="platformSmall">
+		<frame use="platformSmall.r1" />
+		<frame use="platformSmall.r2" />
+		<frame use="platformSmall.r3" />
+		<frame use="platformSmall.r4" />
 	</Animation>
 </BitmapSet>
