@@ -5,4 +5,5 @@
 	<Bitmap name="gameLevel_BorderH" filespec="pkg:/assets/gameLevel_BorderH.png" />
 	<Bitmap name="gameLevel_BorderL" filespec="pkg:/assets/gameLevel_BorderL.png" />
 	<Bitmap name="gameLevel_BorderR" filespec="pkg:/assets/gameLevel_BorderR.png" />
+	<Bitmap name="whitePixel" filespec="pkg:/assets/whitePixel.png" />
 </BitmapSet>

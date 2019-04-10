@@ -36,10 +36,9 @@ function Main() as void
         
 ' --------- GAME VARS ---------------------------------------------------------------------------------
         NEW_LIFE_LOOP_DELAY : 1
-        GAME_FIELD_MAX_X    : 63+13*64-1
-        GAME_FIELD_MIN_X    : 63
-        GAME_FIELD_MAX_Y    : screenHeight
-        GAME_FIELD_MIN_Y    : 37
+
+        MAX_LEVEL_COLUMNS	: 13
+        MAX_LEVEL_LINES		: 12
 
         MAX_LIFE_COUNT      : 6
         START_LIFE_COUNT    : 4
@@ -79,6 +78,18 @@ function Main() as void
         GOAL_DELAY          : 1.0
     }
     GAME_VARS.menuState = GAME_VARS.GAME_STATE_MENU_L1
+	
+	GAME_VARS.BRICK_WIDTH 		= 64
+    GAME_VARS.BRICK_HEIGHT 		= 25
+        
+	GAME_VARS.GAME_FIELD_WIDTH	= GAME_VARS.BRICK_WIDTH * GAME_VARS.MAX_LEVEL_COLUMNS
+	GAME_VARS.GAME_FIELD_HEIGHT	= GAME_VARS.BRICK_HEIGHT * GAME_VARS.MAX_LEVEL_LINES
+        
+	GAME_VARS.GAME_FIELD_MIN_X	= 63
+	GAME_VARS.GAME_FIELD_MAX_X	= GAME_VARS.GAME_FIELD_MIN_X + GAME_VARS.GAME_FIELD_WIDTH
+	GAME_VARS.GAME_FIELD_MIN_Y	= 34
+	GAME_VARS.GAME_FIELD_MAX_Y	= GAME_VARS.GAME_FIELD_MIN_Y + GAME_VARS.GAME_FIELD_HEIGHT
+    
 
     if ( scoreRegSection.Exists("BestScore")) 
         GAME_VARS.bestScore = scoreRegSection.Read("BestScore").ToInt()
@@ -154,12 +165,20 @@ function Main() as void
 	gameUI_TextBoosterXObj.Update()
 	gameUI_BottomLineObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_BottomLine, screen, 41, 678, -0.5, 0, 875.0, 1.0)
 	gameUI_BottomLineObj.Update()
+' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
+	
+	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, GAME_VARS.GAME_FIELD_HEIGHT)
+	gameLevel_DebugWhiteFieldObj.Update()
+	
+	
 ' ------------------------------------------------------------------------------------------
 	platformSmall = CreateVisObj("platformSmall", screen, screenWidth/2, 670, gameObjectsDataSet, "platformSmall")
 		
 	testLevelASCII = ReadAsciiFile("pkg:/assets/testLevel.txt")
+	levelData = parseTextLevel(testLevelASCII, GAME_VARS)
 	
 	brickObj = CreateVisObj("brick", screen, 0, 0, gameObjectsDataSet, "brickTest")
+	
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
 
@@ -202,6 +221,7 @@ MENU_LOOP:
 
 GAME_TEST_LOOP:
     GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
+	lastID = 0
     while true
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
@@ -218,6 +238,7 @@ GAME_TEST_LOOP:
                 Goto GAME_INTRO_LOOP
             endif
             if (id = 0) Goto EXIT_GAME
+            lastID = id
         else if (event = invalid)
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS) 
@@ -241,58 +262,6 @@ GAME_TEST_LOOP:
 				gameLevel_BorderCLObj.Draw()
 				gameLevel_BorderCRObj.Draw()
 				
-'				brickObj.Update(deltaTime)
-'				for i=0 to 12
-'					brickAnimNumber = Mid(testLevelASCII, i+1, 1)
-'					if (Val(brickAnimNumber, 10) < 1 OR Val(brickAnimNumber, 10) > 9) 
-'						brickAnimNumber = "0"
-'					end if
-'					'print(brickAnimNumber)
-'					for j=0 to 11
-'						brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + i*64 + 32
-'						brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + j*25 + 10
-'						brickObj.currentAnimationName = "brick" + brickAnimNumber 
-'						brickObj.Update(0)
-'						brickObj.Draw()
-'					end for         
-'				end for
-				levelASCIILength = Len(testLevelASCII)
-				charPos = 1
-				brickLine = 0
-				brickColumn = 0
-				while charPos <= levelASCIILength
-					brickAnimChar = Mid(testLevelASCII, charPos, 1)
-					'print(brickAnimChar + " " + Asc(brickAnimChar).ToStr())			
-					if (brickAnimChar = Chr(13) )
-						brickColumn = 0
-						brickLine += 1
-						Goto LEVEL_PARSING_NEXT_CHAR
-					end if
-					if (brickAnimChar = Chr(10) ) 
-						Goto LEVEL_PARSING_NEXT_CHAR
-					end if
-					
-					if (Asc(brickAnimChar) < Asc("1") OR Asc(brickAnimChar) > Asc("9"))
-						brickColumn += 1
-						Goto LEVEL_PARSING_NEXT_CHAR
-					end if
-					if (brickColumn > 12)  
-						Goto LEVEL_PARSING_NEXT_CHAR
-					end if
-					if (brickLine > 11)  
-						Goto LEVEL_PARSING_NEXT_CHAR
-					end if
-					
-					brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + brickColumn * 64 + 32
-					brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + brickLine * 25 + 10
-					brickObj.currentAnimationName = "brick" + brickAnimChar 
-					brickObj.Update(0)
-					brickObj.Draw()
-					
-LEVEL_PARSING_NEXT_CHAR:
-					charPos += 1
-				end while
-				
 				gameUI_LogoObj.Draw()
 				gameUI_EnergyBorderObj.Draw()
 				gameUI_EnergyBarObj.Draw()
@@ -303,7 +272,23 @@ LEVEL_PARSING_NEXT_CHAR:
 				gameUI_TextHiscoreObj.Draw()
 				gameUI_TextLevelObj.Draw()
 				gameUI_TextScoreObj.Draw()
+				
+				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
 				' end line for uninteractive back and UI elements
+				
+				for i=0 to GAME_VARS.MAX_LEVEL_LINES-1
+					for j=0 to GAME_VARS.MAX_LEVEL_COLUMNS-1
+						c = levelData[i][j]
+						if (c <> " ")										
+							brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + j * GAME_VARS.BRICK_WIDTH + GAME_VARS.BRICK_WIDTH * 0.5
+							brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + i * GAME_VARS.BRICK_HEIGHT + GAME_VARS.BRICK_HEIGHT * 0.5 - 0.5
+							brickObj.currentAnimationName = "brick" + levelData[i,j] 
+							brickObj.Update(0)
+							brickObj.Draw()
+						end if
+					end for
+				end for
+				
 				platformSmall.Update(deltaTime)
 				platformSmall.Draw()
 				
@@ -2028,4 +2013,67 @@ function menuCursorObjUpdate(_deltatime as float) as void
     m.x += (m.globalVars.GAME_STATE_MENU_X[m.globalVars.menuState] - m.x) * m.offsetSpeedX
     m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + offsetX
     m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY
+end function
+
+' bricks project functions _________________________________________________________________________________________________________________
+' _________________________________________________________________________________________________________________
+function CreateLevel(_globalVars as object) as object
+    obj = {
+        active  : true
+        time    : 0
+        localOffsetX    : 0
+        localOffsetY    : 0
+        drawX   : 0
+        drawY   : 0
+        screen  : _screen
+        
+        Draw    : SpriteDraw
+        Update  : SimpleSpriteUpdate
+    }
+    return obj
+end function
+
+function parseTextLevel(_levelASCII as string, _globalVars as object) as object
+	levelData = []
+	for i=1 to _globalVars.MAX_LEVEL_LINES
+		levelLineData = []
+		for j=1 to _globalVars.MAX_LEVEL_COLUMNS	
+			levelLineData.Push(" ")
+		end for
+		levelData.Push(levelLineData)
+	end for
+	
+	levelASCIILength = Len(_levelASCII)
+	charPos = 1
+	brickLine = 0
+	brickColumn = 0
+	while charPos <= levelASCIILength
+		brickAnimChar = Mid(_levelASCII, charPos, 1)			
+		if (brickAnimChar = Chr(13) )
+			brickColumn = 0
+			brickLine += 1
+			Goto LEVEL_PARSING_NEXT_CHAR
+		end if
+		if (brickAnimChar = " " )
+			brickColumn += 1 
+			Goto LEVEL_PARSING_NEXT_CHAR
+		end if
+					
+		if (Asc(brickAnimChar) < Asc("1") OR Asc(brickAnimChar) > Asc("9"))
+			Goto LEVEL_PARSING_NEXT_CHAR
+		end if
+		if (brickColumn > 12)  
+			Goto LEVEL_PARSING_NEXT_CHAR
+		end if
+		if (brickLine > 11)  
+			Exit While
+		end if
+		
+		levelData[brickLine][brickColumn] = brickAnimChar
+		brickColumn += 1
+					
+LEVEL_PARSING_NEXT_CHAR:
+		charPos += 1
+	end while
+	return levelData
 end function
