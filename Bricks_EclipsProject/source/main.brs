@@ -5,6 +5,7 @@ function Main() as void
     gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
     gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
+    gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
     
     
     scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
@@ -18,17 +19,35 @@ function Main() as void
     codes = bslUniversalControlEventCodes()
     
     GAME_VARS = {
+' ------- NEW -----------------------------------
+        STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
+        PI					: 3.14159265359
+        BALL_START_SPEED	: 5
+        BALL_RADIUSES		: [10, 20, 40]
+        
+        MAX_LEVEL_COLUMNS	: 13
+        MAX_LEVEL_LINES		: 12
+        
+        PLAYER_MOVE_CODE_RIGHT	: 1
+        PLAYER_MOVE_CODE_LEFT	: 2
+        
+        PLAYER_START_SPEED		: 10
+        
+        PLAYER_WIDTHS		: [112, 147, 225]
+        
+        screenWidth			: screenWidth
+        screenHeight		: screenHeight
+' NEED DELETE ------------------------------------------------------
 ' --------- GLOBAL VARS ---------------------------------------------------------------------------------
-        STABLE_FPS      : 1.0 / 30.0    'stable 30 fps
-        PI              : 3.14159265359
     
         HIT_BALL_SCORE  : 50
         AI_FAIL_SCORE   : 100
         COIN_WHITE_SCORE: 500
         
         BALL_SPEEDS     : [5, 10, 15] 'speed depends on game difficulty
+		HERO_SPEED			: 10
         AI_HERO_SPEEDS  : [3.3, 7, 13] 'speed depends on game difficulty
-        HERO_SPEED      : 10
+
     
         bestScore       : 0
         numScoreObj     : invalid
@@ -37,8 +56,6 @@ function Main() as void
 ' --------- GAME VARS ---------------------------------------------------------------------------------
         NEW_LIFE_LOOP_DELAY : 1
 
-        MAX_LEVEL_COLUMNS	: 13
-        MAX_LEVEL_LINES		: 12
 
         MAX_LIFE_COUNT      : 6
         START_LIFE_COUNT    : 4
@@ -89,7 +106,7 @@ function Main() as void
 	GAME_VARS.GAME_FIELD_MAX_X	= GAME_VARS.GAME_FIELD_MIN_X + GAME_VARS.GAME_FIELD_WIDTH
 	GAME_VARS.GAME_FIELD_MIN_Y	= 34
 	GAME_VARS.GAME_FIELD_MAX_Y	= GAME_VARS.GAME_FIELD_MIN_Y + GAME_VARS.GAME_FIELD_HEIGHT
-    
+    GAME_VARS.screen = screen
 
     if ( scoreRegSection.Exists("BestScore")) 
         GAME_VARS.bestScore = scoreRegSection.Read("BestScore").ToInt()
@@ -167,17 +184,14 @@ function Main() as void
 	gameUI_BottomLineObj.Update()
 ' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
 	
-	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, GAME_VARS.GAME_FIELD_HEIGHT)
+	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
 	gameLevel_DebugWhiteFieldObj.Update()
 	
 	
-' ------------------------------------------------------------------------------------------
-	platformSmall = CreateVisObj("platformSmall", screen, screenWidth/2, 670, gameObjectsDataSet, "platformSmall")
-		
-	testLevelASCII = ReadAsciiFile("pkg:/assets/testLevel.txt")
-	levelData = parseTextLevel(testLevelASCII, GAME_VARS)
-	
-	brickObj = CreateVisObj("brick", screen, 0, 0, gameObjectsDataSet, "brickTest")
+' ------------------------------------------------------------------------------------------	
+	player = CreatePlayer(GAME_VARS, gameObjectsDataSet)
+	ball = CreateBall(GAME_VARS, gameBallDataSet, player.x, player.y - 100)
+	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet)
 	
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
@@ -226,16 +240,14 @@ GAME_TEST_LOOP:
         event = port.GetMessage()
         if (type(event) = "roUniversalControlEvent")
             id = event.GetInt()
-            if (id = codes.BUTTON_UP_PRESSED)
-                GAME_VARS.menuState -= 1
-                if (GAME_VARS.menuState < 0 ) GAME_VARS.menuState = 0
+            if (id = codes.BUTTON_LEFT_PRESSED)
+                player.Move(GAME_VARS.PLAYER_MOVE_CODE_LEFT)
             endif
-            if (id = codes.BUTTON_DOWN_PRESSED)
-                GAME_VARS.menuState += 1
-                if (GAME_VARS.menuState > 2 ) GAME_VARS.menuState = 2
+            if (id = codes.BUTTON_RIGHT_PRESSED)
+                player.Move(GAME_VARS.PLAYER_MOVE_CODE_RIGHT)
             endif
             if (id = 6)             
-                Goto GAME_INTRO_LOOP
+                'Goto GAME_INTRO_LOOP
             endif
             if (id = 0) Goto EXIT_GAME
             lastID = id
@@ -276,21 +288,13 @@ GAME_TEST_LOOP:
 				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
 				' end line for uninteractive back and UI elements
 				
-				for i=0 to GAME_VARS.MAX_LEVEL_LINES-1
-					for j=0 to GAME_VARS.MAX_LEVEL_COLUMNS-1
-						c = levelData[i][j]
-						if (c <> " ")										
-							brickObj.x = GAME_VARS.GAME_FIELD_MIN_X + j * GAME_VARS.BRICK_WIDTH + GAME_VARS.BRICK_WIDTH * 0.5
-							brickObj.y = GAME_VARS.GAME_FIELD_MIN_Y + i * GAME_VARS.BRICK_HEIGHT + GAME_VARS.BRICK_HEIGHT * 0.5 - 0.5
-							brickObj.currentAnimationName = "brick" + levelData[i,j] 
-							brickObj.Update(0)
-							brickObj.Draw()
-						end if
-					end for
-				end for
+				firstLevel.Draw()
 				
-				platformSmall.Update(deltaTime)
-				platformSmall.Draw()
+				player.Update(deltaTime)
+				player.Draw()
+				
+				ball.Update(deltaTime)
+				ball.Draw()
 				
                 screen.SwapBuffers()
                 clock.Mark()
@@ -2017,20 +2021,44 @@ end function
 
 ' bricks project functions _________________________________________________________________________________________________________________
 ' _________________________________________________________________________________________________________________
-function CreateLevel(_globalVars as object) as object
+function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDataSet as object) as object
     obj = {
         active  : true
-        time    : 0
-        localOffsetX    : 0
-        localOffsetY    : 0
-        drawX   : 0
-        drawY   : 0
-        screen  : _screen
+        globalVars	: _globalVars
+        levelData : invalid
+        gameObjectDataSet : _gameObjectDataSet
         
-        Draw    : SpriteDraw
-        Update  : SimpleSpriteUpdate
+        Draw    : SimpleLevelDraw
+        Update  : SimpleLevelUpdate
     }
+    
+    obj.testLevelASCII = ReadAsciiFile(_levelPath)
+	obj.levelData = parseTextLevel(obj.testLevelASCII, obj.globalVars)
+	
+	obj.brickObj = CreateVisObj("brick", obj.globalVars.screen, 0, 0, obj.gameObjectDataSet, "brickTest")
+    
     return obj
+end function
+
+function SimpleLevelUpdate () as void
+	if (m.active = false) return
+end function
+
+function SimpleLevelDraw () as void
+	if (m.active = false) return
+	
+	for i=0 to m.globalVars.MAX_LEVEL_LINES-1
+		for j=0 to m.globalVars.MAX_LEVEL_COLUMNS-1
+			c = m.levelData[i][j]
+			if (c <> " ")										
+				m.brickObj.x = m.globalVars.GAME_FIELD_MIN_X + j * m.globalVars.BRICK_WIDTH + m.globalVars.BRICK_WIDTH * 0.5
+				m.brickObj.y = m.globalVars.GAME_FIELD_MIN_Y + i * m.globalVars.BRICK_HEIGHT + m.globalVars.BRICK_HEIGHT * 0.5 - 0.5
+				m.brickObj.currentAnimationName = "brick" + m.levelData[i,j] 
+				m.brickObj.Update(0)
+				m.brickObj.Draw()
+			end if
+		end for
+	end for
 end function
 
 function parseTextLevel(_levelASCII as string, _globalVars as object) as object
@@ -2076,4 +2104,127 @@ LEVEL_PARSING_NEXT_CHAR:
 		charPos += 1
 	end while
 	return levelData
+end function
+
+function CreatePlayer (_globalVars as object, _gameObjectsDataSet as object) as object
+    obj = {
+        active  : true
+        globalVars	: _globalVars
+        gameObjectsDataSet : _gameObjectsDataSet
+        x	: 0
+        y	: 0
+        speedX : 0
+        speedY : 0
+        visObj : invalid
+        startSpeed : _globalVars.PLAYER_START_SPEED
+        playerWidthCode	: 0
+        playerWidth : invalid
+        
+        Draw    : SimplePlayerDraw
+        Update  : SimplePlayerUpdate
+        Move	: SimplePlayerMove
+    }
+    
+    obj.playerWidth = _globalVars.PLAYER_WIDTHS[obj.playerWidthCode]
+    
+    obj.x = obj.globalVars.GAME_FIELD_MIN_X + obj.globalVars.GAME_FIELD_WIDTH * 0.5 
+    obj.y = 670
+	obj.visObj = CreateVisObj("platform", obj.globalVars.screen, obj.x, obj.y, obj.gameObjectsDataSet, "platformSmall")
+    
+    return obj
+end function
+
+function SimplePlayerUpdate (_deltaTime=0 as float) as void
+	if (m.active = false) return
+	
+	m.x += m.speedX
+	m.y += m.speedY
+	
+	if (m.x > m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5)
+		m.x = m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5
+	end if
+
+	if (m.x < m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5)
+		m.x = m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5 
+	end if
+	
+	
+		
+	m.visObj.x = m.x
+	m.visObj.y = m.y
+	m.visObj.Update(_deltaTime)
+end function
+
+function SimplePlayerDraw () as void
+	if (m.active = false) return
+	
+	m.visObj.Draw()
+end function
+
+function SimplePlayerMove(_playerMoveCode as Integer) as void
+	if (_playerMoveCode = m.globalVars.PLAYER_MOVE_CODE_RIGHT)
+		m.speedX = m.startSpeed
+	end if
+		if (_playerMoveCode = m.globalVars.PLAYER_MOVE_CODE_LEFT)
+		m.speedX = -m.startSpeed
+	end if
+end function
+
+function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _x as float, _y as float) as object
+    obj = {
+        active  : true
+        globalVars	: _globalVars
+        gameObjectsDataSet : _gameObjectsDataSet
+        x	: 0
+        y	: 0
+        speedX : 0
+        speedY : 0
+        visObj : invalid
+        startSpeed : _globalVars.BALL_START_SPEED
+        ballRadiusCode	: 0
+        ballRadius : invalid
+        
+        
+        Draw    : SimpleBallDraw
+        Update  : SimpleBallUpdate
+    }
+    
+    obj.ballRadius = _globalVars.BALL_RADIUSES[obj.ballRadiusCode]
+    
+    obj.x = _x 
+    obj.y = _y
+    obj.speedX = obj.startSpeed
+    obj.speedY = -obj.startSpeed
+    
+	obj.visObj = CreateVisObj("ball", obj.globalVars.screen, obj.x, obj.y, obj.gameObjectsDataSet, "idle")
+    
+    return obj
+end function
+
+function SimpleBallUpdate (_deltaTime=0 as float) as void
+	if (m.active = false) return
+	
+	m.x += m.speedX
+	m.y += m.speedY
+	
+	if ((m.x > m.globalVars.GAME_FIELD_MAX_X - m.ballRadius) OR (m.x < m.globalVars.GAME_FIELD_MIN_X + m.ballRadius)) 
+		m.x -= m.speedX
+		m.speedX *= -1
+	end if
+	
+	if ((m.y > m.globalVars.screenHeight - m.ballRadius) OR (m.y < m.globalVars.GAME_FIELD_MIN_Y + m.ballRadius))
+		m.y -= m.speedY
+		m.speedY *= -1
+	end if
+	
+		
+	m.visObj.x = m.x
+	m.visObj.y = m.y
+	m.visObj.Update(_deltaTime)
+end function
+
+function SimpleBallDraw () as void
+	if (m.active = false) return
+	
+	m.visObj.Draw()
 end function
