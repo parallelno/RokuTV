@@ -189,9 +189,10 @@ function Main() as void
 	
 	
 ' ------------------------------------------------------------------------------------------	
-	player = CreatePlayer(GAME_VARS, gameObjectsDataSet)
-	ball = CreateBall(GAME_VARS, gameBallDataSet, player.x, player.y - 100)
 	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet)
+	player = CreatePlayer(GAME_VARS, gameObjectsDataSet)
+	ball = CreateBall(GAME_VARS, gameBallDataSet, firstLevel, player.SpawnPos())
+	
 	
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
@@ -2030,10 +2031,11 @@ function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDat
         
         Draw    : SimpleLevelDraw
         Update  : SimpleLevelUpdate
+        CheckCollision	: LevelCheckCollision
     }
     
     obj.testLevelASCII = ReadAsciiFile(_levelPath)
-	obj.levelData = parseTextLevel(obj.testLevelASCII, obj.globalVars)
+	obj.levelData = ParseTextLevel(obj.testLevelASCII, obj.globalVars)
 	
 	obj.brickObj = CreateVisObj("brick", obj.globalVars.screen, 0, 0, obj.gameObjectDataSet, "brickTest")
     
@@ -2061,7 +2063,24 @@ function SimpleLevelDraw () as void
 	end for
 end function
 
-function parseTextLevel(_levelASCII as string, _globalVars as object) as object
+function LevelCheckCollision (_collisionData as object) as object
+	collisionResult = {
+		speedX : _collisionData.speedX
+		speedY : _collisionData.speedY
+		posX : _collisionData.posX
+		posY : _collisionData.posY
+		radius : _collisionData.radius
+		isCollided	: false
+	}
+	'block collision checking
+	'determine a list of cells which might be collided basing on a ball radius
+	'check every cell if it has block/ make a list of collided blocks
+	'calculate reflection force from every block. summ it. normalize to reminded part of path
+		
+		return collisionResult
+end function
+
+function ParseTextLevel(_levelASCII as string, _globalVars as object) as object
 	levelData = []
 	for i=1 to _globalVars.MAX_LEVEL_LINES
 		levelLineData = []
@@ -2106,7 +2125,7 @@ LEVEL_PARSING_NEXT_CHAR:
 	return levelData
 end function
 
-function CreatePlayer (_globalVars as object, _gameObjectsDataSet as object) as object
+function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as object
     obj = {
         active  : true
         globalVars	: _globalVars
@@ -2119,10 +2138,13 @@ function CreatePlayer (_globalVars as object, _gameObjectsDataSet as object) as 
         startSpeed : _globalVars.PLAYER_START_SPEED
         playerWidthCode	: 0
         playerWidth : invalid
+        spawnPointOffsetX	:  0
+        spawnPointOffsetY	:  -10
         
         Draw    : SimplePlayerDraw
         Update  : SimplePlayerUpdate
         Move	: SimplePlayerMove
+        SpawnPos	: GetPlayerSpawnPos
     }
     
     obj.playerWidth = _globalVars.PLAYER_WIDTHS[obj.playerWidthCode]
@@ -2134,7 +2156,7 @@ function CreatePlayer (_globalVars as object, _gameObjectsDataSet as object) as 
     return obj
 end function
 
-function SimplePlayerUpdate (_deltaTime=0 as float) as void
+function SimplePlayerUpdate(_deltaTime=0 as float) as void
 	if (m.active = false) return
 	
 	m.x += m.speedX
@@ -2147,8 +2169,6 @@ function SimplePlayerUpdate (_deltaTime=0 as float) as void
 	if (m.x < m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5)
 		m.x = m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5 
 	end if
-	
-	
 		
 	m.visObj.x = m.x
 	m.visObj.y = m.y
@@ -2170,20 +2190,29 @@ function SimplePlayerMove(_playerMoveCode as Integer) as void
 	end if
 end function
 
-function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _x as float, _y as float) as object
+function GetPlayerSpawnPos() as object
+	obj = {
+		x : m.x + m.spawnPointOffsetX 
+		y : m.y + m.spawnPointOffsetY
+	}
+	return obj
+end function
+
+function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level as object, _pos as object) as object
     obj = {
         active  : true
         globalVars	: _globalVars
         gameObjectsDataSet : _gameObjectsDataSet
-        x	: 0
-        y	: 0
+        x	: _pos.x
+        y	: _pos.y
         speedX : 0
         speedY : 0
         visObj : invalid
         startSpeed : _globalVars.BALL_START_SPEED
         ballRadiusCode	: 0
         ballRadius : invalid
-        
+        collisionTrackingAccuracy : 2.5 'in pixels
+        level	: _level
         
         Draw    : SimpleBallDraw
         Update  : SimpleBallUpdate
@@ -2191,8 +2220,6 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _x as 
     
     obj.ballRadius = _globalVars.BALL_RADIUSES[obj.ballRadiusCode]
     
-    obj.x = _x 
-    obj.y = _y
     obj.speedX = obj.startSpeed
     obj.speedY = -obj.startSpeed
     
@@ -2204,8 +2231,37 @@ end function
 function SimpleBallUpdate (_deltaTime=0 as float) as void
 	if (m.active = false) return
 	
-	m.x += m.speedX
-	m.y += m.speedY
+	currentSpeed = {
+			x : m.speedX
+			y : m.speedY
+		}
+	pathLength = VectorLength(currentSpeed)
+	
+	collisionTrackingIterations = pathLength \ m.collisionTrackingAccuracy
+	collisionData = {
+		speedX : m.speedX
+		speedY : m.speedY
+		posX : 0
+		posY : 0
+		radius : m.ballRadius
+		isCollided	: false
+	}
+	
+	for i=0 to collisionTrackingIterations - 1
+		stepPosX = m.x + m.speedX / collisionTrackingIterations * (i+1) 
+		stepPosY = m.x + m.speedY / collisionTrackingIterations * (i+1)
+		collisionData.posX = stepPosX
+		collisionData.posY = stepPosY
+
+		collisionDataResult = m.level.CheckCollision(collisionData)
+		if (collisionDataResult.isCollided = true)	
+			exit for
+		end if
+		 
+	end for
+	
+	m.x += collisionData.speedX
+	m.y += collisionData.speedY
 	
 	if ((m.x > m.globalVars.GAME_FIELD_MAX_X - m.ballRadius) OR (m.x < m.globalVars.GAME_FIELD_MIN_X + m.ballRadius)) 
 		m.x -= m.speedX
