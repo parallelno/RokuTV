@@ -22,8 +22,8 @@ function Main() as void
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
         PI					: 3.14159265359
-        BALL_START_SPEED	: 5
-        BALL_RADIUSES		: [10, 20, 40]
+        BALL_START_SPEED	: 1.0
+        BALL_RADIUSES		: [10.0, 20.0, 40.0]
         
         MAX_LEVEL_COLUMNS	: 13
         MAX_LEVEL_LINES		: 12
@@ -31,7 +31,7 @@ function Main() as void
         PLAYER_MOVE_CODE_RIGHT	: 1
         PLAYER_MOVE_CODE_LEFT	: 2
         
-        PLAYER_START_SPEED		: 10
+        PLAYER_START_SPEED		: 10.0
         
         PLAYER_WIDTHS		: [112, 147, 225]
         
@@ -2031,7 +2031,8 @@ function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDat
         
         Draw    : SimpleLevelDraw
         Update  : SimpleLevelUpdate
-        CheckCollision	: LevelCheckCollision
+        CheckCollision : LevelCheckCollision
+        CheckBlockCollision : CheckBlockCollision
     }
     
     obj.testLevelASCII = ReadAsciiFile(_levelPath)
@@ -2074,10 +2075,67 @@ function LevelCheckCollision (_collisionData as object) as object
 	}
 	'block collision checking
 	'determine a list of cells which might be collided basing on a ball radius
-	'check every cell if it has block/ make a list of collided blocks
-	'calculate reflection force from every block. summ it. normalize to reminded part of path
+	leftTestedBlock = (_collisionData.posX - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
+	if (leftTestedBlock < 0 ) leftTestedBlock = 0
+	rightTestedBlock = (_collisionData.posX + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
+	if (rightTestedBlock > m.globalVars.MAX_LEVEL_COLUMNS-1 ) rightTestedBlock = m.globalVars.MAX_LEVEL_COLUMNS-1
+	
+	upperTestedBlock = (_collisionData.posY - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_Y) \ m.globalVars.BRICK_HEIGHT
+	if (upperTestedBlock < 0 ) upperTestedBlock = 0
+	lowerTestedBlock = (_collisionData.posY + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_Y) \ m.globalVars.BRICK_HEIGHT
+	if (lowerTestedBlock > m.globalVars.MAX_LEVEL_LINES-1 ) lowerTestedBlock = m.globalVars.MAX_LEVEL_LINES-1
+	
+	testedBlockList = []
+	for i=upperTestedBlock to lowerTestedBlock
+		for j=leftTestedBlock to rightTestedBlock
+			c = m.levelData[i][j]
+			if (c <> " ")
+				blockCoord = {
+					i: i, 
+					j: j}
+				testedBlockList.Push(blockCoord)
+				'draw tested blocks
+				'm.brickObj.x = m.globalVars.GAME_FIELD_MIN_X + j * m.globalVars.BRICK_WIDTH + m.globalVars.BRICK_WIDTH * 0.5
+				'm.brickObj.y = m.globalVars.GAME_FIELD_MIN_Y + i * m.globalVars.BRICK_HEIGHT + m.globalVars.BRICK_HEIGHT * 0.5 - 0.5
+				'm.brickObj.currentAnimationName = "brick8" 
+				'm.brickObj.Update(0)
+				'm.brickObj.Draw()							
+			end if
+		end for
+	end for
+
+	'make a list of collided blocks
+	'calculate reflection force of every block. 
+	collisionForces = [] 
+	for i=0 to testedBlockList.Count()-1
+		collisionResult.testedBlock = testedBlockList[i]
+		blockCollisionResult = m.CheckBlockCollision(collisionResult)
+		if (blockCollisionResult.isCollided = true) 
+			collisionForces.Push(blockCollisionResult) 
+		end if
+	end for
+	
+	'summ and normalize reflection force for reminded part of path
+	for i=0 to collisionForces.Count()-1
+	
+	end for
 		
-		return collisionResult
+	return collisionResult
+end function
+
+function CheckBlockCollision(_collisionData as object) as object
+	blockLeftSideX = m.globalVars.GAME_FIELD_MIN_X + _collisionData.testedBlock.j * m.globalVars.BRICK_WIDTH
+	blockRightSideX = blockLeftSideX + m.globalVars.BRICK_WIDTH
+	blockCenterX = blockLeftSideX + m.globalVars.BRICK_WIDTH * 0.5
+	
+	blockLeftSideY = m.globalVars.GAME_FIELD_MIN_Y + _collisionData.testedBlock.i * m.globalVars.BRICK_HEIGHT
+	blockRightSideY = blockLeftSideY + m.globalVars.BRICK_HEIGHT
+	blockCenterY = blockLeftSideY + m.globalVars.BRICK_HEIGHT * 0.5
+	
+	continue here...
+	'check block collision
+	
+	return _collisionData
 end function
 
 function ParseTextLevel(_levelASCII as string, _globalVars as object) as object
@@ -2130,16 +2188,16 @@ function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as o
         active  : true
         globalVars	: _globalVars
         gameObjectsDataSet : _gameObjectsDataSet
-        x	: 0
-        y	: 0
-        speedX : 0
-        speedY : 0
+        x	: 0.0
+        y	: 0.0
+        speedX : 0.0
+        speedY : 0.0
         visObj : invalid
         startSpeed : _globalVars.PLAYER_START_SPEED
         playerWidthCode	: 0
         playerWidth : invalid
-        spawnPointOffsetX	:  0
-        spawnPointOffsetY	:  -10
+        spawnPointOffsetX	:  0.0
+        spawnPointOffsetY	:  -10.0
         
         Draw    : SimplePlayerDraw
         Update  : SimplePlayerUpdate
@@ -2150,7 +2208,7 @@ function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as o
     obj.playerWidth = _globalVars.PLAYER_WIDTHS[obj.playerWidthCode]
     
     obj.x = obj.globalVars.GAME_FIELD_MIN_X + obj.globalVars.GAME_FIELD_WIDTH * 0.5 
-    obj.y = 670
+    obj.y = 670.0
 	obj.visObj = CreateVisObj("platform", obj.globalVars.screen, obj.x, obj.y, obj.gameObjectsDataSet, "platformSmall")
     
     return obj
@@ -2205,8 +2263,8 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level
         gameObjectsDataSet : _gameObjectsDataSet
         x	: _pos.x
         y	: _pos.y
-        speedX : 0
-        speedY : 0
+        speedX : 0.0
+        speedY : 0.0
         visObj : invalid
         startSpeed : _globalVars.BALL_START_SPEED
         ballRadiusCode	: 0
@@ -2237,40 +2295,39 @@ function SimpleBallUpdate (_deltaTime=0 as float) as void
 		}
 	pathLength = VectorLength(currentSpeed)
 	
-	collisionTrackingIterations = pathLength \ m.collisionTrackingAccuracy
+	collisionTrackingIterations = pathLength \ m.collisionTrackingAccuracy + 1
 	collisionData = {
 		speedX : m.speedX
 		speedY : m.speedY
-		posX : 0
-		posY : 0
+		posX : 0.0
+		posY : 0.0
 		radius : m.ballRadius
 		isCollided	: false
 	}
-	
 	for i=0 to collisionTrackingIterations - 1
 		stepPosX = m.x + m.speedX / collisionTrackingIterations * (i+1) 
-		stepPosY = m.x + m.speedY / collisionTrackingIterations * (i+1)
+		stepPosY = m.y + m.speedY / collisionTrackingIterations * (i+1)
 		collisionData.posX = stepPosX
 		collisionData.posY = stepPosY
 
 		collisionDataResult = m.level.CheckCollision(collisionData)
-		if (collisionDataResult.isCollided = true)	
+		if (collisionDataResult.isCollided = true)
 			exit for
 		end if
-		 
 	end for
 	
-	m.x += collisionData.speedX
-	m.y += collisionData.speedY
+	m.x = collisionData.posX
+	m.y = collisionData.posY
+
 	
 	if ((m.x > m.globalVars.GAME_FIELD_MAX_X - m.ballRadius) OR (m.x < m.globalVars.GAME_FIELD_MIN_X + m.ballRadius)) 
 		m.x -= m.speedX
-		m.speedX *= -1
+		m.speedX *= -1.0
 	end if
 	
 	if ((m.y > m.globalVars.screenHeight - m.ballRadius) OR (m.y < m.globalVars.GAME_FIELD_MIN_Y + m.ballRadius))
 		m.y -= m.speedY
-		m.speedY *= -1
+		m.speedY *= -1.0
 	end if
 	
 		
