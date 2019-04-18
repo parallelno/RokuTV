@@ -778,6 +778,14 @@ function VectorLength(_obj1 as object) as float
     res = Sqr(_obj1.x * _obj1.x + _obj1.y * _obj1.y )
     return res
 end function
+
+function NormalizeVector() as object
+	vec = {
+	x : 0
+	y : 0
+	}
+	return vecc
+end function
 ' COLLISION API /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateCollisionEngine() as object
     obj = {
@@ -2065,16 +2073,7 @@ function SimpleLevelDraw () as void
 end function
 
 function LevelCheckCollision (_collisionData as object) as object
-	collisionResult = {
-		speedX : _collisionData.speedX
-		speedY : _collisionData.speedY
-		posX : _collisionData.posX
-		posY : _collisionData.posY
-		radius : _collisionData.radius
-		isCollided	: false
-	}
-	'block collision checking
-	'determine a list of cells which might be collided basing on a ball radius
+	'determining a list of cells which might be collided with a ball's AABB
 	leftTestedBlock = (_collisionData.posX - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
 	if (leftTestedBlock < 0 ) leftTestedBlock = 0
 	rightTestedBlock = (_collisionData.posX + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
@@ -2108,10 +2107,10 @@ function LevelCheckCollision (_collisionData as object) as object
 	'calculate reflection force of every block. 
 	collisionForces = [] 
 	for i=0 to testedBlockList.Count()-1
-		collisionResult.testedBlock = testedBlockList[i]
-		blockCollisionResult = m.CheckBlockCollision(collisionResult)
-		if (blockCollisionResult.isCollided = true) 
-			collisionForces.Push(blockCollisionResult) 
+		_collisionData.testedBlock = testedBlockList[i]
+		blockCollisionResult = m.CheckBlockCollision(_collisionData)
+		if (blockCollisionResult.isCollided = true)
+			collisionForces.Push(blockCollisionResult)
 		end if
 	end for
 	
@@ -2120,20 +2119,36 @@ function LevelCheckCollision (_collisionData as object) as object
 	
 	end for
 		
-	return collisionResult
+	return _collisionData
 end function
 
 function CheckBlockCollision(_collisionData as object) as object
-	blockLeftSideX = m.globalVars.GAME_FIELD_MIN_X + _collisionData.testedBlock.j * m.globalVars.BRICK_WIDTH
-	blockRightSideX = blockLeftSideX + m.globalVars.BRICK_WIDTH
-	blockCenterX = blockLeftSideX + m.globalVars.BRICK_WIDTH * 0.5
+	blockX = m.globalVars.GAME_FIELD_MIN_X + _collisionData.testedBlock.j * m.globalVars.BRICK_WIDTH
+	blockY = m.globalVars.GAME_FIELD_MIN_Y + _collisionData.testedBlock.i * m.globalVars.BRICK_HEIGHT
+
+	blockLeftSideX = blockX - m.globalVars.BRICK_WIDTH * 0.5
+	blockRightSideX = blockX + m.globalVars.BRICK_WIDTH * 0.5
 	
-	blockLeftSideY = m.globalVars.GAME_FIELD_MIN_Y + _collisionData.testedBlock.i * m.globalVars.BRICK_HEIGHT
-	blockRightSideY = blockLeftSideY + m.globalVars.BRICK_HEIGHT
-	blockCenterY = blockLeftSideY + m.globalVars.BRICK_HEIGHT * 0.5
+	blockLeftSideY = blockY - m.globalVars.BRICK_HEIGHT * 0.5
+	blockRightSideY = blockY + m.globalVars.BRICK_HEIGHT * 0.5
+
+	'finding a box point closest to the circle' center
+	nearestX = MaxF(blockLeftSideX, Min(_collisionData.posX, blockRightSideX))
+	nearestY = MaxF(blockLeftSideY, Min(_collisionData.posY, blockRightSideY))
+
+	boxNormalX = _collisionData.posX - nearestX
+	boxNormalY = _collisionData.posY - nearestY
+	  
+	_collisionData.isCollided = (boxNormalX * boxNormalX + boxNormalY * boxNormalY) < (_collisionData.radius * _collisionData.radius)
+	_collisionData.PosX += _collisionData.speedX
+	_collisionData.PosY += _collisionData.speedY 
+	if (_collisionData.isCollided = false)
+		return _collisionData
+	end if 
 	
-	continue here...
-	'check block collision
+	reflectedVelosityVector = NormalizeVector(ReflectVector(boxNormalX, boxNormalY, _collisionData.speedX, _collisionData.speedY))
+	_collisionData.speedX = reflectedVelosityVector.x
+	_collisionData.speedY =  reflectedVelosityVector.y
 	
 	return _collisionData
 end function
@@ -2297,23 +2312,17 @@ function SimpleBallUpdate (_deltaTime=0 as float) as void
 	
 	collisionTrackingIterations = pathLength \ m.collisionTrackingAccuracy + 1
 	collisionData = {
-		speedX : m.speedX
-		speedY : m.speedY
+		speedX : m.speedX / collisionTrackingIterations
+		speedY : m.speedY / collisionTrackingIterations
 		posX : 0.0
 		posY : 0.0
 		radius : m.ballRadius
 		isCollided	: false
 	}
 	for i=0 to collisionTrackingIterations - 1
-		stepPosX = m.x + m.speedX / collisionTrackingIterations * (i+1) 
-		stepPosY = m.y + m.speedY / collisionTrackingIterations * (i+1)
-		collisionData.posX = stepPosX
-		collisionData.posY = stepPosY
-
+		collisionData.posX = m.x + collisionData.speedX * (i+1) 
+		collisionData.posY = m.y + collisionData.speedY * (i+1)
 		collisionDataResult = m.level.CheckCollision(collisionData)
-		if (collisionDataResult.isCollided = true)
-			exit for
-		end if
 	end for
 	
 	m.x = collisionData.posX
