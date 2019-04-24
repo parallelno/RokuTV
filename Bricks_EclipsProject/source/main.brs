@@ -22,7 +22,7 @@ function Main() as void
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
         PI					: 3.14159265359
-        BALL_START_SPEED	: 1.0
+        BALL_START_SPEED	: 3.0
         BALL_RADIUSES		: [10.0, 20.0, 40.0]
         
         MAX_LEVEL_COLUMNS	: 13
@@ -779,12 +779,27 @@ function VectorLength(_obj1 as object) as float
     return res
 end function
 
-function NormalizeVector() as object
-	vec = {
-	x : 0
-	y : 0
-	}
-	return vec
+function NormalizeVector(_vec as object) as object
+	if (_vec.x = 0 AND _vec.y = 0)
+		return _vec
+	end if
+	vecLength = VectorLength(_vec)
+	_vec.x = _vec.x / vecLength
+	_vec.y = _vec.y / vecLength
+	return _vec
+end function
+
+function DotProduct(_vec1 as object, _vec2 as object) as float
+	dot = _vec1.x * _vec2.x + _vec1.y * _vec2.y 
+	return dot
+end function 
+
+function ReflectVector(_vec as object, _normal as object) as object
+	dot = DotProduct(_vec, _normal)
+	reflectVec = {x: 0.0, y: 0.0}
+	reflectVec.x = _vec.x - 2 * dot * _normal.x
+	reflectVec.y = _vec.y - 2 * dot * _normal.y	
+	return reflectVec
 end function
 ' COLLISION API /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreateCollisionEngine() as object
@@ -2074,16 +2089,16 @@ end function
 
 function LevelCheckCollision (_collisionData as object) as object
 	'determining a list of cells which might be collided with a ball's AABB
-	leftTestedBlock = (_collisionData.posX - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
+	leftTestedBlock = (_collisionData.position.x - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
 	if (leftTestedBlock < 0 ) leftTestedBlock = 0
-	rightTestedBlock = (_collisionData.posX + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
+	rightTestedBlock = (_collisionData.position.x + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
 	if (rightTestedBlock > m.globalVars.MAX_LEVEL_COLUMNS-1 ) rightTestedBlock = m.globalVars.MAX_LEVEL_COLUMNS-1
 	
-	upperTestedBlock = (_collisionData.posY - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_Y) \ m.globalVars.BRICK_HEIGHT
+	upperTestedBlock = (_collisionData.position.y - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_Y) \ m.globalVars.BRICK_HEIGHT
 	if (upperTestedBlock < 0 ) upperTestedBlock = 0
-	lowerTestedBlock = (_collisionData.posY + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_Y) \ m.globalVars.BRICK_HEIGHT
+	lowerTestedBlock = (_collisionData.position.y + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_Y) \ m.globalVars.BRICK_HEIGHT
 	if (lowerTestedBlock > m.globalVars.MAX_LEVEL_LINES-1 ) lowerTestedBlock = m.globalVars.MAX_LEVEL_LINES-1
-	
+
 	testedBlockList = []
 	for i=upperTestedBlock to lowerTestedBlock
 		for j=leftTestedBlock to rightTestedBlock
@@ -2092,34 +2107,30 @@ function LevelCheckCollision (_collisionData as object) as object
 				blockCoord = {
 					i: i, 
 					j: j}
-				testedBlockList.Push(blockCoord)
-				'draw tested blocks
-				'm.brickObj.x = m.globalVars.GAME_FIELD_MIN_X + j * m.globalVars.BRICK_WIDTH + m.globalVars.BRICK_WIDTH * 0.5
-				'm.brickObj.y = m.globalVars.GAME_FIELD_MIN_Y + i * m.globalVars.BRICK_HEIGHT + m.globalVars.BRICK_HEIGHT * 0.5 - 0.5
-				'm.brickObj.currentAnimationName = "brick8" 
-				'm.brickObj.Update(0)
-				'm.brickObj.Draw()							
+				testedBlockList.Push(blockCoord)					
 			end if
 		end for
 	end for
 
-	'make a list of collided blocks
-	'calculate reflection force of every block. 
-	collisionForces = [] 
+	if (testedBlockList.Count() = 0)
+		return _collisionData
+	end if
+
+	'calculate reflection speed if a ball collides. 
+	blockCollisionResult = invalid
 	for i=0 to testedBlockList.Count()-1
 		_collisionData.testedBlock = testedBlockList[i]
 		blockCollisionResult = m.CheckBlockCollision(_collisionData)
 		if (blockCollisionResult.isCollided = true)
-			collisionForces.Push(blockCollisionResult)
+			exit for
 		end if
 	end for
+
+	if (blockCollisionResult = invalid)
+		return _collisionData
+	end if
 	
-	'summ and normalize reflection force for reminded part of path
-	for i=0 to collisionForces.Count()-1
-	
-	end for
-		
-	return _collisionData
+	return blockCollisionResult
 end function
 
 function CheckBlockCollision(_collisionData as object) as object
@@ -2133,22 +2144,36 @@ function CheckBlockCollision(_collisionData as object) as object
 	blockRightSideY = blockY + m.globalVars.BRICK_HEIGHT * 0.5
 
 	'finding a box point closest to the circle' center
-	nearestX = MaxF(blockLeftSideX, Min(_collisionData.posX, blockRightSideX))
-	nearestY = MaxF(blockLeftSideY, Min(_collisionData.posY, blockRightSideY))
+	nearestX = MaxF(blockLeftSideX, MinF(_collisionData.position.x, blockRightSideX))
+	nearestY = MaxF(blockLeftSideY, MinF(_collisionData.position.y, blockRightSideY))
 
-	boxNormalX = _collisionData.posX - nearestX
-	boxNormalY = _collisionData.posY - nearestY
+	boxBallPosDeltaX = _collisionData.position.x - nearestX
+	boxBallPosDeltaY = _collisionData.position.y - nearestY
+	
+	boxBallPosDeltaDistanceInPow = boxBallPosDeltaX * boxBallPosDeltaX + boxBallPosDeltaY * boxBallPosDeltaY 
 	  
-	_collisionData.isCollided = (boxNormalX * boxNormalX + boxNormalY * boxNormalY) < (_collisionData.radius * _collisionData.radius)
-	_collisionData.PosX += _collisionData.speedX
-	_collisionData.PosY += _collisionData.speedY 
+	_collisionData.isCollided = boxBallPosDeltaDistanceInPow < (_collisionData.radius * _collisionData.radius)
 	if (_collisionData.isCollided = false)
 		return _collisionData
-	end if 
-	
-	reflectedVelosityVector = NormalizeVector(ReflectVector(boxNormalX, boxNormalY, _collisionData.speedX, _collisionData.speedY))
-	_collisionData.speedX = reflectedVelosityVector.x
-	_collisionData.speedY =  reflectedVelosityVector.y
+	end if
+
+	boxNormal = {
+		x : boxBallPosDeltaX
+		y : boxBallPosDeltaY
+	}
+
+	boxBallPosDeltaLength = Sqr(boxBallPosDeltaDistanceInPow)
+	boxNormal = NormalizeVector(boxNormal)
+	reflectedBallSpeed = ReflectVector(_collisionData.speed, boxNormal)
+
+	_collisionData.speed = reflectedBallSpeed
+
+	hitPos.x = _collisionData.position.x + boxNormal.x * (_collisionData.radius - boxBallPosDeltaLength)
+	hitPos.y = _collisionData.position.y + boxNormal.y * (_collisionData.radius - boxBallPosDeltaLength)
+return _collisionData	
+	_collisionData.position = hitPos
+
+	_collisionData.isCollided = true
 	
 	return _collisionData
 end function
@@ -2276,10 +2301,8 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level
         active  : true
         globalVars	: _globalVars
         gameObjectsDataSet : _gameObjectsDataSet
-        x	: _pos.x
-        y	: _pos.y
-        speedX : 0.0
-        speedY : 0.0
+        position	: _pos
+        speed		: {x: 0, y: 0}
         visObj : invalid
         startSpeed : _globalVars.BALL_START_SPEED
         ballRadiusCode	: 0
@@ -2293,10 +2316,10 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level
     
     obj.ballRadius = _globalVars.BALL_RADIUSES[obj.ballRadiusCode]
     
-    obj.speedX = obj.startSpeed
-    obj.speedY = -obj.startSpeed
+    obj.speed.x = obj.startSpeed
+    obj.speed.y = -obj.startSpeed
     
-	obj.visObj = CreateVisObj("ball", obj.globalVars.screen, obj.x, obj.y, obj.gameObjectsDataSet, "idle")
+	obj.visObj = CreateVisObj("ball", obj.globalVars.screen, obj.position.x, obj.position.y, obj.gameObjectsDataSet, "idle")
     
     return obj
 end function
@@ -2304,44 +2327,43 @@ end function
 function SimpleBallUpdate (_deltaTime=0 as float) as void
 	if (m.active = false) return
 	
-	currentSpeed = {
-			x : m.speedX
-			y : m.speedY
-		}
-	pathLength = VectorLength(currentSpeed)
+	'pathLength = VectorLength(m.speed)
+	'collisionTrackingIterations = pathLength \ m.collisionTrackingAccuracy + 1
+	m.position.x += m.speed.x
+	m.position.y += m.speed.y
 	
-	collisionTrackingIterations = pathLength \ m.collisionTrackingAccuracy + 1
 	collisionData = {
-		speedX : m.speedX / collisionTrackingIterations
-		speedY : m.speedY / collisionTrackingIterations
-		posX : 0.0
-		posY : 0.0
+		position : m.position
+		speed : m.speed
 		radius : m.ballRadius
 		isCollided	: false
 	}
-	for i=0 to collisionTrackingIterations - 1
-		collisionData.posX = m.x + collisionData.speedX * (i+1) 
-		collisionData.posY = m.y + collisionData.speedY * (i+1)
-		collisionDataResult = m.level.CheckCollision(collisionData)
-	end for
 	
-	m.x = collisionData.posX
-	m.y = collisionData.posY
-
+	collisionDataResult = m.level.CheckCollision(collisionData)
+	m.position = collisionDataResult.position
+	m.speed = collisionDataResult.speed
 	
-	if ((m.x > m.globalVars.GAME_FIELD_MAX_X - m.ballRadius) OR (m.x < m.globalVars.GAME_FIELD_MIN_X + m.ballRadius)) 
-		m.x -= m.speedX
-		m.speedX *= -1.0
+'	for i=0 to collisionTrackingIterations - 1
+'		m.x = m.x + collisionData.speedX * (i+1)
+'		m.y = m.y + collisionData.speedY * (i+1)
+''		
+	'	collisionData.position.x =  
+	'	collisionData.position.y = 
+	'	collisionDataResult = m.level.CheckCollision(collisionData)
+'	end for
+	
+	if ((m.position.x > m.globalVars.GAME_FIELD_MAX_X - m.ballRadius) OR (m.position.x < m.globalVars.GAME_FIELD_MIN_X + m.ballRadius)) 
+		m.position.x -= m.speed.x
+		m.speed.x *= -1.0
 	end if
 	
-	if ((m.y > m.globalVars.screenHeight - m.ballRadius) OR (m.y < m.globalVars.GAME_FIELD_MIN_Y + m.ballRadius))
-		m.y -= m.speedY
-		m.speedY *= -1.0
+	if ((m.position.y > m.globalVars.screenHeight - m.ballRadius) OR (m.position.y < m.globalVars.GAME_FIELD_MIN_Y + m.ballRadius))
+		m.position.y -= m.speed.y
+		m.speed.y *= -1.0
 	end if
-	
 		
-	m.visObj.x = m.x
-	m.visObj.y = m.y
+	m.visObj.x = m.position.x
+	m.visObj.y = m.position.y
 	m.visObj.Update(_deltaTime)
 end function
 
