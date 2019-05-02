@@ -33,7 +33,12 @@ function Main() as void
         
         PLAYER_START_SPEED		: 10.0
         
-        PLAYER_WIDTHS		: [112, 147, 225]
+        PLAYER_WIDTHS		: [112.0, 147.0, 225.0]
+        PLAYER_HEIGHT		: 28.0
+        
+        PLAYER_POS_Y		: 670.0
+        
+        PLAYER_COLLISION_SLOPE_WIDTH : 19.0
         
         screenWidth			: screenWidth
         screenHeight		: screenHeight
@@ -191,7 +196,7 @@ function Main() as void
 ' ------------------------------------------------------------------------------------------	
 	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet)
 	player = CreatePlayer(GAME_VARS, gameObjectsDataSet)
-	ball = CreateBall(GAME_VARS, gameBallDataSet, firstLevel, player.SpawnPos())
+	ball = CreateBall(GAME_VARS, gameBallDataSet, firstLevel, player, player.SpawnPos())
 	
 	
 ' ------------------------------------------------------------------------------------------	
@@ -2111,6 +2116,8 @@ end function
 
 function LevelCheckCollision (_collisionData as object) as object
 	'determining a list of cells which might be collided with a ball's AABB
+	_collisionData.isCollided = false
+	
 	leftTestedBlock = (_collisionData.position.x - _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
 	if (leftTestedBlock < 0 ) leftTestedBlock = 0
 	rightTestedBlock = (_collisionData.position.x + _collisionData.radius - m.globalVars.GAME_FIELD_MIN_X) \ m.globalVars.BRICK_WIDTH
@@ -2254,28 +2261,29 @@ function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as o
         active  : true
         globalVars	: _globalVars
         gameObjectsDataSet : _gameObjectsDataSet
-        x	: 0.0
-        y	: 0.0
-        speedX : 0.0
-        speedY : 0.0
-        visObj : invalid
-        startSpeed : _globalVars.PLAYER_START_SPEED
-        playerWidthCode	: 0
-        playerWidth : invalid
-        spawnPointOffsetX	:  0.0
-        spawnPointOffsetY	:  -10.0
+        position			: {x: 0, y: 0}
+        speed				: {x: 0, y: 0}
+        visObj 				: invalid
+        startSpeed 			: _globalVars.PLAYER_START_SPEED
+        playerWidthCode		: 0
+        playerWidth 		: invalid
+        playerHeight 		: _globalVars.PLAYER_HEIGHT
+        spawnPointOffset	: {x: 0, y: -10.0}
+        playerCollisionInnerBoxHalfWidth : 0.0
         
         Draw    : SimplePlayerDraw
         Update  : SimplePlayerUpdate
         Move	: SimplePlayerMove
         SpawnPos	: GetPlayerSpawnPos
+        CheckCollision	: CheckPlayerCollision
     }
     
     obj.playerWidth = _globalVars.PLAYER_WIDTHS[obj.playerWidthCode]
+    obj.playerCollisionInnerBoxHalfWidth = obj.playerWidth * 0.5 - _globalVars.PLAYER_COLLISION_SLOPE_WIDTH  
     
-    obj.x = obj.globalVars.GAME_FIELD_MIN_X + obj.globalVars.GAME_FIELD_WIDTH * 0.5 
-    obj.y = 670.0
-	obj.visObj = CreateVisObj("platform", obj.globalVars.screen, obj.x, obj.y, obj.gameObjectsDataSet, "platformSmall")
+    obj.position.x = obj.globalVars.GAME_FIELD_MIN_X + obj.globalVars.GAME_FIELD_WIDTH * 0.5 
+    obj.position.y = _globalVars.PLAYER_POS_Y
+	obj.visObj = CreateVisObj("platform", obj.globalVars.screen, obj.position.x, obj.position.y, obj.gameObjectsDataSet, "platformSmall")
     
     return obj
 end function
@@ -2283,19 +2291,19 @@ end function
 function SimplePlayerUpdate(_deltaTime=0 as float) as void
 	if (m.active = false) return
 	
-	m.x += m.speedX
-	m.y += m.speedY
+	m.position.x += m.speed.x
+	m.position.y += m.speed.y
 	
-	if (m.x > m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5)
-		m.x = m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5
+	if (m.position.x > m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5)
+		m.position.x = m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5
 	end if
 
-	if (m.x < m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5)
-		m.x = m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5 
+	if (m.position.x < m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5)
+		m.position.x = m.globalVars.GAME_FIELD_MIN_X + m.playerWidth * 0.5 
 	end if
 		
-	m.visObj.x = m.x
-	m.visObj.y = m.y
+	m.visObj.x = m.position.x
+	m.visObj.y = m.position.y
 	m.visObj.Update(_deltaTime)
 end function
 
@@ -2307,22 +2315,48 @@ end function
 
 function SimplePlayerMove(_playerMoveCode as Integer) as void
 	if (_playerMoveCode = m.globalVars.PLAYER_MOVE_CODE_RIGHT)
-		m.speedX = m.startSpeed
+		m.speed.x = m.startSpeed
 	end if
 		if (_playerMoveCode = m.globalVars.PLAYER_MOVE_CODE_LEFT)
-		m.speedX = -m.startSpeed
+		m.speed.x = -m.startSpeed
 	end if
 end function
 
 function GetPlayerSpawnPos() as object
 	obj = {
-		x : m.x + m.spawnPointOffsetX 
-		y : m.y + m.spawnPointOffsetY
+		x : m.position.x + m.spawnPointOffset.x 
+		y : m.position.y + m.spawnPointOffset.y
 	}
 	return obj
 end function
 
-function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level as object, _pos as object) as object
+function CheckPlayerCollision(_collisionData as object) as object
+	'player's shape consists of an inner box and two ellipses
+	_collisionData.isCollided = false
+	playerTop = m.position.y - m.playerHeight * 0.5
+	playerLeft = m.position.x - m.playerWidth * 0.5
+	playerRight = m.position.x + m.playerWidth * 0.5
+	'inner box 
+	playerBoxLeft = m.position.x - m.playerCollisionInnerBoxHalfWidth
+	playerBoxRight = m.position.x + m.playerCollisionInnerBoxHalfWidth
+	
+	'check aabb collision
+	if (_collisionData.position.y + _collisionData.radius < playerTop) return _collisionData
+	if (_collisionData.position.x - _collisionData.radius < playerLeft) return _collisionData
+	if (_collisionData.position.x + _collisionData.radius > playerRight) return _collisionData
+	'check inner box
+	if (_collisionData.position.x - _collisionData.radius > playerBoxLeft AND _collisionData.position.x + _collisionData.radius < playerBoxRight)
+		_collisionData.speed.y = -1.0 * Abs(_collisionData.speed.y)
+		_collisionData.position.y = m.position.y - m.playerHeight * 0.5 - _collisionData.radius
+		_collisionData.isCollided = true
+		return _collisionData
+	end if
+	'check slopes
+	
+	return _collisionData
+end function
+
+function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level as object, _player as object, _pos as object) as object
     obj = {
         active  : true
         globalVars	: _globalVars
@@ -2335,6 +2369,7 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level
         ballRadius : invalid
         collisionTrackingAccuracy : 1.0 'in pixels
         level	: _level
+        player	: _player
         
         Draw    : SimpleBallDraw
         Update  : SimpleBallUpdate
@@ -2352,7 +2387,7 @@ end function
 
 function SimpleBallUpdate (_deltaTime=0 as float) as void
 	if (m.active = false) return
-	
+	'blocks collision
 	pathLength = VectorLength(m.speed)
 	collisionTrackingIterations = pathLength \ m.collisionTrackingAccuracy + 1
 	
@@ -2372,12 +2407,14 @@ function SimpleBallUpdate (_deltaTime=0 as float) as void
 		collisionData.position.x += collisionData.speed.x
 		collisionData.position.y += collisionData.speed.y
 		collisionData = m.level.CheckCollision(collisionData)
+		collisionData = m.player.CheckCollision(collisionData)
 	end for
 	
 	m.position = collisionData.position
 	m.speed.x = collisionData.speed.x * collisionTrackingIterations
 	m.speed.y = collisionData.speed.y * collisionTrackingIterations
 	
+	'border collision
 	if ((m.position.x > m.globalVars.GAME_FIELD_MAX_X - m.ballRadius) OR (m.position.x < m.globalVars.GAME_FIELD_MIN_X + m.ballRadius)) 
 		m.position.x -= m.speed.x
 		m.speed.x *= -1.0
