@@ -22,7 +22,7 @@ function Main() as void
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
         PI					: 3.14159265359
-        BALL_START_SPEED	: 10.0
+        BALL_START_SPEED	: 4.0
         BALL_RADIUSES		: [10.0, 20.0, 40.0]
         
         MAX_LEVEL_COLUMNS	: 13
@@ -39,9 +39,9 @@ function Main() as void
         PLAYER_POS_Y		: 670.0
         
         PLAYER_COLLISION_SLOPE_WIDTH : 19.0
-        PLAYER_COLLISION_SLOPE_OFFSET: [{x: 38.0, y: 7.0}, 
-        								{x: 38.0, y: 7.0},
-        								{x: 38.0, y: 7.0}]
+        PLAYER_COLLISION_SLOPE_OFFSET: [{x: 39.0, y: 20.0}, 
+        								{x: 39.0, y: 20.0},
+        								{x: 39.0, y: 20.0}]
         PLAYER_COLLISION_SLOPE_RADIUS : {x: 20.0, y: 34.0}
         
         screenWidth			: screenWidth
@@ -2274,8 +2274,8 @@ function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as o
         playerHeight 		: _globalVars.PLAYER_HEIGHT
         spawnPointOffset	: {x: 0, y: -10.0}
         playerCollisionInnerBoxHalfWidth : 0.0
-        rightSlopOffset			: invalid
-        leftSlopOffset			: invalid
+        rightSlopOffset			: {x: 0, y: -10.0}
+        leftSlopOffset			: {x: 0, y: -10.0}
         
         Draw    : SimplePlayerDraw
         Update  : SimplePlayerUpdate
@@ -2286,9 +2286,10 @@ function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as o
     
     obj.playerWidth = _globalVars.PLAYER_WIDTHS[obj.playerWidthCode]
     obj.playerCollisionInnerBoxHalfWidth = obj.playerWidth * 0.5 - _globalVars.PLAYER_COLLISION_SLOPE_WIDTH
-    obj.leftSlopOffset = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode]
-    obj.rightSlopOffset = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode]
-    obj.rightSlopOffset.x = -1.0 * obj.rightSlopOffset.x
+    obj.leftSlopOffset.x = - _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].x
+    obj.leftSlopOffset.y = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].y
+    obj.rightSlopOffset.x = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].x
+    obj.rightSlopOffset.y = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].y
     
     obj.position.x = obj.globalVars.GAME_FIELD_MIN_X + obj.globalVars.GAME_FIELD_WIDTH * 0.5 
     obj.position.y = _globalVars.PLAYER_POS_Y
@@ -2354,6 +2355,7 @@ function CheckPlayerCollision(_collisionData as object) as object
 	if (_collisionData.position.x - _collisionData.radius < playerLeft) return _collisionData
 	if (_collisionData.position.x + _collisionData.radius > playerRight) return _collisionData
 	if (_collisionData.position.y - _collisionData.radius > playerTop) return _collisionData
+
 	'check inner box
 	if (_collisionData.position.x - _collisionData.radius > playerBoxLeft AND _collisionData.position.x + _collisionData.radius < playerBoxRight)
 		_collisionData.speed.y = -1.0 * Abs(_collisionData.speed.y)
@@ -2362,9 +2364,11 @@ function CheckPlayerCollision(_collisionData as object) as object
 		return _collisionData
 	end if
 	'check slopes
+	print ("slope check")
+	
 	leftSlopePos = {x: 0.0, y:0.0}
-	leftSlopePos.x = m.leftSlopOffset.x + m.position.x
-	leftSlopePos.y = m.leftSlopOffset.y + m.position.y
+	leftSlopePos.x = m.position.x - m.leftSlopOffset.x
+	leftSlopePos.y = m.position.y + m.leftSlopOffset.y 
 	ballSlopeCenterDistance = Distance(_collisionData.position, leftSlopePos)
 	ballPosInSlopeSpace = {x: 0.0, y:0.0}
 	ballPosInSlopeSpace.x = _collisionData.position.x - m.position.x
