@@ -33,7 +33,7 @@ function Main() as void
         
         PLAYER_START_SPEED		: 10.0
         
-        PLAYER_WIDTHS		: [112.0, 147.0, 225.0]
+        PLAYER_WIDTHS		: [116.0, 147.0, 225.0]
         PLAYER_HEIGHT		: 28.0
         
         PLAYER_POS_Y		: 670.0
@@ -2358,6 +2358,7 @@ function CheckPlayerCollision(_collisionData as object) as object
 
 	'check inner box
 	if (_collisionData.position.x - _collisionData.radius > playerBoxLeft AND _collisionData.position.x + _collisionData.radius < playerBoxRight)
+		
 		_collisionData.speed.y = -1.0 * Abs(_collisionData.speed.y)
 		_collisionData.position.y = m.position.y - m.playerHeight * 0.5 - _collisionData.radius
 		_collisionData.isCollided = true
@@ -2370,22 +2371,46 @@ function CheckPlayerCollision(_collisionData as object) as object
 	leftSlopePos.x = m.position.x - m.leftSlopOffset.x
 	leftSlopePos.y = m.position.y + m.leftSlopOffset.y 
 	ballSlopeCenterDistance = Distance(_collisionData.position, leftSlopePos)
+	
+	
 	ballPosInSlopeSpace = {x: 0.0, y:0.0}
-	ballPosInSlopeSpace.x = _collisionData.position.x - m.position.x
-	ballPosInSlopeSpace.y = Abs(_collisionData.position.y - m.position.y)
+	ballPosInSlopeSpace.x = _collisionData.position.x - leftSlopePos.x
+	ballPosInSlopeSpace.y = Abs(_collisionData.position.y - leftSlopePos.y)
+	
+	'hitAngle = atn(ballPosInSlopeSpace.y / ballPosInSlopeSpace.x) / m.globalVars.PI * 180.0
+	
 	slopeCos = ballPosInSlopeSpace.x / ballSlopeCenterDistance
 	slopeSin = ballPosInSlopeSpace.y / ballSlopeCenterDistance
 	slopeNearToBallPos = {x: 0.0, y:0.0}
 	slopeNearToBallPos.x = slopeCos * m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.x
 	slopeNearToBallPos.y = slopeSin * m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.y
 	slopeRadius = VectorLength(slopeNearToBallPos)
+	
+	slopeRadius_collisionDataRadius = slopeRadius + _collisionData.radius
+	print "_collisionData.position.x" _collisionData.position.x
+	print "_collisionData.position.y" _collisionData.position.y
+	print "m.position.x" m.position.x
+	print "m.position.y" m.position.y
+	
+	print "leftSlopePos.x" leftSlopePos.x
+	print "leftSlopePos.y" leftSlopePos.y
+	print "ballSlopeCenterDistance" ballSlopeCenterDistance
+	print "slopeRadius" slopeRadius
+	print "m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.x" m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.x
+	print "m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.y" m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.y
+	print "_collisionData.radius" _collisionData.radius
+	print "slopeRadius_collisionDataRadius" slopeRadius_collisionDataRadius
+	print "slopeCos" slopeCos
+	print "slopeSin" slopeSin
+	print 
+	
 	if (ballSlopeCenterDistance > slopeRadius + _collisionData.radius) 
 		return _collisionData
 	end if
 	
 	slopNormal = {x:0.0, y:0.0}
 	slopNormal.x = ballPosInSlopeSpace.x
-	slopNormal.y = -1.0 * ballPosInSlopeSpace.x
+	slopNormal.y = -1.0 * ballPosInSlopeSpace.y
 	
 	slopNormal = NormalizeVector(slopNormal)
 	reflectedBallSpeed = ReflectVector(_collisionData.speed, slopNormal)
