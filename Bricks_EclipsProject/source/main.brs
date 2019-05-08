@@ -22,7 +22,7 @@ function Main() as void
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
         PI					: 3.14159265359
-        BALL_START_SPEED	: 1.0
+        BALL_START_SPEED	: 5.0
         BALL_RADIUSES		: [10.0, 20.0, 40.0]
         
         MAX_LEVEL_COLUMNS	: 13
@@ -31,18 +31,14 @@ function Main() as void
         PLAYER_MOVE_CODE_RIGHT	: 1
         PLAYER_MOVE_CODE_LEFT	: 2
         
-        PLAYER_START_SPEED		: 1.0
+        PLAYER_START_SPEED		: 10.0
         
         PLAYER_WIDTHS		: [116.0, 147.0, 225.0]
         PLAYER_HEIGHT		: 28.0
         
-        PLAYER_POS_Y		: 670.0
+        PLAYER_COLLISION_INNER_BOX_HALF_WIDTHS : [39.0, 57.0, 95.0]
         
-        PLAYER_COLLISION_SLOPE_WIDTH : 19.0
-        PLAYER_COLLISION_SLOPE_OFFSET: [{x: 39.0, y: 20.0}, 'one pair for each size of player 
-        								{x: 39.0, y: 20.0},
-        								{x: 39.0, y: 20.0}]
-        PLAYER_COLLISION_SLOPE_RADIUS : {x: 20.0, y: 34.0}
+        PLAYER_POS_Y		: 670.0
         
         screenWidth			: screenWidth
         screenHeight		: screenHeight
@@ -2265,18 +2261,16 @@ function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as o
         active  : true
         globalVars	: _globalVars
         gameObjectsDataSet : _gameObjectsDataSet
-        position			: {x: 0, y: 0}
-        speed				: {x: 0, y: 0}
+        position			: {x: 0.0, y: 0.0}
+        speed				: {x: 0.0, y: 0.0}
         visObj 				: invalid
         startSpeed 			: _globalVars.PLAYER_START_SPEED
         playerWidthCode		: 0
         playerWidth 		: invalid
         playerHeight 		: _globalVars.PLAYER_HEIGHT
-        spawnPointOffset	: {x: 0, y: -10.0}
+        spawnPointOffset	: {x: 0.0, y: -30.0}
         playerCollisionInnerBoxHalfWidth : 0.0
-        rightSlopOffset			: {x: 0, y: -10.0}
-        leftSlopOffset			: {x: 0, y: -10.0}
-        
+                
         Draw    : SimplePlayerDraw
         Update  : SimplePlayerUpdate
         Move	: SimplePlayerMove
@@ -2285,12 +2279,7 @@ function CreatePlayer(_globalVars as object, _gameObjectsDataSet as object) as o
     }
     
     obj.playerWidth = _globalVars.PLAYER_WIDTHS[obj.playerWidthCode]
-    obj.playerCollisionInnerBoxHalfWidth = obj.playerWidth * 0.5 - _globalVars.PLAYER_COLLISION_SLOPE_WIDTH
-    obj.leftSlopOffset.x = - _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].x
-    obj.leftSlopOffset.y = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].y
-    obj.rightSlopOffset.x = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].x
-    obj.rightSlopOffset.y = _globalVars.PLAYER_COLLISION_SLOPE_OFFSET[obj.playerWidthCode].y
-    
+    obj.playerCollisionInnerBoxHalfWidth = _globalVars.PLAYER_COLLISION_INNER_BOX_HALF_WIDTHS[obj.playerWidthCode] 
     obj.position.x = obj.globalVars.GAME_FIELD_MIN_X + obj.globalVars.GAME_FIELD_WIDTH * 0.5 
     obj.position.y = _globalVars.PLAYER_POS_Y
 	obj.visObj = CreateVisObj("platform", obj.globalVars.screen, obj.position.x, obj.position.y, obj.gameObjectsDataSet, "platformSmall")
@@ -2346,6 +2335,7 @@ function CheckPlayerCollision(_collisionData as object) as object
 	playerTop = m.position.y - m.playerHeight * 0.5
 	playerLeft = m.position.x - m.playerWidth * 0.5
 	playerRight = m.position.x + m.playerWidth * 0.5
+	playerDown = m.position.y + m.playerHeight * 0.5
 	'inner box 
 	playerBoxLeft = m.position.x - m.playerCollisionInnerBoxHalfWidth
 	playerBoxRight = m.position.x + m.playerCollisionInnerBoxHalfWidth
@@ -2354,86 +2344,29 @@ function CheckPlayerCollision(_collisionData as object) as object
 	if (_collisionData.position.y + _collisionData.radius < playerTop) return _collisionData
 	if (_collisionData.position.x - _collisionData.radius < playerLeft) return _collisionData
 	if (_collisionData.position.x + _collisionData.radius > playerRight) return _collisionData
-	if (_collisionData.position.y - _collisionData.radius > playerTop) return _collisionData
+	if (_collisionData.position.y - _collisionData.radius > playerDown) return _collisionData
 
 	'check inner box
-'	if (_collisionData.position.x - _collisionData.radius > playerBoxLeft AND _collisionData.position.x + _collisionData.radius < playerBoxRight)
-'		
-'		_collisionData.speed.y = -1.0 * Abs(_collisionData.speed.y)
-'		_collisionData.position.y = m.position.y - m.playerHeight * 0.5 - _collisionData.radius
-'		_collisionData.isCollided = true
-'		return _collisionData
-'	end if
-
-	'check left slope	
-	leftSlopePos = {x: 0.0, y:0.0}
-	leftSlopePos.x = m.position.x + m.leftSlopOffset.x
-	leftSlopePos.y = m.position.y + m.leftSlopOffset.y 
-	ballSlopeCenterDistance = Distance(_collisionData.position, leftSlopePos)
-	
-	
-	ballPosInSlopeSpace = {x: 0.0, y:0.0}
-	ballPosInSlopeSpace.x = _collisionData.position.x - leftSlopePos.x
-	ballPosInSlopeSpace.y = Abs(_collisionData.position.y - leftSlopePos.y)
-	
-	slopeCos = ballPosInSlopeSpace.x / ballSlopeCenterDistance
-	slopeSin = ballPosInSlopeSpace.y / ballSlopeCenterDistance
-	slopeNearToBallPos = {x: 0.0, y:0.0}
-	slopeNearToBallPos.x = slopeCos * m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.x
-	slopeNearToBallPos.y = slopeSin * m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.y
-	slopeRadius = VectorLength(slopeNearToBallPos)
-	
-	if (ballSlopeCenterDistance < slopeRadius + _collisionData.radius) 
-		if (_collisionData.speed.y > 0.0)
-			slopNormal = {x:0.0, y:0.0}
-			slopNormal.x = ballPosInSlopeSpace.x
-			slopNormal.y = -1.0 * ballPosInSlopeSpace.y
-
-			slopNormal = NormalizeVector(slopNormal)
-			reflectedBallSpeed = ReflectVector(_collisionData.speed, slopNormal)
-	
-			_collisionData.speed = reflectedBallSpeed
-			_collisionData.position.x += slopNormal.x * (slopeRadius + _collisionData.radius - ballSlopeCenterDistance)
-			_collisionData.position.y += slopNormal.y * (slopeRadius + _collisionData.radius - ballSlopeCenterDistance)
-			_collisionData.isCollided = true
-		end if	
+	if (_collisionData.position.x > playerBoxLeft AND _collisionData.position.x < playerBoxRight)
+		_collisionData.speed.y = -1.0 * Abs(_collisionData.speed.y)
+		_collisionData.position.y = m.position.y - m.playerHeight * 0.5 - _collisionData.radius
+		_collisionData.isCollided = true
+		return _collisionData
 	end if
 
-	'check right slope	
-	rightSlopePos = {x: 0.0, y:0.0}
-	rightSlopePos.x = m.position.x + m.rightSlopOffset.x
-	rightSlopePos.y = m.position.y + m.rightSlopOffset.y 
-	ballSlopeCenterDistance = Distance(_collisionData.position, rightSlopePos)
-	
-	
-	ballPosInSlopeSpace = {x: 0.0, y:0.0}
-	ballPosInSlopeSpace.x = _collisionData.position.x - rightSlopePos.x
-	ballPosInSlopeSpace.y = Abs(_collisionData.position.y - rightSlopePos.y)
-	
-	slopeCos = ballPosInSlopeSpace.x / ballSlopeCenterDistance
-	slopeSin = ballPosInSlopeSpace.y / ballSlopeCenterDistance
-	slopeNearToBallPos = {x: 0.0, y:0.0}
-	slopeNearToBallPos.x = slopeCos * m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.x
-	slopeNearToBallPos.y = slopeSin * m.globalVars.PLAYER_COLLISION_SLOPE_RADIUS.y
-	slopeRadius = VectorLength(slopeNearToBallPos)
-	
-	slopeRadius_collisionDataRadius = slopeRadius + _collisionData.radius
-	
-	if (ballSlopeCenterDistance < slopeRadius + _collisionData.radius) 
-		if (_collisionData.speed.y > 0.0)
-			slopNormal = {x:0.0, y:0.0}
-			slopNormal.x = ballPosInSlopeSpace.x
-			slopNormal.y = -1.0 * ballPosInSlopeSpace.y
-
-			slopNormal = NormalizeVector(slopNormal)
-			reflectedBallSpeed = ReflectVector(_collisionData.speed, slopNormal)
-	
-			_collisionData.speed = reflectedBallSpeed
-			_collisionData.position.x += slopNormal.x * (slopeRadius + _collisionData.radius - ballSlopeCenterDistance)
-			_collisionData.position.y += slopNormal.y * (slopeRadius + _collisionData.radius - ballSlopeCenterDistance)
-			_collisionData.isCollided = true
-		end if	
+	'check slopes
+	if (_collisionData.speed.y < 0.0) return _collisionData
+	ballSpeedLength = VectorLength(_collisionData.speed)
+	ballSpeed = {
+		x : 0.70710678118 * ballSpeedLength 
+		y : -0.70710678118 * ballSpeedLength
+	}
+	if(_collisionData.position.x < m.position.x )
+		ballSpeed.x *= -1.0
 	end if
+	
+	_collisionData.speed = ballSpeed 
+	_collisionData.isCollided = true
 	
 	return _collisionData
 end function
@@ -2444,7 +2377,7 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level
         globalVars	: _globalVars
         gameObjectsDataSet : _gameObjectsDataSet
         position	: _pos
-        speed		: {x: 0, y: 0}
+        speed		: {x: 0.0, y: 0.0}
         visObj : invalid
         startSpeed : _globalVars.BALL_START_SPEED
         ballRadiusCode	: 0
