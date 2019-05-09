@@ -40,8 +40,13 @@ function Main() as void
         
         PLAYER_POS_Y		: 670.0
         
+        ENERGY_ITEM_RADIUS		: 20.0
+        ENERGY_ITEM_START_SPEED	: 1.0
+        ENERGY_ITEMS_MAX_AMOUNT	: 3
         screenWidth			: screenWidth
         screenHeight		: screenHeight
+        
+        ENERGY_ITEM_DATASET	: gameBallDataSet
 ' NEED DELETE ------------------------------------------------------
 ' --------- GLOBAL VARS ---------------------------------------------------------------------------------
     
@@ -294,6 +299,7 @@ GAME_TEST_LOOP:
 				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
 				' end line for uninteractive back and UI elements
 				
+				firstLevel.Update(deltaTime)
 				firstLevel.Draw()
 				
 				player.Update(deltaTime)
@@ -2056,15 +2062,19 @@ function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDat
         globalVars	: _globalVars
         levelData : invalid
         gameObjectDataSet : _gameObjectDataSet
+        egergyItems : CreateObject("roList")
         
-        Draw    : SimpleLevelDraw
-        Update  : SimpleLevelUpdate
+        Draw    : LevelDraw
+        Update  : LevelUpdate
         CheckCollision : LevelCheckCollision
         CheckBlockCollision : CheckBlockCollision
         LevelBlocksDraw : LevelBlocksDraw
         LevelBlockDraw : LevelBlockDraw
+        SpawnEnergyItem : SpawnEnergyItem
+        GetLevelBlockPos : GetLevelBlockPos
     }
     
+    obj.energyItems = CreateObject("roList")
     obj.testLevelASCII = ReadAsciiFile(_levelPath)
 	obj.levelData = ParseTextLevel(obj.testLevelASCII, obj.globalVars)
 	
@@ -2073,11 +2083,15 @@ function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDat
     return obj
 end function
 
-function SimpleLevelUpdate () as void
+function LevelUpdate(_deltatime as float) as void
 	if (m.active = false) return
+	
+	for each energyItem in m.egergyItems
+		energyItem.Update(_deltaTime)
+	end for	
 end function
 
-function SimpleLevelDraw () as void
+function LevelDraw() as void
 	if (m.active = false) return
 	
 	for i=0 to m.globalVars.MAX_LEVEL_LINES-1
@@ -2091,6 +2105,10 @@ function SimpleLevelDraw () as void
 				m.brickObj.Draw()
 			end if
 		end for
+	end for
+	
+	for each energyItem in m.egergyItems
+		energyItem.Draw()
 	end for
 end function
 
@@ -2112,6 +2130,14 @@ function LevelBlockDraw(_blockCellCoord as object) as void
 	m.brickObj.currentAnimationName = "brick8" 
 	m.brickObj.Update(0)
 	m.brickObj.Draw()
+end function
+
+function GetLevelBlockPos(_blockCellCoord as object) as object
+	res = {x : 0.0, y : 0.0}
+	res.x = m.globalVars.GAME_FIELD_MIN_X + _blockCellCoord.j * m.globalVars.BRICK_WIDTH + m.globalVars.BRICK_WIDTH * 0.5
+	res.y = m.globalVars.GAME_FIELD_MIN_Y + _blockCellCoord.i * m.globalVars.BRICK_HEIGHT + m.globalVars.BRICK_HEIGHT * 0.5 - 0.5
+	
+	return res
 end function
 
 function LevelCheckCollision (_collisionData as object) as object
@@ -2153,14 +2179,33 @@ function LevelCheckCollision (_collisionData as object) as object
 		_collisionData.testedBlock = testedBlock
 		blockCollisionResult = m.CheckBlockCollision(_collisionData)
 		if (blockCollisionResult.isCollided = true)
-			m.levelData[testedBlock.i][testedBlock.j] = " "
-			m.LevelBlockDraw(testedBlock)
+			if (m.levelData[testedBlock.i][testedBlock.j] = "1")
+				energyItemPos = m.GetLevelBlockPos(testedBlock)
+				m.SpawnEnergyItem(energyItemPos)
+				m.levelData[testedBlock.i][testedBlock.j] = " "	
+				m.LevelBlockDraw(testedBlock)
+			end if
 			exit for
 		end if
 	end for
 	
 	return blockCollisionResult
 end function
+
+function SpawnEnergyItem(_position as object) as void
+	allIsActive = true
+	for each energyItem in m.egergyItems
+		if (energyItem.active = false)
+			allIsActive = false
+			energyItem.active = true
+			energyItem.position = _position
+		end if 
+	end for
+	
+	if (allIsActive = true AND m.egergyItems.Count() < m.globalVars.ENERGY_ITEMS_MAX_AMOUNT)
+		m.egergyItems.AddTail(CreateEnergyItem(m.globalVars, m.globalVars.ENERGY_ITEM_DATASET, m.player, _position))
+	end if
+end function 
 
 function CheckBlockCollision(_collisionData as object) as object
 	blockX = m.globalVars.GAME_FIELD_MIN_X + _collisionData.testedBlock.j * m.globalVars.BRICK_WIDTH  + m.globalVars.BRICK_WIDTH * 0.5
@@ -2386,8 +2431,8 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level
         level	: _level
         player	: _player
         
-        Draw    : SimpleBallDraw
-        Update  : SimpleBallUpdate
+        Draw    : BallDraw
+        Update  : BallUpdate
     }
     
     obj.ballRadius = _globalVars.BALL_RADIUSES[obj.ballRadiusCode]
@@ -2400,7 +2445,7 @@ function CreateBall(_globalVars as object, _gameObjectsDataSet as object, _level
     return obj
 end function
 
-function SimpleBallUpdate (_deltaTime=0 as float) as void
+function BallUpdate(_deltaTime=0 as float) as void
 	if (m.active = false) return
 	'blocks collision
 	pathLength = VectorLength(m.speed)
@@ -2445,8 +2490,67 @@ function SimpleBallUpdate (_deltaTime=0 as float) as void
 	m.visObj.Update(_deltaTime)
 end function
 
-function SimpleBallDraw () as void
+function BallDraw() as void
 	if (m.active = false) return
 	
 	m.visObj.Draw()
+end function
+
+function CreateEnergyItem(_globalVars as object, _gameObjectsDataSet as object, _player as object, _pos as object) as object
+    obj = {
+        active  : true
+        globalVars	: _globalVars
+        gameObjectsDataSet : _gameObjectsDataSet
+        position	: _pos
+        speed		: {x: 0.0, y: 0.0}
+        visObj : invalid
+        startSpeed : _globalVars.ENERGY_ITEM_START_SPEED
+        radius : _globalVars.ENERGY_ITEM_RADIUS
+        player	: _player
+        
+        Draw    : SimpleDraw
+        Update  : EnergyItemUpdate
+    }
+    
+    obj.speed.x = 0.0
+    obj.speed.y = obj.startSpeed
+    
+	obj.visObj = CreateVisObj("energyItem", obj.globalVars.screen, obj.position.x, obj.position.y, obj.gameObjectsDataSet, "idle")
+    
+    return obj
+end function
+
+function SimpleDraw() as void
+	if (m.active = false) return
+	m.visObj.Draw()
+end function
+
+function EnergyItemUpdate(_deltaTime=0 as float) as void
+	if (m.active = false) return
+	'blocks collision
+	m.position.x += m.speed.x
+	m.position.y += m.speed.y
+		
+'	collisionData = {
+'		position : m.position
+'		speed : m.speed
+'		radius : m.radius
+'		isCollided	: false
+'	}
+	
+'	collisionData = m.player.CheckCollision(collisionData)
+'	if (collisionData.isCollided = true)
+'		m.active = false
+'		return
+'	end if
+	
+	'border collision
+	if (m.position.y - m.radius > m.globalVars.screenHeight)
+		m.active = false
+		return
+	end if
+		
+	m.visObj.x = m.position.x
+	m.visObj.y = m.position.y
+	m.visObj.Update(_deltaTime)
 end function
