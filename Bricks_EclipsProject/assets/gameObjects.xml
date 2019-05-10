@@ -17,6 +17,9 @@
 		<Region name="r3" x="0" y="114" w="144" h="57" />
 		<Region name="r4" x="0" y="171" w="144" h="57" />
 	</Bitmap>
+	<Bitmap name="energyItem" filespec="pkg:/assets/gameObjects_energyItem.png">
+		<Region name="r1" x="0" y="0" w="25" h="27" />
+	</Bitmap>
 	<Animation name="brickTest">
 		<frame use="bricks.r1" />
 		<frame use="bricks.r2" />
@@ -60,5 +63,8 @@
 		<frame use="platformSmall.r2" />
 		<frame use="platformSmall.r3" />
 		<frame use="platformSmall.r4" />
+	</Animation>
+		<Animation name="energyItem">
+		<frame use="energyItem.r1" />
 	</Animation>
 </BitmapSet>

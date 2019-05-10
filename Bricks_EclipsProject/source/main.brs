@@ -42,11 +42,18 @@ function Main() as void
         
         ENERGY_ITEM_RADIUS		: 20.0
         ENERGY_ITEM_START_SPEED	: 1.0
-        ENERGY_ITEMS_MAX_AMOUNT	: 3
+        ENERGY_ITEMS_MAX_AMOUNT	: 15
+        ENERGY_ITEMS_ENERGY		: 0.01
         screenWidth			: screenWidth
         screenHeight		: screenHeight
         
-        ENERGY_ITEM_DATASET	: gameBallDataSet
+        ENERGY_ITEM_DATASET	: gameObjectsDataSet
+        ENERGY_ITEM_ANIMATION	: "energyItem"
+
+        MAX_ENERGY			: 1.0
+        
+        ENERGY_BAR_POSITION	: {x: 974.0, y: 518.0}
+        
 ' NEED DELETE ------------------------------------------------------
 ' --------- GLOBAL VARS ---------------------------------------------------------------------------------
     
@@ -184,14 +191,12 @@ function Main() as void
 	gameUI_TextEnergyObj.Update()
 	gameUI_EnergyBorderObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_EnergyBorder, screen, 970, 520, -0.5, -0.5, 1.0, 1.0)
 	gameUI_EnergyBorderObj.Update()
-	gameUI_EnergyBarObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_EnergyBar, screen, 974, 518, -0.5, -0.5, 1.0, 1.0)
-	gameUI_EnergyBarObj.Update()
 	gameUI_TextBoosterObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBooster, screen, 1020, 573, -0.5, -0.5, 1.0, 1.0)
 	gameUI_TextBoosterObj.Update()
 	gameUI_TextBoosterXObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBoosterX, screen, 1072, 632, -0.5, -0.5, 1.0, 1.0)
 	gameUI_TextBoosterXObj.Update()
 	gameUI_BottomLineObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_BottomLine, screen, 41, 678, -0.5, 0, 875.0, 1.0)
-	gameUI_BottomLineObj.Update()
+	gameUI_BottomLineObj.Update()	
 ' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
 	
 	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
@@ -199,10 +204,13 @@ function Main() as void
 	
 	
 ' ------------------------------------------------------------------------------------------	
-	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet)
 	player = CreatePlayer(GAME_VARS, gameObjectsDataSet)
+	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet, player)
 	ball = CreateBall(GAME_VARS, gameBallDataSet, firstLevel, player, player.SpawnPos())
 	
+	gameUI_EnergyBar = CreateEnergyBar(GAME_VARS, gameUIDataSet.regions.gameUI_EnergyBar)
+	gameUI_EnergyBar.Setup(firstLevel)
+	gameUI_EnergyBar.Update()
 	
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
@@ -287,7 +295,7 @@ GAME_TEST_LOOP:
 				
 				gameUI_LogoObj.Draw()
 				gameUI_EnergyBorderObj.Draw()
-				gameUI_EnergyBarObj.Draw()
+								
 				gameUI_PlatformObj.Draw()
 				gameUI_TextBoosterObj.Draw()
 				gameUI_TextBoosterXObj.Draw()
@@ -298,6 +306,9 @@ GAME_TEST_LOOP:
 				
 				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
 				' end line for uninteractive back and UI elements
+				gameUI_EnergyBar.Update()
+				gameUI_EnergyBar.Draw()
+				
 				
 				firstLevel.Update(deltaTime)
 				firstLevel.Draw()
@@ -2056,22 +2067,25 @@ end function
 
 ' bricks project functions _________________________________________________________________________________________________________________
 ' _________________________________________________________________________________________________________________
-function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDataSet as object) as object
+function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDataSet as object, _player as object) as object
     obj = {
         active  : true
         globalVars	: _globalVars
         levelData : invalid
         gameObjectDataSet : _gameObjectDataSet
         egergyItems : CreateObject("roList")
+		energy		: 0.0
+		player		: _player
         
         Draw    : LevelDraw
         Update  : LevelUpdate
-        CheckCollision : LevelCheckCollision
+        CheckCollision 		: LevelCheckCollision
         CheckBlockCollision : CheckBlockCollision
-        LevelBlocksDraw : LevelBlocksDraw
-        LevelBlockDraw : LevelBlockDraw
-        SpawnEnergyItem : SpawnEnergyItem
-        GetLevelBlockPos : GetLevelBlockPos
+        LevelBlocksDraw 	: LevelBlocksDraw
+        LevelBlockDraw 		: LevelBlockDraw
+        SpawnEnergyItem 	: SpawnEnergyItem
+        GetLevelBlockPos	: GetLevelBlockPos
+        AddEnergy			: LevelAddEnergy
     }
     
     obj.energyItems = CreateObject("roList")
@@ -2079,8 +2093,12 @@ function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDat
 	obj.levelData = ParseTextLevel(obj.testLevelASCII, obj.globalVars)
 	
 	obj.brickObj = CreateVisObj("brick", obj.globalVars.screen, 0, 0, obj.gameObjectDataSet, "brickTest")
-    
     return obj
+end function
+
+function LevelAddEnergy()
+	m.energy += m.globalVars.ENERGY_ITEMS_ENERGY
+	m.energy = MinF(m.energy, m.globalVars.MAX_ENERGY)
 end function
 
 function LevelUpdate(_deltatime as float) as void
@@ -2197,13 +2215,13 @@ function SpawnEnergyItem(_position as object) as void
 	for each energyItem in m.egergyItems
 		if (energyItem.active = false)
 			allIsActive = false
-			energyItem.active = true
-			energyItem.position = _position
+			energyItem.Setup(_position)
+			return
 		end if 
 	end for
-	
+
 	if (allIsActive = true AND m.egergyItems.Count() < m.globalVars.ENERGY_ITEMS_MAX_AMOUNT)
-		m.egergyItems.AddTail(CreateEnergyItem(m.globalVars, m.globalVars.ENERGY_ITEM_DATASET, m.player, _position))
+		m.egergyItems.AddTail(CreateEnergyItem(m.globalVars, m.player, m, _position))
 	end if
 end function 
 
@@ -2496,28 +2514,35 @@ function BallDraw() as void
 	m.visObj.Draw()
 end function
 
-function CreateEnergyItem(_globalVars as object, _gameObjectsDataSet as object, _player as object, _pos as object) as object
+function CreateEnergyItem(_globalVars as object, _player as object, _level as object, _position as object) as object
     obj = {
         active  : true
         globalVars	: _globalVars
-        gameObjectsDataSet : _gameObjectsDataSet
-        position	: _pos
+        position	: invalid
         speed		: {x: 0.0, y: 0.0}
         visObj : invalid
         startSpeed : _globalVars.ENERGY_ITEM_START_SPEED
         radius : _globalVars.ENERGY_ITEM_RADIUS
         player	: _player
+        level	: _level
         
         Draw    : SimpleDraw
         Update  : EnergyItemUpdate
+        Setup : SetupEnergyItem
     }
-    
-    obj.speed.x = 0.0
-    obj.speed.y = obj.startSpeed
-    
-	obj.visObj = CreateVisObj("energyItem", obj.globalVars.screen, obj.position.x, obj.position.y, obj.gameObjectsDataSet, "idle")
+
+	obj.Setup(_position)
+	    
+	obj.visObj = CreateVisObj("energyItem", obj.globalVars.screen, obj.position.x, obj.position.y, _globalVars.ENERGY_ITEM_DATASET, "energyItem")
     
     return obj
+end function
+
+function SetupEnergyItem(_position as object)
+    m.position = _position
+    m.speed.x = 0.0
+    m.speed.y = m.startSpeed
+	m.active = true
 end function
 
 function SimpleDraw() as void
@@ -2531,18 +2556,19 @@ function EnergyItemUpdate(_deltaTime=0 as float) as void
 	m.position.x += m.speed.x
 	m.position.y += m.speed.y
 		
-'	collisionData = {
-'		position : m.position
-'		speed : m.speed
-'		radius : m.radius
-'		isCollided	: false
-'	}
+	collisionData = {
+		position : m.position
+		speed : m.speed
+		radius : m.radius
+		isCollided	: false
+	}
 	
-'	collisionData = m.player.CheckCollision(collisionData)
-'	if (collisionData.isCollided = true)
-'		m.active = false
-'		return
-'	end if
+	collisionData = m.player.CheckCollision(collisionData)
+	if (collisionData.isCollided = true)
+		m.active = false
+		m.level.AddEnergy()
+		return
+	end if
 	
 	'border collision
 	if (m.position.y - m.radius > m.globalVars.screenHeight)
@@ -2553,4 +2579,41 @@ function EnergyItemUpdate(_deltaTime=0 as float) as void
 	m.visObj.x = m.position.x
 	m.visObj.y = m.position.y
 	m.visObj.Update(_deltaTime)
+end function
+
+function CreateEnergyBar(_globalVars as object, _region as object) as object
+    obj = {
+        active  : true
+        globalVars	: _globalVars
+        position	: invalid
+        sprite : invalid
+        level	: invalid
+        
+        Draw    : ObjSpriteDraw
+        Update  : EnergyBarUpdate
+        Setup : SetupEnergyBar
+    }
+
+	obj.position = obj.globalVars.ENERGY_BAR_POSITION 
+	    
+	obj.sprite = CreateSpriteObj(_region, obj.globalVars.screen, obj.position.x, obj.position.y, -0.5, -0.5, 1.0, 1.0)
+    return obj
+end function
+
+function SetupEnergyBar(_level as object)
+	m.level = _level
+end function
+
+function EnergyBarUpdate(_deltaTime=0 as float) as void
+	if (m.active = false) return
+	'blocks collision
+		
+	m.sprite.x = m.position.x
+	m.sprite.y = m.position.y
+	m.sprite.scaleX = m.level.energy 
+	m.sprite.Update(_deltaTime)
+end function
+
+function ObjSpriteDraw()
+	m.sprite.Draw()
 end function
