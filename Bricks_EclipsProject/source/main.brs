@@ -6,6 +6,7 @@ function Main() as void
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
     gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
     gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
+    gameFXDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameFX.xml"))
     
     
     scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
@@ -212,6 +213,8 @@ function Main() as void
 	gameUI_EnergyBar.Setup(firstLevel)
 	gameUI_EnergyBar.Update()
 	
+	explosion = CreateSpriteObj(gameFXDataSet.animations["explosion"][0], screen, 300.0, 300.0, 0.0, 0.0, 1.5, 1.5, gameFXDataSet.animations["explosion"], "explosion")
+	explosion.speed = 1.5
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
 
@@ -318,6 +321,10 @@ GAME_TEST_LOOP:
 				
 				ball.Update(deltaTime)
 				ball.Draw()
+				
+				'effects
+				explosion.Update(deltaTime)
+				explosion.Draw()
 				
                 screen.SwapBuffers()
                 clock.Mark()
@@ -1140,6 +1147,7 @@ function CreateVisObj(_name as String, _screen as object, _x as float, _y as flo
         y       : _y
         width   : 64
         height  : 64
+        scale	: {x: 1.0, y : 1.0}
         spriteObjArray  : {}
         currentAnimationName    : _currentAnimationName
                 
@@ -1164,7 +1172,11 @@ end function
 function SimpleVisObjUpdate(_deltatime=0 as float) as void
     if (m.active = false) return
     
-    m.spriteObjArray.Lookup(m.currentAnimationName).Update(_deltatime, m.x, m.y)
+    currentSprite = m.spriteObjArray.Lookup(m.currentAnimationName)
+    currentSprite.Update(_deltatime, m.x, m.y) 
+    currentSprite.scaleX = m.scale.x
+    currentSprite.scaleY = m.scale.x
+    
 end function
 
 function VisObjDraw() as void
@@ -1174,897 +1186,7 @@ function VisObjDraw() as void
     if (spriteObj <> invalid) spriteObj.Draw()
 end function
 
-'/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function TextRoundObjUpdate(_deltatime as float) as void
-    if (m.currentTime < m.time) 
-        blendFactor = m.currentTime / m.time
-        m.scale = Blend(m.scaleStart, m.scaleEnd, blendFactor)
-    else
-        m.scale = ClampF(m.scale, m.scaleStart, m.scaleEnd)
-    endif
-    m.currentTime += _deltatime
-    
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-        m.spriteObjArray[spriteObjName].scaleX = m.scale
-        m.spriteObjArray[spriteObjName].scaleY = m.scale
-    end for
-end function
-
-function TextRoundObjReset() as void
-    m.currentTime = 0.0
-    m.time = 0.3
-    m.scaleStart = 1.7
-    m.scaleEnd = 0.999
-    m.scale = m.scaleStart
-end function
-
-function CoinVisObjInit(_coin as object, _globalVars as object) as void
-    _coin.width = 20
-    _coin.height = 30
-    _coin.STATE_INTRO_PREPARING = 0
-    _coin.STATE_INTRO = 1
-    _coin.STATE_WAIT = 2
-    _coin.STATE_GAME = 3
-    _coin.STATE_DEATH = 4
-    _coin.state = _coin.STATE_DEATH
-    _coin.FLASHING_SPEED = 15
-    _coin.flashingTimer = 1
-    _coin.minX = 0
-    _coin.maxX = _globalVars.GAME_FIELD_MAX_X
-    _coin.minY = _globalVars.GAME_FIELD_MIN_Y + _coin.height
-    _coin.maxY = _globalVars.GAME_FIELD_MAX_Y - _coin.height
-    _coin.SPEED_X = _globalVars.COIN_SPEED_X
-    _coin.SPEED_Y = _globalVars.COIN_SPEED_Y
-    _coin.speedX = _coin.SPEED_X
-    _coin.speedY = _coin.SPEED_Y
-    _coin.spawnX = _globalVars.GAME_FIELD_MAX_X / 2 + Sgn(Rnd(0)-0.5) * _coin.width 
-    _coin.spawnChance = 0.0001
-    _coin.visible = false
-    _coin.CollidedUpdate = invalid
-    _coin.globalVars = _globalVars
-end function
-
-function CoinYellowVisObjInit(_globalVars as object) as void
-     CoinVisObjInit(m, _globalVars)
-     m.spawnChance = _globalVars.COIN_YELLOW_SPAWN_RATE
-     m.CollidedUpdate = CoinYellowCollidedUpdate
-end function
-
-function CoinGreenVisObjInit(_globalVars as object) as void
-    CoinVisObjInit(m, _globalVars)
-    m.spawnChance = _globalVars.COIN_GREEN_SPAWN_RATE
-    m.CollidedUpdate = CoinGreenCollidedUpdate
-end function
-
-function CoinRedVisObjInit(_globalVars as object) as void
-    CoinVisObjInit(m, _globalVars)
-    m.spawnChance = _globalVars.COIN_RED_SPAWN_RATE
-    m.CollidedUpdate = CoinRedCollidedUpdate
-end function
-
-function CoinBlackVisObjInit(_globalVars as object) as void
-    CoinVisObjInit(m, _globalVars)
-    m.spawnChance = _globalVars.COIN_BLACK_SPAWN_RATE
-    m.CollidedUpdate = CoinBlackCollidedUpdate
-end function
-
-function CoinWhiteVisObjInit(_globalVars as object) as void
-    CoinVisObjInit(m, _globalVars)
-    m.spawnChance = _globalVars.COIN_WHITE_SPAWN_RATE
-    m.CollidedUpdate = CoinWhiteCollidedUpdate
-end function
-
-function CoinPinkVisObjInit(_globalVars as object) as void
-    CoinVisObjInit(m, _globalVars)
-    m.spawnChance = _globalVars.COIN_PINK_SPAWN_RATE
-    m.CollidedUpdate = CoinPinkCollidedUpdate
-end function
-
-function CoinBlueVisObjInit(_globalVars as object) as void
-    CoinVisObjInit(m, _globalVars)
-    m.spawnChance = _globalVars.COIN_BLUE_SPAWN_RATE
-    m.CollidedUpdate = CoinBlueCollidedUpdate
-end function
-
-function CoinVisObjReset() as void
-    m.state = m.STATE_DEATH
-end function
-
-function CoinVisObjSpawn() as void
-    if ( (m.state = m.STATE_DEATH) AND (Rnd(0) < m.spawnChance) )
-        m.state = m.STATE_INTRO_PREPARING
-    end if
-end function
-
-function CoinVisObjUpdate(_deltatime as float, _balls as object, _hero1 as object, _hero2 as object) as void
-    if (m.state = m.STATE_DEATH)
-        m.visible = false
-        return
-    end if
-    
-    if (m.state = m.STATE_INTRO_PREPARING)
-        m.state = m.STATE_INTRO
-        m.y = Rnd(0) * (m.maxY - m.minY) + m.minY
-        m.x = m.spawnX 
-        m.visible = true
-    end if
-    
-    if (m.state = m.STATE_INTRO)
-        if (Sin(m.flashingTimer * m.FLASHING_SPEED) < 0) 
-            m.visible = false
-        else 
-            m.visible = true
-        end if
-        m.flashingTimer -= _deltatime
-        if (m.flashingTimer < 0) 
-            m.state = m.STATE_WAIT
-            m.visible = true
-        end if
-    end if
-    
-    if (m.state = m.STATE_WAIT)
-        isBallCollided = false
-        speedDirection = 1
-        for i=0 to m.globalVars.MAX_BALL_COUNT-1
-            if (_balls[i].state = _balls[i].STATE_GAME)
-                isBallCollided = CollisionBoxCheck(m, _balls[i])
-                if ( isBallCollided = true ) 
-                    speedDirection = Sgn(m.x - _balls[i].x)
-                    Goto BREAK_LOOP
-                end if
-            end if
-        end for
-BREAK_LOOP:
-        if (isBallCollided = true)
-            m.state = m.STATE_GAME
-            m.speedX = m.SPEED_X * speedDirection
-        end if
-        speedDirection = 0
-        if ( (_hero1.magnetTimer > 0 ) AND (_hero1.y - _hero1.height < m.y ) AND (_hero1.y + _hero1.height > m.y ) ) speedDirection -= 1 
-        if (_hero2.magnetTimer > 0 ) speedDirection += 1
-        if (speedDirection <> 0)
-            m.state = m.STATE_GAME
-            m.speedX = m.SPEED_X * speedDirection
-        end if
-    end if
-
-    if (m.state = m.STATE_GAME)
-        m.x += m.speedX
-        if (m.x < m.minX) OR ((m.x > m.maxX))
-            m.state = m.STATE_DEATH
-            m.visible = false
-        end if
-    
-        isHero1Collided = CollisionBoxCheck(m, _hero1)
-        isHero2Collided = CollisionBoxCheck(m, _hero2)
-        hero = _hero1
-        if (isHero1Collided = true)
-            hero = _hero1
-        end if
-        if (isHero2Collided = true)
-            hero = _hero2
-        end if
-        if ( (isHero1Collided = true) OR (isHero2Collided = true) )
-            m.state = m.STATE_DEATH
-            m.visible = false
-            m.CollidedUpdate(hero, m.globalVars)
-        end if
-    end if
-        
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function CoinYellowCollidedUpdate(hero as object, _globalVars as object) as void
-    hero.lifeCount = ClampF(hero.lifeCount + 1, 0, _globalVars.MAX_LIFE_COUNT)
-    _globalVars.Sound_levelup.Trigger(65)
-end function
-
-function CoinGreenCollidedUpdate(hero as object, _globalVars as object) as void
-    HeroChangeSize(hero, _globalVars, 1)
-    _globalVars.Sound_wide.Trigger(65)
-end function
-
-function CoinRedCollidedUpdate(hero as object, _globalVars as object) as void
-    for each rocketLauncher in hero.rocketLaunchers
-        if (rocketLauncher.state = rocketLauncher.STATE_DEATH) 
-            rocketLauncher.Spawn(hero)
-        end if
-    end for
-end function
-
-function CoinBlackCollidedUpdate(hero as object, _globalVars as object) as void
-    hero.lifeCount = ClampF(hero.lifeCount - 1, 0, _globalVars.MAX_LIFE_COUNT)
-    hero.isLifeLost = true
-    _globalVars.Sound_slow.Trigger(65)
-end function
-
-function CoinWhiteCollidedUpdate(hero as object, _globalVars as object) as void
-    _globalVars.numScoreObj.value += _globalVars.numScoreObj.COIN_WHITE_SCORE
-    _globalVars.numScoreObj.value = ClampI(_globalVars.numScoreObj.value, 0, _globalVars.MAX_SCORE)
-    _globalVars.Sound_score.Trigger(65)
-end function
-
-function CoinPinkCollidedUpdate(hero as object, _globalVars as object) as void
-    hero.isFaster = true
-    _globalVars.Sound_speed.Trigger(65)
-end function
-
-function CoinBlueCollidedUpdate(hero as object, _globalVars as object) as void
-    hero.hasMagnet = true
-    _globalVars.Sound_magnet.Trigger(65)
-end function
-
-function RocketLauncherVisObjInit(_globalVars as object, _slotID as integer) as void
-    m.width = 32
-    m.height = 32
-    m.STATE_INTRO_PREPARING = 0
-    m.STATE_GAME = 2
-    m.STATE_DEATH = 3
-    m.state = m.STATE_DEATH
-    m.minY = _globalVars.GAME_FIELD_MIN_Y + m.height
-    m.maxY = _globalVars.GAME_FIELD_MAX_Y - m.height  
-    m.visible = false
-    m.LIFETIME = 10
-    m.time = 0
-    m.globalVars = _globalVars
-    m.parent = invalid
-    m.spawnPosOffsetX = 0
-    m.slotID = _slotID
-end function
-
-function RocketLauncherVisObjReset() as void
-    m.state = m.STATE_DEATH
-end function
-
-function RocketLauncherVisObjSpawn(_hero as object) as void
-    if ( (m.state = m.STATE_DEATH))
-        m.state = m.STATE_INTRO_PREPARING
-        m.parent = _hero
-        m.spawnPosOffsetX = ( m.parent.width + m.width ) * (m.parent.heroID * 2 - 1) 
-    end if
-end function
-
-function RocketLauncherVisObjUpdate(_deltatime as float) as void
-    if (m.state = m.STATE_DEATH) 
-        m.visible = false
-        return
-    end if
-    
-    if (m.state = m.STATE_INTRO_PREPARING)
-        m.state = m.STATE_GAME
-        m.x = m.parent.x + m.spawnPosOffsetX
-        m.visible = true
-        m.time = 0
-    end if
-    
-    if (m.state = m.STATE_GAME)
-        m.y = m.parent.y + (m.parent.height - m.height) * m.slotID
-        m.time += _deltatime
-        if (m.time > m.LIFETIME) m.state = m.STATE_DEATH
-    end if
-    
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function RocketVisObjInit(_globalVars as object) as void
-    m.width = 32
-    m.height = 32
-    m.STATE_INTRO_PREPARING = 0
-    m.STATE_GAME = 2
-    m.STATE_DEATH = 3
-    m.state = m.STATE_DEATH
-    m.visible = false
-    m.time = 0
-    m.SPEED_X = 15
-    m.speedX = m.SPEED_X
-    m.OWNER_HERO1 = 1
-    m.OWNER_HERO2 = 2
-    m.owner = m.OWNER_HERO1
-    m.globalVars = _globalVars
-end function
-
-function RocketVisObjReset() as void
-    m.state = m.STATE_DEATH
-end function
-
-function RocketVisObjSpawn(_rocketLauncher as object, _owner as integer) as void
-    if ( (m.state = m.STATE_DEATH))
-        m.state = m.STATE_INTRO_PREPARING
-        m.x = _rocketLauncher.x
-        m.y = _rocketLauncher.y
-        m.owner = _owner
-        if (m.owner = m.OWNER_HERO1) 
-            m.speedX = m.SPEED_X
-        else 
-            m.speedX = -m.SPEED_X
-        end if
-    end if
-end function
-
-function RocketVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _balls as object) as void
-    if (m.state = m.STATE_DEATH) 
-        m.visible = false
-        return
-    end if
-    
-    if (m.state = m.STATE_INTRO_PREPARING)
-        m.state = m.STATE_GAME
-        m.visible = true
-        m.time = 0
-    end if
-    
-    if (m.state = m.STATE_GAME)
-        m.x += m.speedX
-        if ((m.x > m.globalVars.GAME_FIELD_MAX_X) OR (m.x < m.globalVars.GAME_FIELD_MIN_X)) 
-            m.state = m.STATE_DEATH
-            return
-        end if
-        if (m.owner = m.OWNER_HERO1) 
-            targetHero = _hero2
-        else 
-            targetHero = _hero1
-        end if
-        isHeroCollided = CollisionBoxCheck(m, targetHero)
-        if ( isHeroCollided = true)
-            m.state = m.STATE_DEATH
-            m.visible = false
-            HeroChangeSize(targetHero, m.globalVars, -1)
-            m.globalVars.Sound_shorten.Trigger(65)
-        end if
-        for each ball in _balls
-            if ((ball.state = ball.STATE_GAME) AND (ball.isBallSmall = false))
-                isBallCollided = CollisionBoxAndSphereCheck(m, ball)
-                if (isBallCollided = true)
-                    m.state = m.STATE_DEATH
-                    m.visible = false
-                    BallVisObjSplits(m.globalVars, ball, ball, 1)
-                    ball2 = GetDeadBall(_balls)
-                    if (ball2 <> invalid)           
-                        BallVisObjSplits(m.globalVars, ball2, ball, -1)
-                    end if
-                end if
-            end if
-        end for
-    end if
-    
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function GetDeadRocket(_rockets as object, _globalVars as object) as object
-    deadRocket = invalid 
-    for i=0 to _globalVars.MAX_ROCKET_COUNT-1
-        if (_rockets[i].state = _rockets[i].STATE_DEATH)
-            deadRocket = _rockets[i] 
-        end if
-    end for
-    return deadRocket 
-end function
-
-function BallVisObjInit(_globalVars as object) as void
-    m.ballCurrentSpeedX = _globalVars.BALL_SPEEDS[_globalVars.menuState]
-    m.ballCurrentSpeedY = _globalVars.BALL_SPEEDS[_globalVars.menuState]
-    m.SMALL_RADIUS = 32
-    m.DEFAULT_RADIUS = 64
-    m.radius = m.DEFAULT_RADIUS
-    m.maxX = _globalVars.GAME_FIELD_MAX_X
-    m.minX = _globalVars.GAME_FIELD_MIN_X
-    m.maxY = _globalVars.GAME_FIELD_MAX_Y - m.radius
-    m.minY = _globalVars.GAME_FIELD_MIN_Y + m.radius
-    m.STATE_INTRO_PREPARING = 0
-    m.STATE_INTRO = 1
-    m.STATE_GAME = 2
-    m.STATE_DEATH = 3
-    m.state = m.STATE_DEATH
-    m.FLASHING_SPEED = 15
-    m.flashingTimer = 1
-    m.INTRO_ANIMATION = "idle3"
-    m.GAME_ANIMATION = "idle2"
-    m.GAME_SMALL_ANIMATION = "idle4"
-    m.spawnX = _globalVars.GAME_FIELD_MAX_X / 2
-    m.spawnY = _globalVars.GAME_FIELD_MAX_Y / 2
-    m.Hero1Miss = false
-    m.Hero2Miss = false
-    m.globalVars = _globalVars
-end function
-
-function BallVisObjReset() as void
-    m.state = m.STATE_DEATH
-    m.x = m.spawnX
-    m.y = m.spawnY
-    m.ballCurrentSpeedX = 0
-    m.ballCurrentSpeedY = 0
-    m.Hero1Miss = false
-    m.Hero2Miss = false
-    m.isBallSmall = false
-    m.flashingTimer = 1
-    m.radius = m.DEFAULT_RADIUS
-    m.maxX = m.globalVars.GAME_FIELD_MAX_X
-    m.minX = m.globalVars.GAME_FIELD_MIN_X
-    m.maxY = m.globalVars.GAME_FIELD_MAX_Y - m.radius
-    m.minY = m.globalVars.GAME_FIELD_MIN_Y + m.radius
-end function
-
-function BallVisObjStart() as void
-    ballSpeedAngle = m.globalVars.PI/4 + Rnd(0) * m.globalVars.PI/2
-    m.ballCurrentSpeedX = Sin(ballSpeedAngle) * m.globalVars.BALL_SPEEDS[m.globalVars.menuState]
-    m.ballCurrentSpeedY = Cos(ballSpeedAngle) * m.globalVars.BALL_SPEEDS[m.globalVars.menuState]
-    m.state = m.STATE_GAME
-    m.visible = true
-    m.currentAnimationName = m.GAME_ANIMATION
-end function
-
-function BallVisObjSplits(_globalVars as object, _ball as object, _pivot as object, direction as float) as void
-    _ball.ballCurrentSpeedX = _pivot.ballCurrentSpeedX * direction * 1.2
-    _ball.ballCurrentSpeedY = _pivot.ballCurrentSpeedY * direction * Sgn(Rnd(0) - 0.5) * 1.2
-    _ball.state = _ball.STATE_GAME
-    _ball.visible = true
-    _ball.currentAnimationName = _ball.GAME_SMALL_ANIMATION
-    _ball.x = _pivot.x
-    _ball.y = _pivot.y
-    _ball.isBallSmall = true
-    _ball.radius = _ball.SMALL_RADIUS
-    _ball.maxX = _globalVars.GAME_FIELD_MAX_X
-    _ball.minX = _globalVars.GAME_FIELD_MIN_X
-    _ball.maxY = _globalVars.GAME_FIELD_MAX_Y - _ball.radius
-    _ball.minY = _globalVars.GAME_FIELD_MIN_Y + _ball.radius
-end function
-
-function BallVisObjUpdate(_deltatime as float, _hero1 as object, _hero2 as object, _numScoreObj as object) as void
-    if (m.active = false) return
-    
-    if (m.state = m.STATE_DEATH)
-        m.visible = false
-        return
-    end if
-    
-    if (m.state = m.STATE_INTRO_PREPARING)
-        m.state = m.STATE_INTRO
-        m.x = m.spawnX
-        m.y = m.spawnY
-        m.currentAnimationName = m.INTRO_ANIMATION
-        m.visible = true
-    end if
-    
-    if (m.state = m.STATE_INTRO)
-        if (Sin(m.flashingTimer * m.FLASHING_SPEED) < 0) 
-            m.visible = false
-        else 
-            m.visible = true
-        end if
-        m.flashingTimer -= _deltatime
-        if (m.flashingTimer < 0) 
-            m.state = m.STATE_GAME
-            m.visible = true
-            m.currentAnimationName = m.GAME_ANIMATION
-        end if
-    end if
-    
-    if (m.state = m.STATE_GAME)
-        ballSpeedOld = {
-            x : m.ballCurrentSpeedX
-            y : m.ballCurrentSpeedY
-        }
-        distanceHero1X = _hero1.x - m.x
-        distanceHero2X = _hero2.x - m.x
-        distanceHero1Y = _hero1.y - m.y
-        distanceHero2Y = _hero2.y - m.y
-        changeSpeed = false
-        
-        if ( (_hero1.magnetTimer > 0) AND (Abs(distanceHero1X) < _hero1.magnetObj.FORCE_DISTANCE) AND (m.ballCurrentSpeedX<0) ) 
-            m.ballCurrentSpeedX += distanceHero1X * _hero1.magnetObj.FORCE_X
-            m.ballCurrentSpeedY += distanceHero1Y * _hero1.magnetObj.FORCE_Y
-            changeSpeed = true
-        end if
-        if ( (_hero2.magnetTimer > 0) AND (Abs(distanceHero2X) < _hero2.magnetObj.FORCE_DISTANCE) AND (m.ballCurrentSpeedX>0))
-            m.ballCurrentSpeedX += distanceHero2X * _hero2.magnetObj.FORCE_X
-            m.ballCurrentSpeedY += distanceHero2Y * _hero2.magnetObj.FORCE_Y
-            changeSpeed = true
-        end if
-        
-        ballSpeed = {
-            x : m.ballCurrentSpeedX
-            y : m.ballCurrentSpeedY
-        }
-        if (changeSpeed = true)
-            ballSpeedLengthOld = VectorLength(ballSpeedOld)
-            ballSpeedLength = VectorLength(ballSpeed)  
-            m.ballCurrentSpeedX = m.ballCurrentSpeedX / ballSpeedLength * ballSpeedLengthOld 
-            m.ballCurrentSpeedY = m.ballCurrentSpeedY / ballSpeedLength * ballSpeedLengthOld
-            if (Abs(m.ballCurrentSpeedY) > Abs(m.ballCurrentSpeedX))
-                m.ballCurrentSpeedX = ballSpeedOld.x
-                m.ballCurrentSpeedY = ballSpeedOld.y
-            end if
-        end if
-        
-        m.x += m.ballCurrentSpeedX
-        m.y += m.ballCurrentSpeedY
-        if (m.x < m.minX) 
-            m.Hero1Miss = true
-            m.state = m.STATE_DEATH
-            m.globalVars.isLastMissedBallHeroes = true
-            m.globalVars.Sound_slow.Trigger(65)
-            return
-        else if (m.x > m.maxX) 
-            m.Hero2Miss = true
-            _numScoreObj.value += _numScoreObj.AI_FAIL_SCORE
-            _numScoreObj.value = ClampI(_numScoreObj.value, 0, m.globalVars.MAX_SCORE)
-            m.state = m.STATE_DEATH
-            m.globalVars.isLastMissedBallHeroes = false
-            return
-        end if
-        if ( (m.y > m.maxY) OR (m.y < m.minY) ) 
-            m.ballCurrentSpeedY *= -1
-            m.y = ClampF(m.y, m.minY, m.maxY)
-        end if
-    
-        isHero1HitBall = false
-        toHero1distanceX = Abs(_hero1.x - m.x)
-        if (toHero1distanceX < m.radius)
-            if ( (m.y < _hero1.y + _hero1.height ) AND (m.y > _hero1.y - _hero1.height ) ) 
-                m.ballCurrentSpeedX *= -1
-                m.ballCurrentSpeedY += _hero1.heroCurrentSpeed * 0.3
-                m.ballCurrentSpeedX *= 1.1
-            
-                m.x = _hero1.x + m.radius
-                isHero1HitBall = true
-                m.globalVars.Sound_hit.Trigger(100)
-            endif
-        endif
-    
-        if (isHero1HitBall = true) _numScoreObj.value += _numScoreObj.HIT_BALL_SCORE
-        _numScoreObj.value = ClampI(_numScoreObj.value, 0, m.globalVars.MAX_SCORE)
-
-        isHero2HitBall = false
-        toHero2distanceX = Abs(_hero2.x - m.x)
-        if (toHero2distanceX < m.radius)
-            if ( (m.y < _hero2.y + _hero2.height ) AND (m.y > _hero2.y - _hero2.height ) ) 
-                m.ballCurrentSpeedX *= -1
-                m.ballCurrentSpeedY += _hero2.heroCurrentSpeed * 0.3
-                m.ballCurrentSpeedX *= 1.1
-            
-                m.x = _hero2.x - m.radius
-                isHero2HitBall = true
-                m.globalVars.Sound_hit.Trigger(100)
-            else
-                isHero2HitBall = false
-            end if
-        end if
-    end if
-    
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function isAllBallsDead(_balls as object) as boolean
-    for each ball in _balls
-        if (ball.state <> ball.STATE_DEATH) return false
-    endfor
-    return true
-end function
-
-function GetDeadBall(_balls as object) as object
-    for each ball in _balls
-        if (ball.state = ball.STATE_DEATH) return ball
-    endfor
-    return invalid
-end function
-
-function HeroVisObjInit(_heroID as integer, _globalVars as object, _rocketLaunchers as object, _enemy as object) as void
-    m.heroID = _heroID 
-    m.lifeCount = _globalVars.START_LIFE_COUNT
-    m.width = 24
-    m.SIZE_STATE_MAX = 2
-    m.HEIGHTS = [43, 73, 132]
-    m.ANIMS = ["idle3", "idle", "idle2"]
-    m.SIZE_STATE_TIMES = [20, 0, 7]
-    m.rocketLaunchers = _rocketLaunchers
-    m.STATE_INTRO_PREPARING = 0
-    m.STATE_INTRO = 1
-    m.STATE_GAME = 2
-    m.STATE_DEATH = 3
-    m.state = m.STATE_INTRO_PREPARING
-    m.SIZE_STATE_DEFAULT = 1
-    m.globalVars = _globalVars
-    m.enemy = _enemy
-    m.FAST_TIME = 10
-    m.FAST_SPEED_MODIFIER = 1.5
-    m.MAGNET_TIME = 7
-    m.LIFE_LOST_SHACKING_TIME = _globalVars.SLOW_TIME
-    m.LIFE_LOST_SHACKING_SPEED = 30
-    m.LIFE_LOST_SHACKING_AMPLITUDE = 5
-    m.SPAWN_X = m.x
-    m.SLOW_SPEED_MODIFIER = 0.5
-end function
-
-function HeroVisObjReset(_speed) as void
-    m.sizeState = 1
-    m.height = m.HEIGHTS[m.sizeState]
-    m.SPEED = _speed
-    m.heroCurrentSpeed = 0
-    m.maxY = m.globalVars.GAME_FIELD_MAX_Y - m.height
-    m.minY = m.globalVars.GAME_FIELD_MIN_Y + m.height
-    m.isBig = false
-    m.sizeTimer = 0
-    m.y = m.globalVars.GAME_FIELD_MAX_Y / 2
-    m.currentAnimationName = m.ANIMS[m.sizeState]
-    for each rocketLauncher in m.rocketLaunchers
-        rocketLauncher.Reset()
-    end for
-    m.isFaster = false
-    m.fastTimer = 0
-    m.hasMagnet = false
-    m.magnetTimer = 0
-    m.isLifeLost = false
-    m.lifeLostShackingTimer = 0
-    m.x = m.SPAWN_X
-end function
-
-function HeroVisObjUpdate(_deltatime as float) as void
-    if (m.active = false) return
-    
-    speed_modifier = 1
-    if (m.isLifeLost = true)
-        m.isLifeLost = false
-        m.lifeLostShackingTimer = m.LIFE_LOST_SHACKING_TIME
-    end if
-    
-    if (m.lifeLostShackingTimer > 0)
-        m.lifeLostShackingTimer -= _deltatime
-        m.x = m.SPAWN_X + Sin(m.lifeLostShackingTimer * m.LIFE_LOST_SHACKING_SPEED) * m.LIFE_LOST_SHACKING_AMPLITUDE
-        m.isFaster = false
-        speed_modifier = m.SLOW_SPEED_MODIFIER
-        m.fastTimer = 0
-    end if
-    
-    if (m.isFaster = true) 
-        m.fastTimer = m.FAST_TIME
-        m.isFaster = false
-    end if
-    if (m.fastTimer >0) 
-        speed_modifier = m.FAST_SPEED_MODIFIER
-        m.fastTimer -= _deltatime
-        m.speedIconObj.active = true
-        m.speedIconObj.visible = true
-    else
-        m.speedIconObj.active = false
-        m.speedIconObj.visible = false  
-    end if
-
-    if (m.hasMagnet = true)
-        m.magnetTimer = m.MAGNET_TIME
-        m.hasMagnet = false
-    end if
-    if (m.magnetTimer >0) 
-        m.magnetObj.active = true
-        m.magnetObj.visible = true
-        m.magnetTimer -= _deltatime
-    else
-        m.magnetObj.active = false
-        m.magnetObj.visible = false
-    end if
-    
-    m.y += m.heroCurrentSpeed * speed_modifier
-    if (m.y > m.maxY) m.y = m.maxY
-    if (m.y < m.minY) m.y = m.minY
-    
-    if (m.sizeState <> m.SIZE_STATE_DEFAULT) 
-        m.sizeTimer -= _deltatime
-        if (m.sizeTimer <= 0)
-            m.sizeState = m.SIZE_STATE_DEFAULT
-            m.currentAnimationName = m.ANIMS[m.sizeState]
-            m.height = m.HEIGHTS[m.sizeState]
-            m.maxY = m.globalVars.GAME_FIELD_MAX_Y - m.height
-            m.minY = m.globalVars.GAME_FIELD_MIN_Y + m.height
-            m.sizeTimer = 0
-        end if
-    end if
-    
-    for each rocketLauncher in m.rocketLaunchers
-        rocketLauncher.Update(_deltatime)
-    end for
-    
-    m.magnetObj.Update(_deltatime, m)
-    m.speedIconObj.Update(_deltatime, m)
-                
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function AIHeroVisObjUpdate(_deltatime as float, _balls=invalid as object, _rockets=invalid as object) as void
-    if (m.active = false) return
-    if (_balls = invalid) Goto SPRITES_UPDATE
-    
-    speed_modifier = 1
-    if (m.isLifeLost = true)
-        m.isLifeLost = false
-        m.lifeLostShackingTimer = m.LIFE_LOST_SHACKING_TIME
-    end if
-    
-    if (m.lifeLostShackingTimer > 0)
-        m.lifeLostShackingTimer -= _deltatime
-        m.x = m.SPAWN_X + Sin(m.lifeLostShackingTimer * m.LIFE_LOST_SHACKING_SPEED) * m.LIFE_LOST_SHACKING_AMPLITUDE
-        m.isFaster = false
-        speed_modifier = m.SLOW_SPEED_MODIFIER
-        m.fastTimer = 0
-    end if
-    
-    if (m.isFaster = true) 
-        m.fastTimer = m.FAST_TIME
-        m.isFaster = false
-    end if
-    
-    if (m.fastTimer >0)
-        speed_modifier = m.FAST_SPEED_MODIFIER
-        m.fastTimer -= _deltatime
-        m.speedIconObj.active = true
-        m.speedIconObj.visible = true
-    else
-        m.speedIconObj.active = false
-        m.speedIconObj.visible = false  
-    end if
-
-    if (m.hasMagnet = true) 
-        m.magnetTimer = m.MAGNET_TIME
-        m.hasMagnet = false
-    end if
-    if (m.magnetTimer >0) 
-        m.magnetObj.active = true
-        m.magnetObj.visible = true
-        m.magnetTimer -= _deltatime
-    else
-        m.magnetObj.active = false
-        m.magnetObj.visible = false 
-    end if
-    
-    nearestBallDistance = m.globalVars.GAME_FIELD_MAX_Y + m.globalVars.GAME_FIELD_MAX_X
-    nearestBallNum = 0
-    for i=0 to m.globalVars.MAX_BALL_COUNT-1
-        if (_balls[i].state = m.STATE_GAME)
-            ballDistance = Distance(_balls[i], m)
-            if (ballDistance < nearestBallDistance )
-                nearestBallNum = i
-                nearestBallDistance = ballDistance
-            end if
-        end if
-    end for
-    
-    m.heroCurrentSpeed = ClampF((_balls[nearestBallNum].y - m.y) * 0.4, -m.SPEED, m.SPEED)
-
-    m.y += m.heroCurrentSpeed * speed_modifier
-    if (m.y > m.maxY) m.y = m.maxY
-    if (m.y < m.minY) m.y = m.minY
-    
-    if (m.globalVars <> invalid)
-        if (m.sizeState <> m.SIZE_STATE_DEFAULT) 
-            m.sizeTimer -= _deltatime
-            if (m.sizeTimer <= 0)
-                m.sizeState = m.SIZE_STATE_DEFAULT
-                m.currentAnimationName = m.ANIMS[m.sizeState]
-                m.height = m.HEIGHTS[m.sizeState]
-                m.maxY = m.globalVars.GAME_FIELD_MAX_Y - m.height
-                m.minY = m.globalVars.GAME_FIELD_MIN_Y + m.height
-                m.sizeTimer = 0
-            end if
-        end if
-    end if
-    
-    ememyDistance = Abs(m.enemy.y - m.y)
-    if (ememyDistance < m.height + m.enemy.height)
-        for each rocketLauncher in m.rocketLaunchers
-            if (rocketLauncher.state = rocketLauncher.STATE_GAME)
-                rocket = GetDeadRocket(_rockets, m.globalVars)
-                    if (rocket <> invalid) 
-                        rocket.Spawn(rocketLauncher, rocket.OWNER_HERO2)
-                        rocketLauncher.state = rocketLauncher.STATE_DEATH
-                        Goto AI_ROCKET_CHOSEN
-                    end if
-                end if
-            end for
-    end if
-AI_ROCKET_CHOSEN:
-    
-    for each rocketLauncher in m.rocketLaunchers
-        rocketLauncher.Update(_deltatime)
-    end for
-    
-    m.magnetObj.Update(_deltatime, m)
-    m.speedIconObj.Update(_deltatime, m)
-    
-SPRITES_UPDATE:
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function HeroChangeSize(hero as object, _globalVars as object, sizeChanger as float) as void
-    hero.sizeState = ClampI(hero.sizeState + sizeChanger, 0, hero.SIZE_STATE_MAX)
-    hero.currentAnimationName = hero.ANIMS[hero.sizeState]
-    hero.height = hero.HEIGHTS[hero.sizeState]
-    hero.maxY = _globalVars.GAME_FIELD_MAX_Y - hero.height
-    hero.minY = _globalVars.GAME_FIELD_MIN_Y + hero.height
-    hero.sizeTimer = hero.SIZE_STATE_TIMES[hero.sizeState]
-end function
-
-function MagnetObjInit(_globalVars as object, _offset as float) as void
-    m.width = 32
-    m.height = 32
-    m.active = false
-    m.visible = false
-    m.globalVars = _globalVars
-    m.offsetX = _offset
-    m.FORCE_X = 0.02
-    m.FORCE_Y = 0.02
-    m.FORCE_DISTANCE = (_globalVars.GAME_FIELD_MAX_Y - _globalVars.GAME_FIELD_MIN_Y) * 0.5
-    if (_offset > 0 ) 
-        m.currentAnimationName = "idle"
-    else 
-        m.currentAnimationName = "idle2"
-    end if
-end function
-
-function MagnetObjUpdate(_deltatime as float, _hero as object) as void
-    if (m.active = false) return
-    m.x = _hero.x - (_hero.width + m.width) * m.offsetX
-    m.y = _hero.y
-
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function SpeedIconObjInit(_globalVars as object) as void
-    m.active = false
-    m.visible = false
-    m.globalVars = _globalVars
-end function
-
-function SpeedIconObjUpdate(_deltatime as float, _hero as object) as void
-    if (m.active = false) return
-    m.x = _hero.x
-    m.y = _hero.y
-
-    for each spriteObjName in m.spriteObjArray
-        m.spriteObjArray[spriteObjName].Update(_deltatime, m.x, m.y)
-    end for
-end function
-
-function menuCursorObjInit(_globalVars as object) as void
-    m.globalVars = _globalVars
-    m.JUMP_TIME = m.globalVars.PI
-    m.jumpTimer = m.JUMP_TIME
-    m.JumpSpeedX = 5
-    m.offsetAmplitudeX = 40
-    m.offsetSpeedX = 0.4
-    m.offsetSpeedY = 0.25
-    m.lastMenuState = m.globalVars.menuState
-end function
-
-function menuCursorObjUpdate(_deltatime as float) as void
-    if (m.active = false) return
-    m.AnimationUpdate(_deltatime)
-    
-    if (m.lastMenuState <> m.globalVars.menuState)
-        m.jumpTimer = Abs(m.jumpTimer - m.JUMP_TIME / 2) + m.JUMP_TIME / 2 
-        m.lastMenuState = m.globalVars.menuState
-    end if
-    m.jumpTimer -= _deltatime * m.JumpSpeedX
-    if (m.jumpTimer < 0 ) m.jumpTimer += m.JUMP_TIME
-    offsetX = -Abs(Sin(m.jumpTimer)) * m.offsetAmplitudeX 
-    m.y += (m.globalVars.GAME_STATE_MENU_Y[m.globalVars.menuState] - m.y) * m.offsetSpeedY 
-    m.x += (m.globalVars.GAME_STATE_MENU_X[m.globalVars.menuState] - m.x) * m.offsetSpeedX
-    m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + offsetX
-    m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY
-end function
-
+'/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////`
 ' bricks project functions _________________________________________________________________________________________________________________
 ' _________________________________________________________________________________________________________________
 function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDataSet as object, _player as object) as object
@@ -2617,3 +1739,80 @@ end function
 function ObjSpriteDraw()
 	m.sprite.Draw()
 end function
+
+function CreateParticleSystem(_globalVars as object, _animDataSet as object, _animationName as object, _position as object, _EmitterUpdate=PointEmitterUpdate as object) as object
+    obj = {
+        active  : true
+        globalVars	: _globalVars
+        position	: _position
+        regions : _regions
+        animationName : _animationName
+        sprite		: invalid
+        lifetime	: 1.0
+        burst		: {time: 0.0, value: 5.0}
+        particles	: []	
+        
+        Draw    : ParticlesSystemDraw
+        Update  : ParticlesSystemUpdate
+        EmitterUpdate	: _EmitterUpdate 
+    } 
+	    
+	obj.sprite = CreateSpriteObj(_animDataSet.animations[_animationName][0], obj.globalVars.screen, obj.position.x, obj.position.y, -0.5, -0.5, 1.0, 1.0, _animDataSet.animations[_animationName], _animationName)
+    return obj
+end function
+
+function ParticlesSystemDraw() as void
+	for each particle in particles
+	end for
+	m.sprite.Draw()
+end function 
+
+function ParticlesSystemUpdate(_deltaTime=0 as float) as void
+
+end function 
+
+function PointEmitterUpdate(_deltaTime=0 as float) as void
+
+end function 
+
+function CreateParticle(_globalVars as object, _animation as object) as object
+   obj = {
+        active  : true
+        globalVars  : _globalVars
+        position : invalid
+        speed   : invalid
+        scale	: invalid        
+        scaleDelta : invalid
+        lifetime    : 1.0
+        time : 0.0
+        currentRegion : invalid
+        
+        Draw    : ParticleDraw
+        Update  : ParticleUpdate
+        Setup : ParticleSetup
+    }
+    'obj.currentRegion.SetScaleMode(1)
+    return obj
+end function
+
+function ParticleSetup(_animationName as String, _lifetime as float, _position as object, _speed as object, _scale as object, _scaleDelta as object) as void
+	m.time = 0.0
+	m.active = true
+	m.position = _position
+    m.speed = _speed
+    m.scale	= _scale
+    m.scaleDelta = _scaleDelta
+    m.lifetime = _lifetime
+    m.currentRegion = _animation[_animationName][0]
+end function
+
+function ParticleDraw() as void
+    m.globalVars.screen.DrawScaledObject(m.position.x, position.y, m.scale.x, m.scale.y, m.currentRegion)
+end function 
+
+function ParticleUpdate(_deltaTime=0 as float) as void
+	if (m.active = false) return
+    'm.AnimationUpdate(_deltatime)
+    m.position.x += m.speed.x
+    m.position.y += m.speed.y
+end function 

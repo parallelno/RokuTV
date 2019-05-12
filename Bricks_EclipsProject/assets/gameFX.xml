@@ -1,0 +1,39 @@
+<BitmapSet>
+	<ExtraInfo explosion_speed = "1"/>
+	<Bitmap name="explosion" filespec="pkg:/assets/gameFX_Explosion.png">
+		<Region name="r1" x="0" y="0" w="128" h="128" />
+		<Region name="r2" x="128" y="0" w="128" h="128" />
+		<Region name="r3" x="256" y="0" w="128" h="128" />
+		<Region name="r4" x="384" y="0" w="128" h="128" />
+		<Region name="r5" x="0" y="128" w="128" h="128" />
+		<Region name="r6" x="128" y="128" w="128" h="128" />
+		<Region name="r7" x="256" y="128" w="128" h="128" />
+		<Region name="r8" x="384" y="128" w="128" h="128" />
+		<Region name="r9" x="0" y="256" w="128" h="128" />
+		<Region name="r10" x="128" y="256" w="128" h="128" />
+		<Region name="r11" x="256" y="256" w="128" h="128" />
+		<Region name="r12" x="384" y="256" w="128" h="128" />
+		<Region name="r13" x="0" y="384" w="128" h="128" />
+		<Region name="r14" x="128" y="384" w="128" h="128" />
+		<Region name="r15" x="256" y="384" w="128" h="128" />
+		<Region name="r16" x="384" y="384" w="128" h="128" />
+	</Bitmap>
+	<Animation name="explosion">
+		<frame use="explosion.r1" />
+		<frame use="explosion.r2" />
+		<frame use="explosion.r3" />
+		<frame use="explosion.r4" />
+		<frame use="explosion.r5" />
+		<frame use="explosion.r6" />
+		<frame use="explosion.r7" />
+		<frame use="explosion.r8" />
+		<frame use="explosion.r9" />
+		<frame use="explosion.r10" />
+		<frame use="explosion.r11" />
+		<frame use="explosion.r12" />
+		<frame use="explosion.r13" />
+		<frame use="explosion.r14" />
+		<frame use="explosion.r15" />
+		<frame use="explosion.r16" />
+	</Animation>
+</BitmapSet>
