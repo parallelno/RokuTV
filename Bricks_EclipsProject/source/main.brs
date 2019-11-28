@@ -6,7 +6,7 @@ function Main() as void
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
     gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
     gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
-    gameFXDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameFX.xml"))
+    gameFXDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameFX_Explosion2.xml"))
     
     
     scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
@@ -1162,7 +1162,14 @@ function CreateVisObj(_name as String, _screen as object, _x as float, _y as flo
         
         spriteObjSpeed = _animsData.extrainfo.Lookup(regionsName + "_speed")
         if (spriteObjSpeed <> invalid) spriteObj.speed = spriteObjSpeed.ToFloat()
-        
+	'print _name
+	'print "_______________________________animsData"
+	'print _animsData
+	'print "_______________________________animsData.animations"
+	'print _animsData.animations
+	'print "_______________________________animsData.extrainfo"
+	'print _animsData.extrainfo
+
         obj.spriteObjArray.AddReplace(regionsName,  spriteObj)
     end for
     

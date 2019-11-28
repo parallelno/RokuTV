@@ -1,0 +1,25 @@
+<BitmapSet>
+	<ExtraInfo explosion_speed = "0.01"/>
+	<Bitmap name="explosion" filespec="pkg:/assets/gameFX_Explosion2.png">
+		<Region name="r1" x="0" y="0" w="128" h="128" />
+		<Region name="r2" x="128" y="0" w="128" h="128" />
+		<Region name="r3" x="256" y="0" w="128" h="128" />
+		<Region name="r4" x="0" y="128" w="128" h="128" />
+		<Region name="r5" x="128" y="128" w="128" h="128" />
+		<Region name="r6" x="256" y="128" w="128" h="128" />
+		<Region name="r7" x="0" y="256" w="128" h="128" />
+		<Region name="r8" x="128" y="256" w="128" h="128" />
+		<Region name="r9" x="256" y="256" w="128" h="128" />
+	</Bitmap>
+	<Animation name="explosion">
+		<frame use="explosion.r1" />
+		<frame use="explosion.r2" />
+		<frame use="explosion.r3" />
+		<frame use="explosion.r4" />
+		<frame use="explosion.r5" />
+		<frame use="explosion.r6" />
+		<frame use="explosion.r7" />
+		<frame use="explosion.r8" />
+		<frame use="explosion.r9" />
+	</Animation>
+</BitmapSet>
