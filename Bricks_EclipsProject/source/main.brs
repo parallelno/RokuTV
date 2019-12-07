@@ -1,7 +1,7 @@
 ﻿Library "v30/bslDefender.brs"
 
 function Main() as void
-    mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
+    'mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
     gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
     gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
@@ -161,9 +161,9 @@ function Main() as void
     GAME_VARS.Sound_new_round = CreateObject("roAudioResource", "pkg:/sounds/new_round.wav")
 ' ------------------------------------------------------------------------------------------
 
-    mainMenuBackObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
-    mainMenu_GameTitleObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_GameTitle, screen, screenWidth/2, screenHeight * 0.4, 0, 0, 1.0, 1.0)
-	mainMenu_OptionsObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Options, screen, screenWidth/2, screenHeight * 0.75, 0, 0, 1.0, 1.0)
+    'mainMenuBackObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
+    'mainMenu_GameTitleObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_GameTitle, screen, screenWidth/2, screenHeight * 0.4, 0, 0, 1.0, 1.0)
+	'mainMenu_OptionsObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Options, screen, screenWidth/2, screenHeight * 0.75, 0, 0, 1.0, 1.0)
 	
 ' ------------------------------------------------------------------------------------------	
 	gameLevel_BackObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
@@ -199,13 +199,13 @@ function Main() as void
 	gameUI_TextBoosterXObj.Update()
 	gameUI_BottomLineObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_BottomLine, screen, 41, 678, -0.5, 0, 875.0, 1.0)
 	gameUI_BottomLineObj.Update()	
+
 ' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
-	
 	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
 	gameLevel_DebugWhiteFieldObj.Update()
+' ------------------------------------------------------------------------------------------
+
 	
-	
-' ------------------------------------------------------------------------------------------	
 	player = CreatePlayer(GAME_VARS, gameObjectsDataSet)
 	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet, player)
 	ball = CreateBall(GAME_VARS, gameBallDataSet, firstLevel, player, player.SpawnPos())
