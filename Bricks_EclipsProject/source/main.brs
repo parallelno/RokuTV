@@ -197,8 +197,12 @@ function Main() as void
 	gameUI_TextBoosterObj.Update()
 	gameUI_TextBoosterXObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBoosterX, screen, 1072, 632, -0.5, -0.5, 1.0, 1.0)
 	gameUI_TextBoosterXObj.Update()
-	gameUI_BottomLineObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_BottomLine, screen, 41, 678, -0.5, 0, 875.0, 1.0)
-	gameUI_BottomLineObj.Update()	
+	
+	'old
+	'gameUI_BottomLineObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_BottomLine, screen, 41, 678, -0.5, 0, 875.0, 1.0)
+	'gameUI_BottomLineObj.Update()
+	'new	
+	gameUI_BottomLineObj = CreateSprite([gameUIDataSet.regions.gameUI_BottomLine], screen, {x: 41, y: 678}, {x: -0.5, y: 0.0}, {x: 875.0, y: 1.0})
 
 ' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
 	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
@@ -214,8 +218,8 @@ function Main() as void
 	gameUI_EnergyBar.Setup(firstLevel)
 	gameUI_EnergyBar.Update()
 	
-	explosion = CreateSpriteObj(gameFXDataSet.animations["explosion"][0], screen, 300.0, 300.0, 0.0, 0.0, 1.5, 1.5, gameFXDataSet.animations["explosion"], "explosion")
-	explosion.speed = 1.0
+	explosion = CreateSprite(gameFXDataSet.animations["explosion"], screen, {x: 300, y: 300})
+	explosion.animationSpeed = 2.0
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
 

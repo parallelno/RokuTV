@@ -1,3 +1,80 @@
+' new API. Convert pairs of floats to roAssociativeArray 
+function CreateSprite(_regions as object, _screen as object, _position as object, _localOffset={x: 0.0, y: 0.0} as object, _scale={x: 1.0, y: 1.0} as object, _AnimationUpdate=_SpriteAnimationUpdate as object ) as object
+    obj = {
+    	active		: true
+        visible		: true
+    	lifetime	: 1.0
+    	loop		: true
+    	animationSpeed	: 1.0
+    	time			: 0.0
+    	position		: _position
+    	scale			: _scale
+    	localOffset		: _localOffset
+    	scrollSpeed		: {x: 0.0, y: 0.0}
+		regions			: _regions
+'		private fields
+		currentRegion	: _regions[0]
+		currentRegionNum	: 0
+    	drawPosition	: {x: 0.0, y: 0.0}
+        screen			: _screen
+'		functions
+		Draw    : SpriteDraw
+		Update  : SpriteUpdate
+		AnimationUpdate : _SpriteAnimationUpdate
+    }
+	obj.currentRegion.SetScaleMode(1)
+	obj.Update()
+	
+	return obj
+end function
+
+function SpriteDraw() as void
+    if (m.visible = false) return
+    m.screen.DrawScaledObject(m.drawPosition.x, m.drawPosition.y, m.scale.x, m.scale.y, m.currentRegion)
+end function
+
+function SpriteUpdate(_deltatime=0 as float, _position=invalid as object) as void
+    if (m.active = false) return
+    m.AnimationUpdate(_deltatime)
+    if _position <> invalid
+    	m.position = _position
+    end if
+    	
+    m.drawPosition.x = m.position.x + (-m.localOffset.x - 0.5) * m.currentRegion.GetWidth() * m.scale.x
+    m.drawPosition.y = m.position.y + (-m.localOffset.y - 0.5) * m.currentRegion.GetHeight() * m.scale.y
+end function
+
+function _SpriteAnimationUpdate(_deltatime=0 as float) as void
+    if (m.active = false) return
+    if (m.regions.Count() = 1) return
+    
+    m.time += _deltatime * m.animationSpeed
+    if (m.time > m.lifetime) 
+        if (m.loop = true)
+            m.time -= m.lifetime
+        else 
+            m.time = m.lifetime
+        endif
+    end if
+    if (m.time < 0) 
+        if (m.loop = true)
+            m.time += m.lifetime
+        else 
+            m.time = 0
+        endif
+    end if
+
+    m.currentRegionNum = Int(m.time / m.lifetime * m.regions.Count())
+    if (m.currentRegionNum > ( m.regions.Count() - 1) ) m.currentRegionNum -= 1
+    
+    currentRegion = m.regions[m.currentRegionNum]
+    if ( currentRegion <> invalid) m.currentRegion = currentRegion
+end function
+
+
+
+' old API
+
 function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object, _name="idle" as String, _AnimationUpdate=SimpleSpriteAnimationUpdate as object ) as object
     obj = {
         active  : true
@@ -24,7 +101,7 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
         spriteWidth     : 0
         spriteHeight    : 0
         
-        Draw    : SpriteDraw
+        Draw    : SpriteDrawOld
         Update  : SimpleSpriteUpdate
         AnimationUpdate : _AnimationUpdate
     }
@@ -33,7 +110,7 @@ function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y
     return obj
 end function
 
-function SpriteDraw() as void
+function SpriteDrawOld() as void
     if (m.visible = false) return
     m.screen.DrawScaledObject(m.drawX, m.drawY, m.scaleX, m.scaleY, m.currentRegion)
 end function
@@ -83,8 +160,8 @@ end function
 function ScrolledSpriteUpdate(_deltatime=0 as float, _x=0 as float, _y=0 as float) as void
     if (m.active = false) return
 
-    m.drawX = m.x + (-m.localOffsetX - 0.5) * m.currentRegion.GetWidth() * m.scaleX + _x
-    m.drawY = m.y + (-m.localOffsetY - 0.5) * m.currentRegion.GetHeight() * m.scaleY + _y
+    m.drawX = m.x + (-m.localOffsetX - 0.5) * m.spriteWidth * m.scaleX + _x
+    m.drawY = m.y + (-m.localOffsetY - 0.5) * m.spriteHeight * m.scaleY + _y
     currentSpriteOffsetX = _deltatime * m.scrollSpeedX
     currentSpriteOffsetY = _deltatime * m.scrollSpeedY
     currentSpriteOffsetX -= Int(currentSpriteOffsetX / m.spriteWidth) * m.spriteWidth
