@@ -1,0 +1,25 @@
+{
+      "sprites" : [
+           {  
+				"path" : "pkg:/assets/gameLevel_BorderCL.png",
+				"position" : [
+					{
+                 		"x" : 41.0,
+						"y" : 678.0
+					}
+				],
+				"localOffset" : [
+                 	{
+                 		"x" : 0.5,
+                 		"y" : 0.0
+                 	}
+				],
+                 "scale" : [
+                 	{
+                 		"x" : 875.0,
+                 		"y" : 1.0
+                 	}
+                 ] 
+           }
+      ]
+}

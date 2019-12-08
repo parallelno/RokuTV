@@ -11,6 +11,17 @@ function Main() as void
     screen.SetAlphaEnable(true)
     codes = bslUniversalControlEventCodes()
     
+	levelSkinASCII = ReadAsciiFile("pkg:/assets/LevelSkin01.json")
+	LevelSkinXml=createObject("roXMLElement")
+	LevelSkinXml = ParseJson(levelSkinASCII)
+    print LevelSkinXml.sprites.Count()
+
+    For Each sprite In LevelSkinXml.sprites
+    	print sprite.path
+    	print "x=" ; sprite.position[0].x
+    	print "y=" ; sprite.position[0].y
+	End For
+    
     'mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
     gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
