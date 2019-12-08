@@ -1,14 +1,6 @@
 ﻿Library "v30/bslDefender.brs"
 
 function Main() as void
-    'mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
-    gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
-    gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
-    gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
-    gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
-    gameFXDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameFX_Explosion2.xml"))
-    
-    
     scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
     port = CreateObject("roMessagePort")
@@ -19,121 +11,23 @@ function Main() as void
     screen.SetAlphaEnable(true)
     codes = bslUniversalControlEventCodes()
     
+    'mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
+    gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
+    gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
+    gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
+    gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
+    gameFXDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameFX_Explosion2.xml"))
     
-    GAME_VARS = {
-' ------- NEW -----------------------------------
-        STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
-        PI					: 3.14159265359
-        BALL_START_SPEED	: 5.0
-        BALL_RADIUSES		: [10.0, 20.0, 40.0]
-        
-        MAX_LEVEL_COLUMNS	: 13
-        MAX_LEVEL_LINES		: 17
-        
-        PLAYER_MOVE_CODE_RIGHT	: 1
-        PLAYER_MOVE_CODE_LEFT	: 2
-        
-        PLAYER_START_SPEED		: 10.0
-        
-        PLAYER_WIDTHS		: [116.0, 147.0, 225.0]
-        PLAYER_HEIGHT		: 28.0
-        
-        PLAYER_COLLISION_INNER_BOX_HALF_WIDTHS : [39.0, 57.0, 95.0]
-        
-        PLAYER_POS_Y		: 670.0
-        
-        ENERGY_ITEM_RADIUS		: 20.0
-        ENERGY_ITEM_START_SPEED	: 1.0
-        ENERGY_ITEMS_MAX_AMOUNT	: 15
-        ENERGY_ITEMS_ENERGY		: 0.01
-        screenWidth			: screenWidth
-        screenHeight		: screenHeight
-        
-        ENERGY_ITEM_DATASET	: gameObjectsDataSet
-        ENERGY_ITEM_ANIMATION	: "energyItem"
-
-        MAX_ENERGY			: 1.0
-        
-        ENERGY_BAR_POSITION	: {x: 974.0, y: 518.0}
-        
-' NEED DELETE ------------------------------------------------------
-' --------- GLOBAL VARS ---------------------------------------------------------------------------------
+    GAME_VARS = GlobalVars(screen, screenWidth, screenHeight, gameObjectsDataSet)
     
-        HIT_BALL_SCORE  : 50
-        AI_FAIL_SCORE   : 100
-        COIN_WHITE_SCORE: 500
-        
-        BALL_SPEEDS     : [5, 10, 15] 'speed depends on game difficulty
-		HERO_SPEED			: 10
-        AI_HERO_SPEEDS  : [3.3, 7, 13] 'speed depends on game difficulty
-
-    
-        bestScore       : 0
-        numScoreObj     : invalid
-        MAX_SCORE       : 99999
-        
-' --------- GAME VARS ---------------------------------------------------------------------------------
-        NEW_LIFE_LOOP_DELAY : 1
-
-
-        MAX_LIFE_COUNT      : 6
-        START_LIFE_COUNT    : 4
-        
-        MAX_BALL_COUNT      : 4
-        isLastMissedBallHeroes  : false
-        
-        MAX_ROCKET_COUNT    : 4
-        
-        HERO1_ID            : 0
-        HERO2_ID            : 1
-        
-        COIN_SPEED_X        : 3
-        
-        SLOW_TIME           : 10
-        
-        COIN_YELLOW_SPAWN_RATE  : 0.0003
-        COIN_GREEN_SPAWN_RATE   : 0.01  
-        COIN_RED_SPAWN_RATE     : 0.004
-        COIN_WHITE_SPAWN_RATE   : 0.1
-        COIN_PINK_SPAWN_RATE    : 0.1   
-        COIN_BLACK_SPAWN_RATE   : 1 '0.0003
-        COIN_BLUE_SPAWN_RATE    : 1 '0.01
-
-' --------- MAIN MENU VARS ---------------------------------------------------------------------------------
-        GAME_STATE_MENU_L1  : 0
-        GAME_STATE_MENU_L2  : 1
-        GAME_STATE_MENU_L3  : 2
-
-        GAME_STATE_MENU_X   : [ 280, 560, 490 ]
-        GAME_STATE_MENU_Y   : [ 489, 550, 610 ]
-' --------- INTRO VARS ---------------------------------------------------------------------------------    
-        GAME_INTRO_DELAY    : 1.0
-
-' --------- GAME OVER VARS ---------------------------------------------------------------------------------    
-        GAME_OVER_DELAY     : 3.0
-        GOAL_DELAY          : 1.0
-    }
-    GAME_VARS.menuState = GAME_VARS.GAME_STATE_MENU_L1
-	
-	GAME_VARS.BRICK_WIDTH 		= 64
-    GAME_VARS.BRICK_HEIGHT 		= 25
-        
-	GAME_VARS.GAME_FIELD_WIDTH	= GAME_VARS.BRICK_WIDTH * GAME_VARS.MAX_LEVEL_COLUMNS
-	GAME_VARS.GAME_FIELD_HEIGHT	= GAME_VARS.BRICK_HEIGHT * GAME_VARS.MAX_LEVEL_LINES
-        
-	GAME_VARS.GAME_FIELD_MIN_X	= 63
-	GAME_VARS.GAME_FIELD_MAX_X	= GAME_VARS.GAME_FIELD_MIN_X + GAME_VARS.GAME_FIELD_WIDTH
-	GAME_VARS.GAME_FIELD_MIN_Y	= 34
-	GAME_VARS.GAME_FIELD_MAX_Y	= GAME_VARS.GAME_FIELD_MIN_Y + GAME_VARS.GAME_FIELD_HEIGHT
-    GAME_VARS.screen = screen
-
+' ------------------------------------------------------------------------------------------
+' Best score saved/created into registry 
     if ( scoreRegSection.Exists("BestScore")) 
         GAME_VARS.bestScore = scoreRegSection.Read("BestScore").ToInt()
     else 
         scoreRegSection.write("BestScore", GAME_VARS.bestScore.ToStr())
         scoreRegSection.Flush()
     end if
-
 ' ------------------------------------------------------------------------------------------
 ' --------- MUSIC ---------------------------------------------------------------------------------
 	audioPlayer = CreateObject("roAudioPlayer")
@@ -195,14 +89,8 @@ function Main() as void
 	gameUI_EnergyBorderObj.Update()
 	gameUI_TextBoosterObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBooster, screen, 1020, 573, -0.5, -0.5, 1.0, 1.0)
 	gameUI_TextBoosterObj.Update()
-	gameUI_TextBoosterXObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBoosterX, screen, 1072, 632, -0.5, -0.5, 1.0, 1.0)
-	gameUI_TextBoosterXObj.Update()
-	
-	'old
-	'gameUI_BottomLineObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_BottomLine, screen, 41, 678, -0.5, 0, 875.0, 1.0)
-	'gameUI_BottomLineObj.Update()
-	'new	
-	gameUI_BottomLineObj = CreateSprite([gameUIDataSet.regions.gameUI_BottomLine], screen, {x: 41, y: 678}, {x: -0.5, y: 0.0}, {x: 875.0, y: 1.0})
+	gameUI_TextBoosterXObj = CreateSprite([gameUIDataSet.regions.gameUI_TextBoosterX], screen, {x: 1072.0, y: 632.0}, {x: -0.5, y: -0.5})
+	gameUI_BottomLineObj = CreateSprite([gameUIDataSet.regions.gameUI_BottomLine], screen, {x: 41.0, y: 678.0}, {x: -0.5, y: 0.0}, {x: 875.0, y: 1.0})
 
 ' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
 	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
@@ -218,48 +106,13 @@ function Main() as void
 	gameUI_EnergyBar.Setup(firstLevel)
 	gameUI_EnergyBar.Update()
 	
-	explosion = CreateSprite(gameFXDataSet.animations["explosion"], screen, {x: 300, y: 300})
+	explosion = CreateSprite(gameFXDataSet.animations["explosion"], screen, {x: 300.0, y: 300.0})
 	explosion.animationSpeed = 2.0
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
 
 MENU_LOOP:
 	
-	Goto GAME_TEST_LOOP  ''sssssssssssssssssssssssssss delete it is test
-	
-    GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
-    while true
-        event = port.GetMessage()
-        if (type(event) = "roUniversalControlEvent")
-            id = event.GetInt()
-            if (id = codes.BUTTON_UP_PRESSED)
-                GAME_VARS.menuState -= 1
-                if (GAME_VARS.menuState < 0 ) GAME_VARS.menuState = 0
-            endif
-            if (id = codes.BUTTON_DOWN_PRESSED)
-                GAME_VARS.menuState += 1
-                if (GAME_VARS.menuState > 2 ) GAME_VARS.menuState = 2
-            endif
-            if (id = 6)             
-                Goto GAME_TEST_LOOP
-            endif
-            if (id = 0) Goto EXIT_GAME
-        else if (event = invalid)
-                deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > GAME_VARS.STABLE_FPS) 
-                mainMenuBackObj.Update()
-				mainMenu_GameTitleObj.Update()
-				mainMenu_OptionsObj.Update()
-
-                mainMenuBackObj.Draw()
-				mainMenu_GameTitleObj.Draw()
-				mainMenu_OptionsObj.Draw()
-                screen.SwapBuffers()
-                clock.Mark()
-            endif        
-        endif
-    end while
-
 GAME_TEST_LOOP:
     GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
 	lastID = 0
@@ -335,420 +188,6 @@ GAME_TEST_LOOP:
                 clock.Mark()
             endif        
         endif
-    end while
-
-GAME_INTRO_LOOP:
-    GAME_VARS.Sound_new_round.Trigger(60)
-    loopTime = 0.0
-    textRoundObj.Reset()
-    heroObj1.Reset(GAME_VARS.HERO_SPEED)
-    heroObj2.Reset(GAME_VARS.AI_HERO_SPEEDS[GAME_VARS.menuState])
-    heroObj1.lifeCount = GAME_VARS.START_LIFE_COUNT
-    heroObj2.lifeCount = GAME_VARS.START_LIFE_COUNT
-    
-    while true
-        deltaTime = clock.TotalMilliseconds() / 1000.0
-        if (deltaTime > GAME_VARS.STABLE_FPS)
-            heroObj1.Update(deltaTime)
-            heroObj2.Update(deltaTime)
-            textRoundObj.Update(deltaTime)
-            
-            backObj.Draw()
-            heroObj1.Draw()
-            heroObj2.Draw()
-            
-            textRoundObj.Draw()
-            
-            screen.SwapBuffers()
-            
-            if (loopTime > GAME_VARS.GAME_INTRO_DELAY) Goto NEW_GAME_LOOP
-            loopTime += deltaTime
-            
-            clock.Mark()
-        endif
-    end while
-
-NEW_GAME_LOOP:
-    numScoreObj.value = 0
-    
-NEW_LIFE_LOOP:
-    loopTime = 0.0
-    
-    for i=0 to GAME_VARS.MAX_BALL_COUNT-1   
-        balls[i].Reset()
-    end for
-    balls[0].state = balls[0].STATE_INTRO_PREPARING
-
-    for i=0 to GAME_VARS.MAX_ROCKET_COUNT-1 
-        rockets[i].Reset()
-    end for
-    
-    heroObj1.Reset(GAME_VARS.HERO_SPEED)
-    heroObj2.Reset(GAME_VARS.AI_HERO_SPEEDS[GAME_VARS.menuState])
-    heroObj1.Update(0)
-    heroObj2.Update(0, balls)
-    
-    coin.Reset()
-    coinGreen.Reset()
-    coinRed.Reset()
-    coinBlack.Reset()
-    coinWhite.Reset()
-    coinPink.Reset()
-    coinBlue.Reset()
-
-    while true
-        deltaTime = clock.TotalMilliseconds() / 1000.0
-        if (deltaTime > GAME_VARS.STABLE_FPS)
-            for i=0 to GAME_VARS.MAX_BALL_COUNT-1
-                balls[i].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
-            endfor
-            numScoreObj.Update(deltaTime)
-            textScoreObj.Update(deltaTime)
-            numBestScoreObj.Update(deltaTime)
-            textBestScoreObj.Update(deltaTime)
-            for i=0 to heroObj1.lifeCount-1
-                hero1LivesObj[i].Update(deltaTime)
-            end for
-            for i=0 to heroObj2.lifeCount-1
-                hero2LivesObj[i].Update(deltaTime)
-            end for
-                                
-            backObj.Draw()
-            textScoreObj.Draw()
-            numScoreObj.Draw()
-            textBestScoreObj.Draw()
-            numBestScoreObj.Draw()
-            heroObj1.Draw()
-            heroObj2.Draw()
-            for i=0 to GAME_VARS.MAX_BALL_COUNT-1
-                balls[i].Draw()
-            endfor
-            for i=0 to heroObj1.lifeCount-1
-                hero1LivesObj[i].Draw()
-            end for
-            for i=0 to heroObj2.lifeCount-1
-                hero2LivesObj[i].Draw()
-            end for
-            screen.SwapBuffers()
-
-            if (loopTime > GAME_VARS.NEW_LIFE_LOOP_DELAY) Goto GAME_LOOP
-            loopTime += deltaTime
-
-            clock.Mark()
-        endif        
-    end while
-
-GAME_LOOP:
-    balls[0].Start()
-
-    while true
-        event = port.GetMessage()
-        if (type(event) = "roUniversalControlEvent")
-            id = event.GetInt()
-            if (id = codes.BUTTON_UP_PRESSED)
-                heroObj1.heroCurrentSpeed = -heroObj1.SPEED
-            endif
-            if (id = codes.BUTTON_DOWN_PRESSED)
-                heroObj1.heroCurrentSpeed = heroObj1.SPEED
-            endif
-            if (id = 0) Goto MENU_LOOP
-            if (id = 6) 
-                for each rocketLauncher in heroObj1.rocketLaunchers
-                    if (rocketLauncher.state = rocketLauncher.STATE_GAME)
-                        rocket = GetDeadRocket(rockets, GAME_VARS)
-                        if (rocket <> invalid)
-                            rocket.Spawn(rocketLauncher, rocket.OWNER_HERO1)
-                            rocketLauncher.state = rocketLauncher.STATE_DEATH
-                            GAME_VARS.Sound_gun_shoot.Trigger(65)
-                            Goto ROCKET_CHOSEN
-                        end if
-                    end if
-                end for
-            end if
-ROCKET_CHOSEN:
-        else if (event = invalid)
-            deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > GAME_VARS.STABLE_FPS)
-                heroObj1.Update(deltaTime)
-                heroObj2.Update(deltaTime, balls, rockets)
-                for i=0 to GAME_VARS.MAX_BALL_COUNT-1
-                    balls[i].Update(deltaTime, heroObj1, heroObj2, numScoreObj)
-                end for
-                
-                for i=0 to GAME_VARS.MAX_ROCKET_COUNT-1 
-                    rockets[i].Update(deltaTime, heroObj1, heroObj2, balls)
-                end for
-                
-                numScoreObj.Update(deltaTime)
-                textScoreObj.Update(deltaTime)
-                numBestScoreObj.Update(deltaTime)
-                textBestScoreObj.Update(deltaTime)
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Update(deltaTime)
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Update(deltaTime)
-                end for
-
-                coin.Spawn()
-                coinGreen.Spawn()
-                coinRed.Spawn()
-                coinBlack.Spawn()
-                coinWhite.Spawn()
-                coinPink.Spawn()
-                coinBlue.Spawn()
-                
-                coin.Update(deltaTime, balls, heroObj1, heroObj2)
-                coinGreen.Update(deltaTime, balls, heroObj1, heroObj2)
-                coinRed.Update(deltaTime, balls, heroObj1, heroObj2)
-                coinBlack.Update(deltaTime, balls, heroObj1, heroObj2)
-                coinWhite.Update(deltaTime, balls, heroObj1, heroObj2)
-                coinPink.Update(deltaTime, balls, heroObj1, heroObj2)
-                coinBlue.Update(deltaTime, balls, heroObj1, heroObj2)
-                                                                
-                backObj.Draw()
-                textScoreObj.Draw()
-                numScoreObj.Draw()
-                textBestScoreObj.Draw()
-                numBestScoreObj.Draw()
-                heroObj1.Draw()
-                heroObj2.Draw()
-                for i=0 to GAME_VARS.MAX_BALL_COUNT-1
-                    balls[i].Draw()
-                end for
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Draw()
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Draw()
-                end for
-                coin.Draw()
-                coinGreen.Draw()
-                coinRed.Draw()
-                coinBlack.Draw()
-                coinWhite.Draw()
-                coinPink.Draw()
-                coinBlue.Draw()
-                for each rocketLauncher in heroObj1.rocketLaunchers
-                    rocketLauncher.Draw()
-                end for
-                for each rocketLauncher in heroObj2.rocketLaunchers
-                    rocketLauncher.Draw()
-                end for
-                for i=0 to GAME_VARS.MAX_ROCKET_COUNT-1 
-                    rockets[i].Draw()
-                end for
-                heroObj1.magnetObj.Draw()
-                heroObj2.magnetObj.Draw()
-                heroObj1.speedIconObj.Draw()
-                heroObj2.speedIconObj.Draw()
-                screen.SwapBuffers()
-                                
-                isAllBallsMissed = isAllBallsDead(balls)
-                
-                if (isAllBallsMissed = true)
-                    if (GAME_VARS.isLastMissedBallHeroes  = true) 
-                        heroObj1.lifeCount -= 1
-                        if (heroObj1.lifeCount > 0) 
-                            Goto NEW_LIFE_LOOP
-                        endif
-                    else
-                        heroObj2.lifeCount -= 1
-                        if (heroObj2.lifeCount > 0) 
-                            Goto GAME_GOAL_LOOP
-                        endif
-                    endif
-                end if
-                if (heroObj1.lifeCount <= 0) Goto GAME_OVER_LOOP
-                if (heroObj2.lifeCount <= 0) Goto GAME_WIN_LOOP
-
-                clock.Mark()
-            endif        
-        endif
-    end while
-    
-GAME_GOAL_LOOP:
-    GAME_VARS.Sound_goal.Trigger(50)
-    gameOverLoopTime = 0.0
-    textGoalObj.currentTime = 0.0
-    textGoalObj.time = 0.5
-    textGoalObj.scaleStart = 1.7
-    textGoalObj.scaleEnd = 0.999
-    textGoalObj.scale = textGoalObj.scaleStart
-    if (numBestScoreObj.value < numScoreObj.value) 
-        numBestScoreObj.value = numScoreObj.value
-        GAME_VARS.bestScore = numBestScoreObj.value
-        scoreRegSection.Write("BestScore", GAME_VARS.bestScore.ToStr())
-        scoreRegSection.Flush()
-    endif
-    
-    while true
-        event = port.GetMessage()
-        if (type(event) = "roUniversalControlEvent")
-            id = event.GetInt()
-            if ( (id = 0) OR (id = 6) ) Goto MENU_LOOP
-        else if (event = invalid)
-            deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > GAME_VARS.STABLE_FPS)
-                heroObj1.Update(0)
-                heroObj2.Update(0)
-                textGoalObj.Update(deltaTime)
-                numBestScoreObj.Update(deltaTime)
-                textBestScoreObj.Update(deltaTime)
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Update(deltaTime)
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Update(deltaTime)
-                end for
-
-
-                backObj.Draw()
-                textBestScoreObj.Draw()
-                numBestScoreObj.Draw()
-                textScoreObj.Draw()
-                numScoreObj.Draw()
-                heroObj1.Draw()
-                heroObj2.Draw()
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Draw()
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Draw()
-                end for
-            
-                textGoalObj.Draw()
-            
-                screen.SwapBuffers()
-            
-                if (gameOverLoopTime > GAME_VARS.GOAL_DELAY) Goto NEW_LIFE_LOOP
-                gameOverLoopTime += deltaTime
-            
-                clock.Mark()
-            endif
-        end if
-    end while
-
-GAME_OVER_LOOP:
-    GAME_VARS.Sound_GameOver.Trigger(50)
-    gameOverLoopTime = 0.0
-    textGameOverObj.currentTime = 0.0
-    textGameOverObj.time = 1
-    textGameOverObj.scaleStart = 1.7
-    textGameOverObj.scaleEnd = 0.999
-    textGameOverObj.scale = textGameOverObj.scaleStart
-    if (numBestScoreObj.value < numScoreObj.value) 
-        numBestScoreObj.value = numScoreObj.value
-        GAME_VARS.bestScore = numBestScoreObj.value
-        scoreRegSection.Write("BestScore", GAME_VARS.bestScore.ToStr())
-        scoreRegSection.Flush()
-    endif
-    
-    while true
-        event = port.GetMessage()
-        if (type(event) = "roUniversalControlEvent")
-            id = event.GetInt()
-            if ( (id = 0) OR (id = 6) ) Goto MENU_LOOP
-        else if (event = invalid)
-            deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > GAME_VARS.STABLE_FPS)
-                heroObj1.Update(0)
-                heroObj2.Update(0)
-                textGameOverObj.Update(deltaTime)
-                numBestScoreObj.Update(deltaTime)
-                textBestScoreObj.Update(deltaTime)
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Update(deltaTime)
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Update(deltaTime)
-                end for
-
-                backObj.Draw()
-                textBestScoreObj.Draw()
-                numBestScoreObj.Draw()
-                textScoreObj.Draw()
-                numScoreObj.Draw()
-                heroObj1.Draw()
-                heroObj2.Draw()
-
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Draw()
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Draw()
-                end for         
-                textGameOverObj.Draw()
-            
-                screen.SwapBuffers()
-            
-                if (gameOverLoopTime > GAME_VARS.GAME_OVER_DELAY) Goto MENU_LOOP
-                gameOverLoopTime += deltaTime
-            
-                clock.Mark()
-            endif
-        end if
-    end while
-
-GAME_WIN_LOOP:
-    GAME_VARS.Sound_win.Trigger(65)
-    gameOverLoopTime = 0.0
-    textWinObj.currentTime = 0.0
-    textWinObj.time = 1
-    textWinObj.scaleStart = 1.7
-    textWinObj.scaleEnd = 1.0
-    textWinObj.scale = textWinObj.scaleStart
-    if (numBestScoreObj.value < numScoreObj.value) 
-        numBestScoreObj.value = numScoreObj.value
-        GAME_VARS.bestScore = numBestScoreObj.value
-        scoreRegSection.Write("BestScore", GAME_VARS.bestScore.ToStr())
-        scoreRegSection.Flush()
-    endif
-    
-    while true
-        event = port.GetMessage()
-        if (type(event) = "roUniversalControlEvent")
-            id = event.GetInt()
-            if ( (id = 0) OR (id = 6) ) Goto MENU_LOOP
-        else if (event = invalid)
-            deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > GAME_VARS.STABLE_FPS)
-                heroObj1.Update(0)
-                heroObj2.Update(0)
-                textWinObj.Update(deltaTime)
-                numBestScoreObj.Update(deltaTime)
-                textBestScoreObj.Update(deltaTime)
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Update(deltaTime)
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Update(deltaTime)
-                end for
-                
-                backObj.Draw()
-                textBestScoreObj.Draw()
-                numBestScoreObj.Draw()
-                textScoreObj.Draw()
-                numScoreObj.Draw()
-                heroObj1.Draw()
-                heroObj2.Draw()
-                for i=0 to heroObj1.lifeCount-1
-                    hero1LivesObj[i].Draw()
-                end for
-                for i=0 to heroObj2.lifeCount-1
-                    hero2LivesObj[i].Draw()
-                end for         
-            
-                textWinObj.Draw()
-            
-                screen.SwapBuffers()
-            
-                if (gameOverLoopTime > GAME_VARS.GAME_OVER_DELAY) Goto MENU_LOOP
-                gameOverLoopTime += deltaTime
-            
-                clock.Mark()
-            endif
-        end if
     end while
     
 EXIT_GAME:
@@ -1230,7 +669,7 @@ function CreateEnergyItem(_globalVars as object, _player as object, _level as ob
     return obj
 end function
 
-function SetupEnergyItem(_position as object)
+function SetupEnergyItem(_position as object) as void
     m.position = _position
     m.speed.x = 0.0
     m.speed.y = m.startSpeed
@@ -1292,7 +731,7 @@ function CreateEnergyBar(_globalVars as object, _region as object) as object
     return obj
 end function
 
-function SetupEnergyBar(_level as object)
+function SetupEnergyBar(_level as object) as void
 	m.level = _level
 end function
 

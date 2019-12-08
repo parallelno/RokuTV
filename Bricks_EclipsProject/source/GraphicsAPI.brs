@@ -72,7 +72,6 @@ function _SpriteAnimationUpdate(_deltatime=0 as float) as void
 end function
 
 
-
 ' old API
 
 function CreateSpriteObj(_region as object, _screen as object, _x=0 as float, _y=0 as float, _localOffsetX=0 as float, _localOffsetY=0 as float, _scaleX=1 as float, _scaleY=1 as float, _regions=invalid as object, _name="idle" as String, _AnimationUpdate=SimpleSpriteAnimationUpdate as object ) as object
