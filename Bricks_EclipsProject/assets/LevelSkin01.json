@@ -1,25 +1,41 @@
 {
-      "sprites" : [
-           {  
-				"path" : "pkg:/assets/gameLevel_BorderCL.png",
-				"position" : [
-					{
-                 		"x" : 41.0,
-						"y" : 678.0
-					}
-				],
-				"localOffset" : [
-                 	{
-                 		"x" : 0.5,
-                 		"y" : 0.0
-                 	}
-				],
-                 "scale" : [
-                 	{
-                 		"x" : 875.0,
-                 		"y" : 1.0
-                 	}
-                 ] 
-           }
-      ]
+  "bitmaps": {
+    "ball": {
+      "file": "pkg:/assets/ballAnim.png",
+      "regions": {
+        "r1": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "r2": {
+          "x": 32,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "r3": {
+          "x": 0,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "r4": {
+          "x": 32,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      }
+    }
+  },
+  "animations": {
+    "idle" : {
+      "frame1" : "r1",
+      "frame2" : "r2",
+      "frame3" : "r3",
+      "frame4" : "r4"
+    }
+  }
 }

@@ -1,27 +1,17 @@
 ﻿Library "v30/bslDefender.brs"
 
 function Main() as void
-    scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
-    screen = CreateObject("roScreen", true)
-    port = CreateObject("roMessagePort")
-    screenWidth = screen.GetWidth()
-    screenHeight= screen.GetHeight()
-    clock = CreateObject("roTimespan")
-    screen.SetMessagePort(port)
-    screen.SetAlphaEnable(true)
-    codes = bslUniversalControlEventCodes()
+	port = CreateObject("roMessagePort")
+	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
+	screen = CreateObject("roScreen", true)
+	screenWidth = screen.GetWidth()
+	screenHeight= screen.GetHeight()
+	screen.SetMessagePort(port)
+	screen.SetAlphaEnable(true)
+	clock = CreateObject("roTimespan")
+	codes = bslUniversalControlEventCodes()
     
-	levelSkinASCII = ReadAsciiFile("pkg:/assets/LevelSkin01.json")
-	LevelSkinXml=createObject("roXMLElement")
-	LevelSkinXml = ParseJson(levelSkinASCII)
-    print LevelSkinXml.sprites.Count()
-
-    For Each sprite In LevelSkinXml.sprites
-    	print sprite.path
-    	print "x=" ; sprite.position[0].x
-    	print "y=" ; sprite.position[0].y
-	End For
-    
+     
     'mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
     gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
@@ -30,7 +20,25 @@ function Main() as void
     gameFXDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameFX_Explosion2.xml"))
     
     GAME_VARS = GlobalVars(screen, screenWidth, screenHeight, gameObjectsDataSet)
+
+'//// test
+	levelSkinASCII = ReadAsciiFile("pkg:/assets/LevelSkin01.json")
+	LevelSkinXml=createObject("roXMLElement")
+	LevelSkinXml = ParseJson(levelSkinASCII)
+
+'    For Each sprite In LevelSkinXml.sprites
+'    	print sprite.path
+'    	print "x=" ; sprite.position[0].x
+'    	print "y=" ; sprite.position[0].y
+'	End For
     
+    
+    testBitmap = CreateObject("roBitmap", "pkg:/assets/ballAnim.png")
+    testRegion = CreateObject("roRegion", testBitmap, 0, 0, 32, 32)
+    if testRegion = invalid print "test Reg invalid" 
+'end test
+    
+        
 ' ------------------------------------------------------------------------------------------
 ' Best score saved/created into registry 
     if ( scoreRegSection.Exists("BestScore")) 
@@ -148,33 +156,33 @@ GAME_TEST_LOOP:
                 ' uninteractive back and UI elements
                 gameLevel_BackObj.Update(deltaTime)
                 gameLevel_BackObj.Draw()
-                gameUI_BottomLineObj.Draw()
-				for i=0 to 4
-					gameLevel_BorderLObj.y = i * gameLevel_BorderLObj.currentRegion.GetHeight() + 81 
-					gameLevel_BorderLObj.Update()
-					gameLevel_BorderLObj.Draw()
-					gameLevel_BorderRObj.y = i * gameLevel_BorderRObj.currentRegion.GetHeight() + 81 
-					gameLevel_BorderRObj.Update()
-					gameLevel_BorderRObj.Draw()
-				end for
-				for i=0 to 5
-					gameLevel_BorderHObj.x = i * gameLevel_BorderHObj.currentRegion.GetWidth() + 107 
-					gameLevel_BorderHObj.Update()
-					gameLevel_BorderHObj.Draw()
-				end for
-				gameLevel_BorderCLObj.Draw()
-				gameLevel_BorderCRObj.Draw()
+'                gameUI_BottomLineObj.Draw()
+'				for i=0 to 4
+'					gameLevel_BorderLObj.y = i * gameLevel_BorderLObj.currentRegion.GetHeight() + 81 
+'					gameLevel_BorderLObj.Update()
+'					gameLevel_BorderLObj.Draw()
+'					gameLevel_BorderRObj.y = i * gameLevel_BorderRObj.currentRegion.GetHeight() + 81 
+'					gameLevel_BorderRObj.Update()
+'					gameLevel_BorderRObj.Draw()
+'				end for
+'				for i=0 to 5
+'					gameLevel_BorderHObj.x = i * gameLevel_BorderHObj.currentRegion.GetWidth() + 107 
+'					gameLevel_BorderHObj.Update()
+'					gameLevel_BorderHObj.Draw()
+'				end for
+'				gameLevel_BorderCLObj.Draw()
+'				gameLevel_BorderCRObj.Draw()
 				
-				gameUI_LogoObj.Draw()
-				gameUI_EnergyBorderObj.Draw()
+'				gameUI_LogoObj.Draw()
+'				gameUI_EnergyBorderObj.Draw()
 								
-				gameUI_PlatformObj.Draw()
-				gameUI_TextBoosterObj.Draw()
-				gameUI_TextBoosterXObj.Draw()
-				gameUI_TextEnergyObj.Draw()
-				gameUI_TextHiscoreObj.Draw()
-				gameUI_TextLevelObj.Draw()
-				gameUI_TextScoreObj.Draw()
+'				gameUI_PlatformObj.Draw()
+'				gameUI_TextBoosterObj.Draw()
+'				gameUI_TextBoosterXObj.Draw()
+'				gameUI_TextEnergyObj.Draw()
+'				gameUI_TextHiscoreObj.Draw()
+'				gameUI_TextLevelObj.Draw()
+'				gameUI_TextScoreObj.Draw()
 				
 				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
 				' end line for uninteractive back and UI elements
@@ -192,9 +200,11 @@ GAME_TEST_LOOP:
 				ball.Draw()
 				
 				'effects
-				explosion.Update(deltaTime)
-				explosion.Draw()
-				
+'				explosion.Update(deltaTime)
+'				explosion.Draw()
+' test
+				screen.DrawObject(70, 70, testRegion)
+'end test
                 screen.SwapBuffers()
                 clock.Mark()
             endif        
