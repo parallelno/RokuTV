@@ -1,36 +1,110 @@
 ' new API. Convert pairs of floats to roAssociativeArray 
-function CreateSprite(_regions as object, _screen as object, _position as object, _localOffset={x: 0.0, y: 0.0} as object, _scale={x: 1.0, y: 1.0} as object, _AnimationUpdate=_SpriteAnimationUpdate as object ) as object
+function CreateStaticSprite(_screen as object, _staticSpriteData as object) as object
     obj = {
+'		public
+        visible		: true
+        position		: {x: 0.0, y: 0.0}
+		bitmaps			: {}
+		tiles			: {}
+'		private fields
+        screen			: _screen
+'		functions
+		Draw    : StaticSpriteDraw
+    }
+    obj.Append(_staticSpriteData)
+	
+	return obj
+end function
+
+function StaticSpriteDraw() as void
+    if (m.visible = false) return
+    for each tileName in m.tiles
+    	localOffset = m.tiles[tileName].localOffset
+    	if (localOffset = invalid) localOffset = {x: 0.0, y: 0.0}
+
+    	scale = m.tiles[tileName].scale
+    	if (scale = invalid) scale = {x: 1.0, y: 1.0}
+    	
+    	bitmap = m.bitmaps[tileName]
+    	
+    	drawPosition = {}
+    	drawPosition.x = m.position.x + (-localOffset.x - 0.5) * bitmap.GetWidth() * scale.x
+    	drawPosition.y = m.position.y + (-localOffset.y - 0.5) * bitmap.GetHeight() * scale.y
+    
+    	m.screen.DrawScaledObject(drawPosition.x, drawPosition.y, scale.x, scale.y, bitmap)
+    	'm.screen.DrawScaledObject(100, 100, scale.x, scale.y, bitmap)
+    	return
+    end for
+end function
+
+function LoadStaticSprite(_path as String) as object
+	staticSpriteASCIIData = ReadAsciiFile(_path)
+	if (staticSpriteASCIIData = invalid) return invalid
+	
+	staticSpriteData = ParseJson(staticSpriteASCIIData)
+	if (staticSpriteData = invalid OR staticSpriteData.type <> "staticSprite") return invalid
+	
+	staticSpriteData.bitmaps = {}
+	
+	for each filename in staticSpriteData.filenames
+		bitmap = CreateObject("roBitmap", staticSpriteData.filenames[filename])
+		staticSpriteData.bitmaps.AddReplace(filename, bitmap)
+	end for
+	
+	return staticSpriteData
+end function
+
+function CreateSprite(_screen as object, _spriteData as object) as object
+    obj = {
+'		public    
     	active		: true
         visible		: true
     	lifetime	: 1.0
     	loop		: true
-    	animationSpeed	: 1.0
-    	time			: 0.0
-    	position		: _position
-    	scale			: _scale
-    	localOffset		: _localOffset
-    	scrollSpeed		: {x: 0.0, y: 0.0}
-		regions			: _regions
+    	position		: {x: 0.0, y: 0.0}
+    	scale			: {x: 1.0, y: 1.0}
+    	localOffset		: {x: 0.0, y: 0.0}
+		regions			: {}
+		animations		: {}
+		currentAnimationName	: "idle"
 '		private fields
-		currentRegion	: _regions[0]
+    	time			: 0.0
+		currentRegion	: invalid
 		currentRegionNum	: 0
     	drawPosition	: {x: 0.0, y: 0.0}
         screen			: _screen
 '		functions
 		Draw    : SpriteDraw
 		Update  : SpriteUpdate
-		AnimationUpdate : _SpriteAnimationUpdate
+		AnimationUpdate : SpriteAnimationUpdate
+		AnimationSet : SpriteAnimationSet
     }
-	obj.currentRegion.SetScaleMode(1)
+    obj.Append(_spriteData)
+    obj.AnimationSet()
 	obj.Update()
 	
 	return obj
 end function
 
-function SpriteDraw() as void
-    if (m.visible = false) return
-    m.screen.DrawScaledObject(m.drawPosition.x, m.drawPosition.y, m.scale.x, m.scale.y, m.currentRegion)
+function LoadSprite(_path as String) as object
+	spriteASCIIData = ReadAsciiFile(_path)
+	if (spriteASCIIData = invalid) return invalid
+	
+	spriteData = ParseJson(spriteASCIIData)
+	if (spriteData = invalid OR spriteData.type <> "sprite") return invalid
+	
+	spriteData.regions = {}
+	
+	for each bitmapName in spriteData.bitmaps
+		bitmap = CreateObject("roBitmap", spriteData.bitmaps[bitmapName].filename)
+		regionsData = spriteData.bitmaps[bitmapName].regions
+		for each regionName in regionsData
+			regionData = regionsData[regionName]
+			region = CreateObject("roRegion", bitmap, regionData.offset.x, regionData.offset.y, regionData.size.x, regionData.size.y)
+			spriteData.regions.AddReplace(bitmapName + "." + regionName, region)
+		end for
+	end for
+	return spriteData
 end function
 
 function SpriteUpdate(_deltatime=0 as float, _position=invalid as object) as void
@@ -44,11 +118,12 @@ function SpriteUpdate(_deltatime=0 as float, _position=invalid as object) as voi
     m.drawPosition.y = m.position.y + (-m.localOffset.y - 0.5) * m.currentRegion.GetHeight() * m.scale.y
 end function
 
-function _SpriteAnimationUpdate(_deltatime=0 as float) as void
+function SpriteAnimationUpdate(_deltatime=0 as float) as void
     if (m.active = false) return
-    if (m.regions.Count() = 1) return
-    
-    m.time += _deltatime * m.animationSpeed
+    currentAnimationFramesCount = m.animations[m.currentAnimationName].frames.Count()
+    if (currentAnimationFramesCount = 1) return
+
+    m.time += _deltatime * m.animations[m.currentAnimationName].speed
     if (m.time > m.lifetime) 
         if (m.loop = true)
             m.time -= m.lifetime
@@ -64,13 +139,23 @@ function _SpriteAnimationUpdate(_deltatime=0 as float) as void
         endif
     end if
 
-    m.currentRegionNum = Int(m.time / m.lifetime * m.regions.Count())
-    if (m.currentRegionNum > ( m.regions.Count() - 1) ) m.currentRegionNum -= 1
+    m.currentRegionNum = Int(m.time / m.lifetime * currentAnimationFramesCount)
+    if (m.currentRegionNum > ( currentAnimationFramesCount - 1) ) m.currentRegionNum = currentAnimationFramesCount
     
-    currentRegion = m.regions[m.currentRegionNum]
+    currentRegion = m.regions[m.animations[m.currentAnimationName].frames[m.currentRegionNum]]
     if ( currentRegion <> invalid) m.currentRegion = currentRegion
 end function
 
+function SpriteDraw() as void
+    if (m.visible = false) return
+    m.screen.DrawScaledObject(m.drawPosition.x, m.drawPosition.y, m.scale.x, m.scale.y, m.currentRegion)
+end function
+
+function SpriteAnimationSet(_animationName="idle" as String) as void
+	m.currentAnimationName = _animationName
+	m.currentRegion = m.regions[m.animations[_animationName].frames[0]]
+	m.time = 0.0
+end function
 
 ' old API
 
@@ -203,7 +288,7 @@ function SimpleVisObjUpdate(_deltatime=0 as float) as void
     if (m.active = false) return
     
     currentSprite = m.spriteObjArray.Lookup(m.currentAnimationName)
-    currentSprite.Update(_deltatime, m.x, m.y) 
+    currentSprite.Update(_deltatime, m.x, m.y)
     currentSprite.scaleX = m.scale.x
     currentSprite.scaleY = m.scale.x
     
