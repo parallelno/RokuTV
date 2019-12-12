@@ -36,10 +36,9 @@ function Main() as void
 	spriteData = LoadSprite("pkg:/assets/testSprite.json")	
 	spriteTest = CreateSprite(screen, spriteData)
 	
-	staticSpriteData = LoadStaticSprite("pkg:/assets/LevelSkin01.json")
-	print(staticSpriteData)
-	staticSpriteTest = CreateStaticSprite(screen, staticSpriteData)
+	staticSpriteTest = LoadStaticSprite(screen, "pkg:/assets/levelSkins/levelSkin01.json")
 	print(staticSpriteTest)
+	print(staticSpriteTest.tiles)
 	
 '// end test
 
@@ -75,18 +74,18 @@ function Main() as void
 	'mainMenu_OptionsObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Options, screen, screenWidth/2, screenHeight * 0.75, 0, 0, 1.0, 1.0)
 	
 ' ------------------------------------------------------------------------------------------	
-	gameLevel_BackObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
-	gameLevel_BackObj.Update = ScrolledSpriteUpdate
-	gameLevel_BackObj.Init = ScrolledSpriteInit
-	gameLevel_BackObj.Init(0,-80)
+'	gameLevel_BackObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
+'	gameLevel_BackObj.Update = ScrolledSpriteUpdate
+'	gameLevel_BackObj.Init = ScrolledSpriteInit
+'	gameLevel_BackObj.Init(0,-80)
 	
-	gameLevel_BorderCLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCL, screen, 9, 31, -0.5, 0, 1.0, 1.0)
-	gameLevel_BorderCLObj.Update()
-	gameLevel_BorderCRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCR, screen, 851, 31, -0.5, 0, 1.0, 1.0)
-	gameLevel_BorderCRObj.Update()
-	gameLevel_BorderHObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderH, screen, 0, 15, -0.5, 0, 1.0, 1.0)
-	gameLevel_BorderLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderL, screen, 7, 0, -0.5, -0.5, 1.0, 1.0)
-	gameLevel_BorderRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderR, screen, 881, 0, -0.5, -0.5, 1.0, 1.0)
+'	gameLevel_BorderCLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCL, screen, 9, 31, -0.5, 0, 1.0, 1.0)
+'	gameLevel_BorderCLObj.Update()
+'	gameLevel_BorderCRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCR, screen, 851, 31, -0.5, 0, 1.0, 1.0)
+'	gameLevel_BorderCRObj.Update()
+'	gameLevel_BorderHObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderH, screen, 0, 15, -0.5, 0, 1.0, 1.0)
+'	gameLevel_BorderLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderL, screen, 7, 0, -0.5, -0.5, 1.0, 1.0)
+'	gameLevel_BorderRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderR, screen, 881, 0, -0.5, -0.5, 1.0, 1.0)
 
 	gameUI_LogoObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_Logo, screen, 967, 14, -0.5, -0.5, 1.0, 1.0)
 	gameUI_LogoObj.Update()
@@ -108,8 +107,8 @@ function Main() as void
 	'gameUI_BottomLineObj = CreateSpriteOld([gameUIDataSet.regions.gameUI_BottomLine], screen, {x: 41.0, y: 678.0}, {x: -0.5, y: 0.0}, {x: 875.0, y: 1.0})
 
 ' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
-	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
-	gameLevel_DebugWhiteFieldObj.Update()
+'	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
+'	gameLevel_DebugWhiteFieldObj.Update()
 ' ------------------------------------------------------------------------------------------
 
 	
@@ -150,24 +149,24 @@ GAME_TEST_LOOP:
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS) 
                 ' uninteractive back and UI elements
-                gameLevel_BackObj.Update(deltaTime)
-                gameLevel_BackObj.Draw()
+'                gameLevel_BackObj.Update(deltaTime)
+'                gameLevel_BackObj.Draw()
 '                gameUI_BottomLineObj.Draw()
-				for i=0 to 4
-					gameLevel_BorderLObj.y = i * gameLevel_BorderLObj.currentRegion.GetHeight() + 81 
-					gameLevel_BorderLObj.Update()
-					gameLevel_BorderLObj.Draw()
-					gameLevel_BorderRObj.y = i * gameLevel_BorderRObj.currentRegion.GetHeight() + 81 
-					gameLevel_BorderRObj.Update()
-					gameLevel_BorderRObj.Draw()
-				end for
-				for i=0 to 5
-					gameLevel_BorderHObj.x = i * gameLevel_BorderHObj.currentRegion.GetWidth() + 107 
-					gameLevel_BorderHObj.Update()
-					gameLevel_BorderHObj.Draw()
-				end for
-				gameLevel_BorderCLObj.Draw()
-				gameLevel_BorderCRObj.Draw()
+'				for i=0 to 4
+'					gameLevel_BorderLObj.y = i * gameLevel_BorderLObj.currentRegion.GetHeight() + 81 
+'					gameLevel_BorderLObj.Update()
+'					gameLevel_BorderLObj.Draw()
+'					gameLevel_BorderRObj.y = i * gameLevel_BorderRObj.currentRegion.GetHeight() + 81 
+'					gameLevel_BorderRObj.Update()
+'					gameLevel_BorderRObj.Draw()
+'				end for
+'				for i=0 to 5
+'					gameLevel_BorderHObj.x = i * gameLevel_BorderHObj.currentRegion.GetWidth() + 107 
+'					gameLevel_BorderHObj.Update()
+'					gameLevel_BorderHObj.Draw()
+'				end for
+'				gameLevel_BorderCLObj.Draw()
+'				gameLevel_BorderCRObj.Draw()
 				
 				gameUI_LogoObj.Draw()
 				gameUI_EnergyBorderObj.Draw()
@@ -180,7 +179,7 @@ GAME_TEST_LOOP:
 				gameUI_TextLevelObj.Draw()
 				gameUI_TextScoreObj.Draw()
 				
-				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
+'				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
 				' end line for uninteractive back and UI elements
 				gameUI_EnergyBar.Update()
 				gameUI_EnergyBar.Draw()
