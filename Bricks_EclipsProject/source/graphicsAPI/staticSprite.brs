@@ -11,7 +11,7 @@ function CreateStaticSprite(_screen as object) as object
 				objectName: {
 					bitmap	: "bitmapName"
 					repeat	: {count: 1, x: 0.0, y: 0.0}
-					order	: 0 'render order. -1 (background) will be rendered earlier than 0 (common layer)
+					order	: 0 'render order from 0 to 9. 1 (background) will be rendered earlier than 0 (common layer)
 					position: {x: 0.0, y: 0.0}
 					localOffset: {x: 0.0, y: 0.0}
 					scale: {x: 0.0, y: 0.0}
@@ -46,16 +46,22 @@ end function
 
 function StaticSpriteDraw() as void
     if (m.visible = false) return
-    for each tileName in m.tiles
-    	position = m.tiles[tileName].position
-    	localOffset = m.tiles[tileName].localOffset
-    	scale = m.tiles[tileName].scale
-    	bitmap = m.bitmaps[tileName]
+    tiles = m.tiles.Items()
+ 
+    for j=0 to m.tiles.Count()-1
+' 	for each tileN in m.tiles
+    	'tileName = tileKeys[i]
+    	tile = tiles[j].value
     	
-		drawPosition = m.tiles[tileName].drawPosition 
-		repeatCount = m.tiles[tileName].repeat.count
-   		repeatOffsetX = m.tiles[tileName].repeat.x
-   		repeatOffsetY = m.tiles[tileName].repeat.y
+    	position = tile.position
+    	localOffset = tile.localOffset
+    	scale = tile.scale
+    	bitmap = m.bitmaps[tiles[j].key]
+    	
+		drawPosition = tile.drawPosition 
+		repeatCount = tile.repeat.count
+   		repeatOffsetX = tile.repeat.x
+   		repeatOffsetY = tile.repeat.y
 
     	for	i=0 to repeatCount-1
     		m.screen.DrawScaledObject(drawPosition.x + repeatOffsetX * i, drawPosition.y + repeatOffsetY * i, scale.x, scale.y, bitmap)
