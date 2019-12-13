@@ -37,8 +37,7 @@ function Main() as void
 	spriteTest = CreateSprite(screen, spriteData)
 	
 	staticSpriteTest = LoadStaticSprite(screen, "pkg:/assets/levelSkins/levelSkin01.json")
-	print(staticSpriteTest)
-	print(staticSpriteTest.tiles)
+
 	
 '// end test
 
@@ -74,19 +73,6 @@ function Main() as void
 	'mainMenu_OptionsObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Options, screen, screenWidth/2, screenHeight * 0.75, 0, 0, 1.0, 1.0)
 	
 ' ------------------------------------------------------------------------------------------	
-'	gameLevel_BackObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
-'	gameLevel_BackObj.Update = ScrolledSpriteUpdate
-'	gameLevel_BackObj.Init = ScrolledSpriteInit
-'	gameLevel_BackObj.Init(0,-80)
-	
-'	gameLevel_BorderCLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCL, screen, 9, 31, -0.5, 0, 1.0, 1.0)
-'	gameLevel_BorderCLObj.Update()
-'	gameLevel_BorderCRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderCR, screen, 851, 31, -0.5, 0, 1.0, 1.0)
-'	gameLevel_BorderCRObj.Update()
-'	gameLevel_BorderHObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderH, screen, 0, 15, -0.5, 0, 1.0, 1.0)
-'	gameLevel_BorderLObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderL, screen, 7, 0, -0.5, -0.5, 1.0, 1.0)
-'	gameLevel_BorderRObj = CreateSpriteObj(gameLevelDataSet.regions.gameLevel_BorderR, screen, 881, 0, -0.5, -0.5, 1.0, 1.0)
-
 	gameUI_LogoObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_Logo, screen, 967, 14, -0.5, -0.5, 1.0, 1.0)
 	gameUI_LogoObj.Update()
 	gameUI_TextLevelObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextLevel, screen, 1045, 147, -0.5, -0.5, 1.0, 1.0)
@@ -119,9 +105,6 @@ function Main() as void
 	gameUI_EnergyBar = CreateEnergyBar(GAME_VARS, gameUIDataSet.regions.gameUI_EnergyBar)
 	gameUI_EnergyBar.Setup(firstLevel)
 	gameUI_EnergyBar.Update()
-	
-	'explosion = CreateSpriteOld(gameFXDataSet.animations["explosion"], screen, {x: 300.0, y: 300.0})
-	'explosion.animationSpeed = 2.0
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
 
@@ -149,24 +132,12 @@ GAME_TEST_LOOP:
                 deltaTime = clock.TotalMilliseconds() / 1000.0
             if (deltaTime > GAME_VARS.STABLE_FPS) 
                 ' uninteractive back and UI elements
-'                gameLevel_BackObj.Update(deltaTime)
-'                gameLevel_BackObj.Draw()
+' test				
+				staticSpriteTest.Update(deltatime)
+				staticSpriteTest.Draw()
+' end test
+
 '                gameUI_BottomLineObj.Draw()
-'				for i=0 to 4
-'					gameLevel_BorderLObj.y = i * gameLevel_BorderLObj.currentRegion.GetHeight() + 81 
-'					gameLevel_BorderLObj.Update()
-'					gameLevel_BorderLObj.Draw()
-'					gameLevel_BorderRObj.y = i * gameLevel_BorderRObj.currentRegion.GetHeight() + 81 
-'					gameLevel_BorderRObj.Update()
-'					gameLevel_BorderRObj.Draw()
-'				end for
-'				for i=0 to 5
-'					gameLevel_BorderHObj.x = i * gameLevel_BorderHObj.currentRegion.GetWidth() + 107 
-'					gameLevel_BorderHObj.Update()
-'					gameLevel_BorderHObj.Draw()
-'				end for
-'				gameLevel_BorderCLObj.Draw()
-'				gameLevel_BorderCRObj.Draw()
 				
 				gameUI_LogoObj.Draw()
 				gameUI_EnergyBorderObj.Draw()
@@ -194,14 +165,9 @@ GAME_TEST_LOOP:
 				ball.Update(deltaTime)
 				ball.Draw()
 				
-				'effects
-'				explosion.Update(deltaTime)
-'				explosion.Draw()
 ' test
 				spriteTest.Update(deltaTime)
 				spriteTest.Draw()
-				
-				staticSpriteTest.Draw()
 ' end test
 
                 screen.SwapBuffers()

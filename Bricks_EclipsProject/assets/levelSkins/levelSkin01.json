@@ -8,88 +8,44 @@
 		"borderL": "pkg:/assets/levelSkins/skin01/gameLevel_BorderL.png",
 		"borderR": "pkg:/assets/levelSkins/skin01/gameLevel_BorderR.png"
 	},
-	"tiles" : {
-		"background" : {
-			"bitmap" : "background",
+	"tiles" : [
+		{
+			"region" : "background",
 			"order"	 : -1,
-			"position" : {
-				"x" : 0,
-				"y" : 0
-			},
-			"localOffset" : {
-				"x" : -0.5,
-				"y" : -0.5
-			}
+			"type"	 : "scrolling",
+			"speed"	 : {"x": 0, "y": -80},
+			"position" : {"x": 0, "y": 0},
+			"localOffset" : {"x": -0.5, "y": -0.5}
 		},
-		"borderCL" : {
-			"bitmap" : "borderCL",
-			"position" : {
-				"x" : 12,
-				"y" : 32
-			},
-			"localOffset" : {
-				"x" : -0.5,
-				"y" : 0
-			}
+		{
+			"region" : "borderCL",
+			"order"	 : 1,
+			"position" : {"x": 12, "y": 32},
+			"localOffset" : {"x": -0.5, "y": 0}
 		},
-		"borderCR" : {
-			"bitmap" : "borderCR",
-			"position" : {
-				"x" : 848,
-				"y" : 31
-			},
-			"localOffset" : {
-				"x" : -0.5,
-				"y" : 0
-			}
+		{
+			"region" : "borderCR",
+			"order"	 : 1,
+			"position" : {"x": 848, "y": 31},
+			"localOffset" : {"x": -0.5, "y": 0}
 		},
-		"borderH" : {
-			"bitmap" : "borderH",
-			"repeat" : {
-				"count"	: 6,
-				"x" : 128,
-				"y"	: 0
-			},
-			"position" : {
-				"x" : 107,
-				"y" : 17
-			},
-			"localOffset" : {
-				"x" : -0.5,
-				"y" : 0
-			}
+		{
+			"region" : "borderH",
+			"repeat" : {"count": 6, "x":128, "y": 0},
+			"position" : {"x": 107, "y": 17},
+			"localOffset" : {"x": -0.5, "y": 0}
 		},
-		"borderL" : {
-			"bitmap" : "borderL",
-			"repeat" : {
-				"count"	: 5,
-				"x" : 0,
-				"y"	: 128
-			},
-			"position" : {
-				"x" : 10,
-				"y" : 82
-			},
-			"localOffset" : {
-				"x" : -0.5,
-				"y" : -0.5
-			}
+		{
+			"region" : "borderL",
+			"repeat" : {"count": 5, "x": 0, "y": 128},
+			"position" : {"x": 10, "y": 82},
+			"localOffset" : {"x": -0.5, "y": -0.5}
 		},
-		"borderR" : {
-			"bitmap" : "borderR",
-			"repeat" : {
-				"count"	: 5,
-				"x" : 0,
-				"y"	: 128
-			},
-			"position" : {
-				"x" : 878,
-				"y" : 81
-			},
-			"localOffset" : {
-				"x" : -0.5,
-				"y" : -0.5
-			}
+		{
+			"region" : "borderR",
+			"repeat" : {"count": 5, "x": 0, "y": 128},
+			"position" : {"x": 878, "y": 81},
+			"localOffset" : {"x": -0.5, "y": -0.5}
 		}
-	}
+	]
 }
