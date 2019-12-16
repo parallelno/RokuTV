@@ -1,0 +1,61 @@
+{
+	"type" : "staticSprite",
+	"filenames": {
+		"energyBorder": "pkg:/assets/ui/png/energyBorder.png",
+		"logo": "pkg:/assets/ui/png/logo.png",
+		"platform": "pkg:/assets/ui/png/platform.png",
+		"textBooster": "pkg:/assets/ui/png/textBooster.png",
+		"textBoosterX": "pkg:/assets/ui/png/textBoosterX.png",
+		"textEnergy": "pkg:/assets/ui/png/textEnergy.png",
+		"textHiscore": "pkg:/assets/ui/png/textHiscore.png",
+		"textLevel": "pkg:/assets/ui/png/textLevel.png",
+		"textScore": "pkg:/assets/ui/png/textScore.png"
+	},
+	"tiles" : [
+		{
+			"region" : "logo",
+			"position" : {"x": 967, "y": 14},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "textLevel",
+			"position" : {"x": 1045, "y": 147},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "platform",
+			"position" : {"x": 1023, "y": 189},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "textHiscore",
+			"position" : {"x": 1041, "y": 286},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "textScore",
+			"position" : {"x": 1059, "y": 386},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "textEnergy",
+			"position" : {"x": 1054, "y": 487},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "energyBorder",
+			"position" : {"x": 970, "y": 520},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "textBooster",
+			"position" : {"x": 1020, "y": 573},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "textBoosterX",
+			"position" : {"x": 1072, "y": 632},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		}		
+	]
+}

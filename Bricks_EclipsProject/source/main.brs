@@ -11,15 +11,11 @@ function Main() as void
 	clock = CreateObject("roTimespan")
 	codes = bslUniversalControlEventCodes()
     
-     
-    'mainMenuBackDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/mainMenu.xml"))
-    gameLevelDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameLevel.xml"))
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
     gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
     gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
-    gameFXDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameFX_Explosion2.xml"))
     
-    GAME_VARS = GlobalVars(screen, screenWidth, screenHeight, gameObjectsDataSet)
+	GAME_VARS = GlobalVars(screen, screenWidth, screenHeight, gameObjectsDataSet)
 
 ' ------------------------------------------------------------------------------------------
 ' Best score saved/created into registry 
@@ -32,13 +28,13 @@ function Main() as void
 ' ------------------------------------------------------------------------------------------
 
 '// test
-
-	spriteData = LoadSprite("pkg:/assets/testSprite.json")	
-	spriteTest = CreateSprite(screen, spriteData)
+    
+	spriteTest = LoadSprite(screen, "pkg:/assets/testSprite.json")	
+'	spriteTest = CreateSprite(screen, spriteData)
 	
 	staticSpriteTest = LoadStaticSprite(screen, "pkg:/assets/levelSkins/levelSkin01.json")
-
 	
+	staticSpriteLevelUI = LoadStaticSprite(screen, "pkg:/assets/ui/gameUI.json")
 '// end test
 
 
@@ -66,31 +62,7 @@ function Main() as void
     GAME_VARS.Sound_shorten = CreateObject("roAudioResource", "pkg:/sounds/shorten.wav")
     GAME_VARS.Sound_levelup = CreateObject("roAudioResource", "pkg:/sounds/levelup.wav")
     GAME_VARS.Sound_new_round = CreateObject("roAudioResource", "pkg:/sounds/new_round.wav")
-' ------------------------------------------------------------------------------------------
-
-    'mainMenuBackObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Back, screen, 0, 0, -0.5, -0.5, 1.0, 1.0)
-    'mainMenu_GameTitleObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_GameTitle, screen, screenWidth/2, screenHeight * 0.4, 0, 0, 1.0, 1.0)
-	'mainMenu_OptionsObj = CreateSpriteObj(mainMenuBackDataSet.regions.mainMenu_Options, screen, screenWidth/2, screenHeight * 0.75, 0, 0, 1.0, 1.0)
-	
 ' ------------------------------------------------------------------------------------------	
-	gameUI_LogoObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_Logo, screen, 967, 14, -0.5, -0.5, 1.0, 1.0)
-	gameUI_LogoObj.Update()
-	gameUI_TextLevelObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextLevel, screen, 1045, 147, -0.5, -0.5, 1.0, 1.0)
-	gameUI_TextLevelObj.Update()
-	gameUI_PlatformObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_Platform, screen, 1023, 189, -0.5, -0.5, 1.0, 1.0)
-	gameUI_PlatformObj.Update()
-	gameUI_TextHiscoreObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextHiscore, screen, 1041, 286, -0.5, -0.5, 1.0, 1.0)
-	gameUI_TextHiscoreObj.Update()
-	gameUI_TextScoreObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextScore, screen, 1059, 386, -0.5, -0.5, 1.0, 1.0)
-	gameUI_TextScoreObj.Update()
-	gameUI_TextEnergyObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextEnergy, screen, 1054, 487, -0.5, -0.5, 1.0, 1.0)
-	gameUI_TextEnergyObj.Update()
-	gameUI_EnergyBorderObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_EnergyBorder, screen, 970, 520, -0.5, -0.5, 1.0, 1.0)
-	gameUI_EnergyBorderObj.Update()
-	gameUI_TextBoosterObj = CreateSpriteObj(gameUIDataSet.regions.gameUI_TextBooster, screen, 1020, 573, -0.5, -0.5, 1.0, 1.0)
-	gameUI_TextBoosterObj.Update()
-	'gameUI_TextBoosterXObj = CreateSpriteOld([gameUIDataSet.regions.gameUI_TextBoosterX], screen, {x: 1072.0, y: 632.0}, {x: -0.5, y: -0.5})
-	'gameUI_BottomLineObj = CreateSpriteOld([gameUIDataSet.regions.gameUI_BottomLine], screen, {x: 41.0, y: 678.0}, {x: -0.5, y: 0.0}, {x: 875.0, y: 1.0})
 
 ' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
 '	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
@@ -135,20 +107,9 @@ GAME_TEST_LOOP:
 ' test				
 				staticSpriteTest.Update(deltatime)
 				staticSpriteTest.Draw()
-' end test
-
-'                gameUI_BottomLineObj.Draw()
 				
-				gameUI_LogoObj.Draw()
-				gameUI_EnergyBorderObj.Draw()
-								
-				gameUI_PlatformObj.Draw()
-				gameUI_TextBoosterObj.Draw()
-'				gameUI_TextBoosterXObj.Draw()
-				gameUI_TextEnergyObj.Draw()
-				gameUI_TextHiscoreObj.Draw()
-				gameUI_TextLevelObj.Draw()
-				gameUI_TextScoreObj.Draw()
+				staticSpriteLevelUI.Draw()
+' end test
 				
 '				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
 				' end line for uninteractive back and UI elements

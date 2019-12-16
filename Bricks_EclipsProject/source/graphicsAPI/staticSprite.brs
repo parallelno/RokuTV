@@ -77,17 +77,24 @@ function StaticSpriteDraw() as void
 end function
 
 function LoadStaticSprite(_screen as object, _path as String) as object
-	sprite = CreateStaticSprite(_screen)
+	staticSprite = CreateStaticSprite(_screen)
 	staticSpriteASCIIData = ReadAsciiFile(_path)
-	if (staticSpriteASCIIData = invalid) return invalid
+	if (staticSpriteASCIIData = invalid) 
+		print "staticSpriteASCIIData " + _path + " wasn't created. Check file name."
+		return invalid
+	end if
 	
 	staticSpriteData = ParseJson(staticSpriteASCIIData)
-	if (staticSpriteData = invalid OR staticSpriteData.type <> sprite.type) return invalid
+	if (staticSpriteData = invalid OR staticSpriteData.type <> staticSprite.type)
+		print "staticSpriteData " + _path + " wasn't created. Check the file structure and type." 
+		return invalid
+	end if
 	
 	staticSpriteData.regions = {}
 	
 	for each filename in staticSpriteData.filenames
 		bitmap = CreateObject("roBitmap", staticSpriteData.filenames[filename])
+		if (bitmap = invalid) print "bitmap " + staticSpriteData.filenames[filename] + " wasn't created. Check file name."
 		region = CreateObject("roRegion", bitmap, 0, 0, bitmap.GetWidth(), bitmap.GetHeight())
 		staticSpriteData.regions.AddReplace(filename, region)
 	end for
@@ -114,7 +121,7 @@ function LoadStaticSprite(_screen as object, _path as String) as object
     end for
     staticSpriteData.tiles.SortBy("order")
     
-    sprite.Append(staticSpriteData)
-    sprite.Update()
-	return sprite
+    staticSprite.Append(staticSpriteData)
+    staticSprite.Update()
+	return staticSprite
 end function
