@@ -88,7 +88,8 @@ function SpriteUpdate(_deltatime=0 as float, _position=invalid as object) as voi
     if (m.active = false) return
     m.AnimationUpdate(_deltatime)
     if _position <> invalid
-    	m.position = _position
+    	m.position.x = _position.x
+    	m.position.y = _position.y
     end if
     	
     m.drawPosition.x = m.position.x + (-m.localOffset.x - 0.5) * m.currentRegion.GetWidth() * m.scale.x

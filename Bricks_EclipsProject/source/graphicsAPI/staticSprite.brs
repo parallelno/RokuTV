@@ -5,6 +5,7 @@ function CreateStaticSprite(_screen as object) as object
         visible		: true
         time		: 0
         position		: {x: 0.0, y: 0.0}
+        scale			: {x: 1.0, y: 1.0}
 		regions			: {
 			regionName	: invalid
 		}
@@ -41,8 +42,8 @@ function StaticSpriteUpdate(_deltatime=0 as float) as void
     	region = m.regions[tile.region]
     	
     	drawPosition = {}
-    	drawPosition.x = position.x + (-localOffset.x - 0.5) * region.GetWidth() * scale.x + m.position.x
-    	drawPosition.y = position.y + (-localOffset.y - 0.5) * region.GetHeight() * scale.y + m.position.y
+    	drawPosition.x = position.x + (-localOffset.x - 0.5) * region.GetWidth() * scale.x * m.scale.x + m.position.x
+    	drawPosition.y = position.y + (-localOffset.y - 0.5) * region.GetHeight() * scale.y * m.scale.y + m.position.y
     	tile.drawPosition = drawPosition
     	if (tile.type = "scrolling") ScrolledStaticSpriteUpdate(_deltatime, tile, region)
     end for
@@ -71,7 +72,7 @@ function StaticSpriteDraw() as void
    		repeatOffsetY = tile.repeat.y
 
     	for	i=0 to repeatCount-1
-    		m.screen.DrawScaledObject(drawPosition.x + repeatOffsetX * i, drawPosition.y + repeatOffsetY * i, scale.x, scale.y, region)
+    		m.screen.DrawScaledObject(drawPosition.x + repeatOffsetX * i, drawPosition.y + repeatOffsetY * i, scale.x * m.scale.x, scale.y * m.scale.y, region)
     	end for
     end for
 end function

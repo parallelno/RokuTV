@@ -12,10 +12,9 @@ function Main() as void
 	codes = bslUniversalControlEventCodes()
     
     gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
-    gameUIDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameUI.xml"))
     gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
     
-	GAME_VARS = GlobalVars(screen, screenWidth, screenHeight, gameObjectsDataSet)
+	GAME_VARS = GlobalVars(screen, screenWidth, screenHeight)
 
 ' ------------------------------------------------------------------------------------------
 ' Best score saved/created into registry 
@@ -30,11 +29,8 @@ function Main() as void
 '// test
     
 	spriteTest = LoadSprite(screen, "pkg:/assets/testSprite.json")	
-'	spriteTest = CreateSprite(screen, spriteData)
-	
 	staticSpriteTest = LoadStaticSprite(screen, "pkg:/assets/levelSkins/levelSkin01.json")
-	
-	staticSpriteLevelUI = LoadStaticSprite(screen, "pkg:/assets/ui/gameUI.json")
+	staticSpriteLevelUI = LoadStaticSprite(screen, "pkg:/assets/ui/gameStaticUI.json")
 '// end test
 
 
@@ -46,7 +42,6 @@ function Main() as void
 	audioplayer.addcontent(song)
 	audioplayer.setloop(true)
 	audioPlayer.play()
-' ------------------------------------------------------------------------------------------
 ' --------- SOUNDS ---------------------------------------------------------------------------------
 	GAME_VARS.Sound_MainMenu_Intro = CreateObject("roAudioResource", "pkg:/sounds/main_menu_intro.wav")
 	GAME_VARS.Sound_GameOver = CreateObject("roAudioResource", "pkg:/sounds/game_over.wav")
@@ -74,8 +69,8 @@ function Main() as void
 	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet, player)
 	ball = CreateBall(GAME_VARS, gameBallDataSet, firstLevel, player, player.SpawnPos())
 	
-	gameUI_EnergyBar = CreateEnergyBar(GAME_VARS, gameUIDataSet.regions.gameUI_EnergyBar)
-	gameUI_EnergyBar.Setup(firstLevel)
+	gameUI_EnergyBar = CreateEnergyBar(GAME_VARS)
+	gameUI_EnergyBar.Init(firstLevel)
 	gameUI_EnergyBar.Update()
 ' ------------------------------------------------------------------------------------------	
     clock.Mark()
@@ -152,6 +147,7 @@ function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDat
         levelData : invalid
         gameObjectDataSet : _gameObjectDataSet
         egergyItems : CreateObject("roList")
+        energyItem	: invalid
 		energy		: 0.0
 		player		: _player
         
@@ -167,6 +163,10 @@ function CreateLevel(_globalVars as object, _levelPath as string, _gameObjectDat
     }
     
     obj.energyItems = CreateObject("roList")
+    if (obj.energyItem = invalid) 
+    	obj.energyItem = LoadSprite(obj.globalVars.screen, obj.globalVars.ENERGY_ITEM_SPRITE_FILENAME)
+    end if
+    
     obj.testLevelASCII = ReadAsciiFile(_levelPath)
 	obj.levelData = ParseTextLevel(obj.testLevelASCII, obj.globalVars)
 	
@@ -293,13 +293,13 @@ function SpawnEnergyItem(_position as object) as void
 	for each energyItem in m.egergyItems
 		if (energyItem.active = false)
 			allIsActive = false
-			energyItem.Setup(_position)
+			energyItem.Init(_position)
 			return
 		end if 
 	end for
 
 	if (allIsActive = true AND m.egergyItems.Count() < m.globalVars.ENERGY_ITEMS_MAX_AMOUNT)
-		m.egergyItems.AddTail(CreateEnergyItem(m.globalVars, m.player, m, _position))
+		m.egergyItems.AddTail(CreateEnergyItem(m.globalVars, m.energyItem, m.player, m, _position))
 	end if
 end function 
 
@@ -590,110 +590,6 @@ function BallDraw() as void
 	if (m.active = false) return
 	
 	m.visObj.Draw()
-end function
-
-function CreateEnergyItem(_globalVars as object, _player as object, _level as object, _position as object) as object
-    obj = {
-        active  : true
-        globalVars	: _globalVars
-        position	: invalid
-        speed		: {x: 0.0, y: 0.0}
-        visObj : invalid
-        startSpeed : _globalVars.ENERGY_ITEM_START_SPEED
-        radius : _globalVars.ENERGY_ITEM_RADIUS
-        player	: _player
-        level	: _level
-        
-        Draw    : SimpleDraw
-        Update  : EnergyItemUpdate
-        Setup : SetupEnergyItem
-    }
-
-	obj.Setup(_position)
-	    
-	obj.visObj = CreateVisObj("energyItem", obj.globalVars.screen, obj.position.x, obj.position.y, _globalVars.ENERGY_ITEM_DATASET, "energyItem")
-    
-    return obj
-end function
-
-function SetupEnergyItem(_position as object) as void
-    m.position = _position
-    m.speed.x = 0.0
-    m.speed.y = m.startSpeed
-	m.active = true
-end function
-
-function SimpleDraw() as void
-	if (m.active = false) return
-	m.visObj.Draw()
-end function
-
-function EnergyItemUpdate(_deltaTime=0 as float) as void
-	if (m.active = false) return
-	'blocks collision
-	m.position.x += m.speed.x
-	m.position.y += m.speed.y
-		
-	collisionData = {
-		position : m.position
-		speed : m.speed
-		radius : m.radius
-		isCollided	: false
-	}
-	
-	collisionData = m.player.CheckCollision(collisionData)
-	if (collisionData.isCollided = true)
-		m.active = false
-		m.level.AddEnergy()
-		return
-	end if
-	
-	'border collision
-	if (m.position.y - m.radius > m.globalVars.screenHeight)
-		m.active = false
-		return
-	end if
-		
-	m.visObj.x = m.position.x
-	m.visObj.y = m.position.y
-	m.visObj.Update(_deltaTime)
-end function
-
-function CreateEnergyBar(_globalVars as object, _region as object) as object
-    obj = {
-        active  : true
-        globalVars	: _globalVars
-        position	: invalid
-        sprite : invalid
-        level	: invalid
-        
-        Draw    : ObjSpriteDraw
-        Update  : EnergyBarUpdate
-        Setup : SetupEnergyBar
-    }
-
-	obj.position = obj.globalVars.ENERGY_BAR_POSITION 
-	    
-	obj.sprite = CreateSpriteObj(_region, obj.globalVars.screen, obj.position.x, obj.position.y, -0.5, -0.5, 1.0, 1.0)
-    return obj
-end function
-
-function SetupEnergyBar(_level as object) as void
-	m.level = _level
-end function
-
-function EnergyBarUpdate(_deltaTime=0 as float) as void
-	if (m.active = false) return
-	'blocks collision
-		
-	m.sprite.x = m.position.x
-	m.sprite.y = m.position.y
-	m.sprite.scaleX = m.level.energy 
-	m.sprite.Update(_deltaTime)
-end function
-
-function ObjSpriteDraw()
-	m.sprite.Draw()
 end function
 
 

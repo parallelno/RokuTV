@@ -1,4 +1,4 @@
-function GlobalVars(_screen as object, _screenWidth as float, _screenHeight as float, _gameObjectsDataSet as object) as object
+function GlobalVars(_screen as object, _screenWidth as float, _screenHeight as float) as object
 	obj = {
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
@@ -25,15 +25,14 @@ function GlobalVars(_screen as object, _screenWidth as float, _screenHeight as f
         ENERGY_ITEM_START_SPEED	: 1.0
         ENERGY_ITEMS_MAX_AMOUNT	: 15
         ENERGY_ITEMS_ENERGY		: 0.01
-        screenWidth			: _screenWidth
-        screenHeight		: _screenHeight
+		ENERGY_ITEM_SPRITE_FILENAME	: "pkg:/assets/gameObjects/energyItem.json"
+		MAX_ENERGY			: 1.0
         
-        ENERGY_ITEM_DATASET	: _gameObjectsDataSet
-        ENERGY_ITEM_ANIMATION	: "energyItem"
-
-        MAX_ENERGY			: 1.0
+        ENERGY_BAR_STATIC_SPRITE_FILENAME	: "pkg:/assets/ui/energyBar.json"
         
-        ENERGY_BAR_POSITION	: {x: 974.0, y: 518.0}
+		screenWidth			: _screenWidth
+		screenHeight		: _screenHeight
+   
         
     }
     obj.menuState = obj.GAME_STATE_MENU_L1

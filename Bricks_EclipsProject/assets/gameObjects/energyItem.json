@@ -1,0 +1,26 @@
+{
+	"type" : "sprite",
+	"position" : {
+		"x" : 200,
+		"y" : 100
+	},
+	"bitmaps": {
+		"energyItem": {
+			"filename": "pkg:/assets/gameObjects/png/energyItem.png",
+			"regions": {
+				"r1": {
+					"offset": {"x": 0, "y": 0},
+					"size": {"x": 25, "y": 27}
+				}
+			}
+		}
+	},
+	"animations": {
+		"idle" : {
+			"speed" : 1,
+			"frames" : [
+				"energyItem.r1"
+			]
+		}
+	}
+}
