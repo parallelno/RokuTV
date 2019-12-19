@@ -1,4 +1,4 @@
-function GlobalVars(_screen as object, _screenWidth as float, _screenHeight as float) as object
+function GlobalVars(_screen as object) as object
 	obj = {
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
@@ -20,6 +20,7 @@ function GlobalVars(_screen as object, _screenWidth as float, _screenHeight as f
         PLAYER_COLLISION_INNER_BOX_HALF_WIDTHS : [39.0, 57.0, 95.0]
         
         PLAYER_POS_Y		: 670.0
+        PLAYER_SPRITE_FILENAME	: "pkg:/assets/testSprite.json"
         
         ENERGY_ITEM_RADIUS		: 20.0
         ENERGY_ITEM_START_SPEED	: 1.0
@@ -30,8 +31,8 @@ function GlobalVars(_screen as object, _screenWidth as float, _screenHeight as f
         
         ENERGY_BAR_STATIC_SPRITE_FILENAME	: "pkg:/assets/ui/energyBar.json"
         
-		screenWidth			: _screenWidth
-		screenHeight		: _screenHeight
+		screenWidth			: _screen.GetWidth()
+		screenHeight		: _screen.GetHeight()
    
         
     }

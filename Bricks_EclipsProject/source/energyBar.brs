@@ -7,15 +7,15 @@ function CreateEnergyBar(_globalVars as object) as object
         staticSprite : invalid
         level	: invalid
         
-        Draw    : ObjSpriteDraw
+        Draw    : EnergyBarDraw
         Update  : EnergyBarUpdate
-        Init : InitEnergyBar
+        Init 	: EnergyBarInit
     }
 	obj.staticSprite = LoadStaticSprite(obj.globalVars.screen, obj.globalVars.ENERGY_BAR_STATIC_SPRITE_FILENAME)
     return obj
 end function
 
-function InitEnergyBar(_level as object) as void
+function EnergyBarInit(_level as object) as void
 	m.level = _level
 end function
 
@@ -26,6 +26,6 @@ function EnergyBarUpdate(_deltaTime=0 as float) as void
 	m.staticSprite.Update(_deltaTime)
 end function
 
-function ObjSpriteDraw()
+function EnergyBarDraw()
 	m.staticSprite.Draw()
 end function
