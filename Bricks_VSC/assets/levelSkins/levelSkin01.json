@@ -1,0 +1,51 @@
+{
+	"type" : "staticSprite",
+	"filenames": {
+		"background": "pkg:/assets/levelSkins/skin01/gameLevel_Back.jpg",
+		"borderCL": "pkg:/assets/levelSkins/skin01/gameLevel_BorderCL.png",
+		"borderCR": "pkg:/assets/levelSkins/skin01/gameLevel_BorderCR.png",
+		"borderH": "pkg:/assets/levelSkins/skin01/gameLevel_BorderH.png",
+		"borderL": "pkg:/assets/levelSkins/skin01/gameLevel_BorderL.png",
+		"borderR": "pkg:/assets/levelSkins/skin01/gameLevel_BorderR.png"
+	},
+	"tiles" : [
+		{
+			"region" : "background",
+			"order"	 : -1,
+			"type"	 : "scrolling",
+			"speed"	 : {"x": 0, "y": -80},
+			"position" : {"x": 0, "y": 0},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "borderCL",
+			"order"	 : 1,
+			"position" : {"x": 12, "y": 32},
+			"localOffset" : {"x": -0.5, "y": 0}
+		},
+		{
+			"region" : "borderCR",
+			"order"	 : 1,
+			"position" : {"x": 848, "y": 31},
+			"localOffset" : {"x": -0.5, "y": 0}
+		},
+		{
+			"region" : "borderH",
+			"repeat" : {"count": 6, "x":128, "y": 0},
+			"position" : {"x": 107, "y": 17},
+			"localOffset" : {"x": -0.5, "y": 0}
+		},
+		{
+			"region" : "borderL",
+			"repeat" : {"count": 5, "x": 0, "y": 128},
+			"position" : {"x": 10, "y": 82},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		},
+		{
+			"region" : "borderR",
+			"repeat" : {"count": 5, "x": 0, "y": 128},
+			"position" : {"x": 878, "y": 81},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		}
+	]
+}

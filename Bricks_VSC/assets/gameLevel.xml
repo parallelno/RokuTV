@@ -1,0 +1,9 @@
+<BitmapSet>
+	<Bitmap name="gameLevel_Back" filespec="pkg:/assets/gameLevel_Back.jpg" />
+	<Bitmap name="gameLevel_BorderCL" filespec="pkg:/assets/gameLevel_BorderCL.png" />
+	<Bitmap name="gameLevel_BorderCR" filespec="pkg:/assets/gameLevel_BorderCR.png" />
+	<Bitmap name="gameLevel_BorderH" filespec="pkg:/assets/gameLevel_BorderH.png" />
+	<Bitmap name="gameLevel_BorderL" filespec="pkg:/assets/gameLevel_BorderL.png" />
+	<Bitmap name="gameLevel_BorderR" filespec="pkg:/assets/gameLevel_BorderR.png" />
+	<Bitmap name="whitePixel" filespec="pkg:/assets/whitePixel.png" />
+</BitmapSet>

@@ -1,0 +1,13 @@
+{
+	"type" : "staticSprite",
+	"filenames": {
+		"energyBar": "pkg:/assets/ui/png/energyBar.png"
+	},
+	"tiles" : [
+		{
+			"region" : "energyBar",
+			"position" : {"x": 974, "y": 518},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		}		
+	]
+}

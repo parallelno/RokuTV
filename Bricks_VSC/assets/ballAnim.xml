@@ -1,0 +1,15 @@
+<BitmapSet>
+	<ExtraInfo idle_speed = "4" />
+	<Bitmap name="ballAnim" filespec="pkg:/assets/ballAnim.png">
+		<Region name="r1" x="0" y="0" w="32" h="32" />
+		<Region name="r2" x="32" y="0" w="32" h="32" />
+		<Region name="r3" x="0" y="32" w="32" h="32" />
+		<Region name="r4" x="32" y="32" w="32" h="32" />
+	</Bitmap>	
+	<Animation name="idle">
+		<frame use="ballAnim.r1" />
+		<frame use="ballAnim.r2" />
+		<frame use="ballAnim.r3" />
+		<frame use="ballAnim.r4" />		
+	</Animation>
+</BitmapSet>

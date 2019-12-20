@@ -1,0 +1,23 @@
+{
+	"type" : "level",
+	"objs": [
+    {
+      "type"      : "staticSprite",
+      "filename"  : "pkg:/assets/levelSkins/levelSkin01.json",
+      "position"  : {"x": 0, "y": 0},
+      "order"     : 0
+    },
+    {
+      "type"      : "staticSprite",
+      "filename"  : "pkg:/assets/ui/gameStaticUI.json",
+      "position"  : {"x": 0, "y": 0},
+      "order"     : 1
+    },
+    {
+      "type"      : "sprite",
+      "filename"  : "pkg:/assets/testSprite.json",
+      "order"     : 2,
+      "update"    : "PlayerUpdate"
+    }
+  ]
+}
