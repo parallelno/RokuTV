@@ -52,5 +52,6 @@ function GlobalVars() as object
 
 ' level needs to have all unique empty gameobjects to be added to that array
     obj.gameObjectInterfaces.AddReplace("player", CreatePlayer(obj))
+    obj.gameObjectInterfaces.AddReplace("ball", CreateBall(obj))
     return obj
 end function

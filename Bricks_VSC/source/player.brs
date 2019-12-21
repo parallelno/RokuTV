@@ -29,7 +29,7 @@ function PlayerUpdate(_deltatime=0 as float, _position=invalid as object) as voi
 	m.position.x += m.speed.x
 	m.position.y += m.speed.y
 
-' START. move it to collision manager		
+' START. move it to collision manager	
 	if (m.position.x > m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5)
 		m.position.x = m.globalVars.GAME_FIELD_MAX_X - m.playerWidth * 0.5
 	end if

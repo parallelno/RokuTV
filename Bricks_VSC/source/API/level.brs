@@ -25,6 +25,7 @@ function CreateLevel(_globalVars as object) as object
 
 		Draw    : LevelDraw
 		Update  : LevelUpdate
+		GetObjsByType : LevelGetObjsByType
 	}
 
 	return obj
@@ -62,15 +63,18 @@ function LoadLevel(_globalVars as object, _path as string) as object
 			return invalid
 		end if
 		objData.Append(obj)
-		if objData.Init <> invalid 
-			objData.Init(level)
-		end if
 		objs.Push(objData)
 	end for
 
 	objs.SortBy("order")
 	levelData.objs = objs
 	level.Append(levelData)
+	
+	for each obj in level.objs
+		if obj.Init <> invalid 
+			obj.Init(level)
+		end if
+	end for
 
 	return level
 end function
@@ -93,7 +97,7 @@ function LevelUpdate(_deltaTime=0 as float) as void
 	end for
 
 ' collision handlers of all collided objects will be called by this object's update
-	m.collisionManager.Update(_deltatime) 
+	m.collisionManager.Update(_deltatime)
 
 end function
 
@@ -115,4 +119,15 @@ function LevelControlListenerSet(_listener)
 	if isListenerExist = false
         m.listeners.AddTail(_listener)
     end if
+end function
+
+function LevelGetObjsByType(_type as string) as object
+	res = []
+	for each obj in m.objs
+		if obj.type = _type
+			res.Push(obj)
+		end if
+	end for
+
+	return res
 end function

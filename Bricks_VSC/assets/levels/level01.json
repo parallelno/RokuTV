@@ -18,6 +18,12 @@
       "filename"  : "pkg:/assets/gameObjects/player.json",
       "order"     : 2,
       "override"    : "player"
+    },
+    {
+      "type"      : "sprite",
+      "filename"  : "pkg:/assets/gameObjects/ball.json",
+      "order"     : 3,
+      "override"    : "ball"
     }
   ]
 }
