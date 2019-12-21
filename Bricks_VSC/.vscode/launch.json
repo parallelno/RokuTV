@@ -13,7 +13,7 @@
             "password": "rokudev",
             "rootDir": "${workspaceFolder}",
             "enableDebuggerAutoRecovery": false,
-            "stopDebuggerOnAppExit": false
+            "stopDebuggerOnAppExit": false,
             "files": [
                 "manifest",
                 "source/*.*",
@@ -35,7 +35,7 @@
             "password": "aaaa",
             "rootDir": "${workspaceFolder}",
             "enableDebuggerAutoRecovery": false,
-            "stopDebuggerOnAppExit": false
+            "stopDebuggerOnAppExit": false,
             "files": [
                 "manifest",
                 "source/*.*",
@@ -47,6 +47,28 @@
 				"assets/*/*.*",
 				"assets/*/*/*.*"
             ]
-        }
+        },
+        {
+            "type": "brightscript",
+            "request": "launch",
+            "name": "BrightScript Debug: home emul",
+            "stopOnEntry": false,
+            "host": "192.168.1.139",
+            "password": "rokudev",
+            "rootDir": "${workspaceFolder}",
+            "enableDebuggerAutoRecovery": false,
+            "stopDebuggerOnAppExit": false,
+            "files": [
+                "manifest",
+                "source/*.*",
+				"source/*/*.*",
+                "components/*.*",
+                "images/*.*",
+                "sounds/*.*",
+                "assets/*.*",
+				"assets/*/*.*",
+				"assets/*/*/*.*"
+            ]
+        }        
     ]
 }

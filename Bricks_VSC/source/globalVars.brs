@@ -3,8 +3,6 @@ function GlobalVars() as object
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
         PI					: 3.14159265359
-        BALL_START_SPEED	: 5.0
-        BALL_RADIUSES		: [10.0, 20.0, 40.0]
         
         MAX_LEVEL_COLUMNS	: 13
         MAX_LEVEL_LINES		: 17

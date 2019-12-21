@@ -4,11 +4,13 @@ function CreateLevel(_globalVars as object) as object
 		active  : true
 		globalVars	: _globalVars
 		position	: {x: 0.0, y: 0.0}
+		objsId		: 0 'it uses to generate unique id for every gameobject
 		objs : [
 			{' this is an interface of all visual objects
 				active	: true
 				visible	: true
 				type	: ""
+				id		: "" 'unique number (as a string) in scope of level. it will be assiged by LevelLoader and LevelAddGameObject
 				filename: ""
 				position: {x: 0.0, y: 0.0}
 				order	: 0 'render order from -999 to 9999. -1 (background) will be rendered earlier than 0 (common layer)
@@ -19,13 +21,14 @@ function CreateLevel(_globalVars as object) as object
 		filenames: []
 
 		ControlListenerSet	: LevelControlListenerSet
-		listeners			: CreateObject("roList") 'gameobjects which want to have their ControlListener functions being called when any keys pressed
+		listeners			: {} 'gameobjects which want to have their ControlListener functions being called when any keys pressed
 
 		collisionManager	: CollisionManagerCreate()
 
 		Draw    : LevelDraw
 		Update  : LevelUpdate
 		GetObjsByType : LevelGetObjsByType
+		SetID	: LevelSetID
 	}
 
 	return obj
@@ -63,6 +66,7 @@ function LoadLevel(_globalVars as object, _path as string) as object
 			return invalid
 		end if
 		objData.Append(obj)
+		level.SetID(objData)
 		objs.Push(objData)
 	end for
 
@@ -85,7 +89,7 @@ function LevelUpdate(_deltaTime=0 as float) as void
 	if type(event) = "roUniversalControlEvent"
 		id = event.GetInt()
 		for each listener in m.listeners
-			listener.ControlListener(id, m.globalVars.codes)
+			m.listeners[listener].ControlListener(id, m.globalVars.codes)
 		end for
 	end if
 	
@@ -98,27 +102,16 @@ function LevelUpdate(_deltaTime=0 as float) as void
 
 ' collision handlers of all collided objects will be called by this object's update
 	m.collisionManager.Update(_deltatime)
-
 end function
 
-function LevelDraw()
+function LevelDraw() as void
 	for each obj in m.objs
 		obj.Draw()
 	end for	
 end function
 
-function LevelControlListenerSet(_listener)
-    isListenerExist = false
-	for each listener in m.listeners
-		if listener = _listener
-			isListenerExist = true
-			Exit for
-		end if
-	end for
-	
-	if isListenerExist = false
-        m.listeners.AddTail(_listener)
-    end if
+function LevelControlListenerSet(_listener) as object
+    m.listeners.AddReplace(_listener.id, _listener)
 end function
 
 function LevelGetObjsByType(_type as string) as object
@@ -128,6 +121,15 @@ function LevelGetObjsByType(_type as string) as object
 			res.Push(obj)
 		end if
 	end for
-
 	return res
+end function
+
+function LevelSetID(_obj) as void
+	_obj.id = m.objsId.ToStr()
+	m.objsId += 1
+end function
+
+function LevelAddGameObject(_obj) as void
+		m.SetID(_obj)
+		m.objs.Push(_obj)
 end function

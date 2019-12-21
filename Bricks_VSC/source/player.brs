@@ -2,6 +2,7 @@ function CreatePlayer(_globalVars as object) as object
     obj = {
 		type	: "player"
 		globalVars	: _globalVars
+		id			: "" 'unique number (as a string) in scope of level. it will be assiged by LevelLoader and LevelAddGameObject
 		level		: invalid
 		speed		: {x: 0.0, y: 0.0}
         playerWidth 		: invalid
@@ -11,9 +12,9 @@ function CreatePlayer(_globalVars as object) as object
         PLAYER_MOVE_CODE_RIGHT	: 1
         PLAYER_MOVE_CODE_LEFT	: 2
 
+		Init			: PlayerInit
 		Update    		: PlayerUpdate
 		ControlListener	: PlayerControlListener
-		Init			: PlayerInit
 		Move			: PlayerMove
 	}
 	return obj
