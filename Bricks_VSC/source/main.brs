@@ -1,22 +1,8 @@
-﻿Library "v30/bslDefender.brs"
+Library "v30/bslDefender.brs"
 
 function Main() as void
-	port = CreateObject("roMessagePort")
-	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
-	screen = CreateObject("roScreen", true)
-'	screenWidth = screen.GetWidth()
-'	screenHeight= screen.GetHeight()
-	screen.SetMessagePort(port)
-	screen.SetAlphaEnable(true)
-	clock = CreateObject("roTimespan")
-	codes = bslUniversalControlEventCodes()
-    
-'    gameObjectsDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/gameObjects.xml"))
-'    gameBallDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/ballAnim.xml"))
-    
-	GAME_VARS = GlobalVars(screen)
-
 ' ------------------------------------------------------------------------------------------
+' scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
 ' Best score saved/created into registry 
 '	if ( scoreRegSection.Exists("BestScore")) 
 '		GAME_VARS.bestScore = scoreRegSection.Read("BestScore").ToInt()
@@ -65,47 +51,22 @@ function Main() as void
 '	gameUI_EnergyBar.Init(firstLevel)
 '	gameUI_EnergyBar.Update()
 ' ------------------------------------------------------------------------------------------	
-'// test
+
+    clock = CreateObject("roTimespan")
+    GAME_VARS = GlobalVars()
     
-'	spriteTest = LoadSprite(screen, "pkg:/assets/testSprite.json")	
-
-'// end test
-
-	collisionManager = CollisionManagerCreate()
-'	player = CreatePlayer(GAME_VARS)
     level = LoadLevel(GAME_VARS, "pkg:/assets/levels/level01.json")
 
 ' ------------------------------------------------------------------------------------------
     clock.Mark()
 
-MENU_LOOP:
+'MENU_LOOP:
 	
-GAME_TEST_LOOP:
-'    GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
-	lastID = 0
+'GAME_TEST_LOOP:
+'   GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
     while true
-        event = port.GetMessage()
-        if (type(event) = "roUniversalControlEvent")
-            id = event.GetInt()
-            if (id = codes.BUTTON_LEFT_PRESSED)
-'                player.Move(GAME_VARS.PLAYER_MOVE_CODE_LEFT)
-            endif
-            if (id = codes.BUTTON_RIGHT_PRESSED)
-'                player.Move(GAME_VARS.PLAYER_MOVE_CODE_RIGHT)
-            endif
-            if (id = 6)             
-                'Goto GAME_INTRO_LOOP
-            endif
-            if (id = 0) Goto EXIT_GAME
-            lastID = id
-        else 
-        	deltaTime = clock.TotalMilliseconds() / 1000.0
-            if (deltaTime > GAME_VARS.STABLE_FPS) 
-                ' uninteractive back and UI elements
-
-				
-'				if (lastID = 7) gameLevel_DebugWhiteFieldObj.Draw()
-				' end line for uninteractive back and UI elements
+       	deltaTime = clock.TotalMilliseconds() / 1000.0
+        if (deltaTime > GAME_VARS.STABLE_FPS) 
 '				gameUI_EnergyBar.Update()
 '				gameUI_EnergyBar.Draw()
 				
@@ -119,25 +80,14 @@ GAME_TEST_LOOP:
 '				ball.Update(deltaTime)
 '				ball.Draw()
 				
-' test
-'				spriteTest.Update(deltaTime)
-'				spriteTest.Draw()
-' end test
-                level.Update(deltaTime)
-'				player.Update(deltatime)
-'------------------------------------------------
-' all dynamic object updates called already
-				collisionManager.Update(deltatime) ' collision handlers of all collided objects will be called by this object's update
-'------------------------------------------------
-'				player.Draw()
-				level.Draw()
+            level.Update(deltaTime)
+            level.Draw()
                 
-                screen.SwapBuffers()
-                clock.Mark()
-            endif
+            GAME_VARS.screen.SwapBuffers()
+            clock.Mark()
         endif
     end while
     
-EXIT_GAME:
+'EXIT_GAME:
     
 end function

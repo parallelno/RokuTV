@@ -7,7 +7,29 @@
         {
             "type": "brightscript",
             "request": "launch",
-            "name": "BrightScript Debug: Launch",
+            "name": "BrightScript Debug: work",
+            "stopOnEntry": false,
+            "host": "10.130.53.194",
+            "password": "rokudev",
+            "rootDir": "${workspaceFolder}",
+            "enableDebuggerAutoRecovery": false,
+            "stopDebuggerOnAppExit": false
+            "files": [
+                "manifest",
+                "source/*.*",
+				"source/*/*.*",
+                "components/*.*",
+                "images/*.*",
+                "sounds/*.*",
+                "assets/*.*",
+				"assets/*/*.*",
+				"assets/*/*/*.*"
+            ]
+        },
+        {
+            "type": "brightscript",
+            "request": "launch",
+            "name": "BrightScript Debug: home",
             "stopOnEntry": false,
             "host": "192.168.1.208",
             "password": "aaaa",

@@ -119,7 +119,7 @@ function SpriteAnimationUpdate(_deltatime=0 as float) as void
     end if
 
     m.currentRegionNum = Int(m.time / m.lifetime * currentAnimationFramesCount)
-    if (m.currentRegionNum > ( currentAnimationFramesCount - 1) ) m.currentRegionNum = currentAnimationFramesCount
+	m.currentRegionNum = ClampI(m.currentRegionNum, 0, currentAnimationFramesCount - 1)
     
     currentRegion = m.regions[m.animations[m.currentAnimationName].frames[m.currentRegionNum]]
     if ( currentRegion <> invalid) m.currentRegion = currentRegion

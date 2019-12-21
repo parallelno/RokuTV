@@ -1,4 +1,4 @@
-function GlobalVars(_screen as object) as object
+function GlobalVars() as object
 	obj = {
 ' ------- NEW -----------------------------------
         STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
@@ -8,9 +8,8 @@ function GlobalVars(_screen as object) as object
         
         MAX_LEVEL_COLUMNS	: 13
         MAX_LEVEL_LINES		: 17
-        
-        PLAYER_MOVE_CODE_RIGHT	: 1
-        PLAYER_MOVE_CODE_LEFT	: 2
+        BRICK_WIDTH 		: 64
+        BRICK_HEIGHT 		: 25
         
         PLAYER_START_SPEED		: 10.0
         
@@ -19,9 +18,6 @@ function GlobalVars(_screen as object) as object
         
         PLAYER_COLLISION_INNER_BOX_HALF_WIDTHS : [39.0, 57.0, 95.0]
         
-        PLAYER_POS_Y		: 670.0
-        PLAYER_SPRITE_FILENAME	: "pkg:/assets/testSprite.json"
-        
         ENERGY_ITEM_RADIUS		: 20.0
         ENERGY_ITEM_START_SPEED	: 1.0
         ENERGY_ITEMS_MAX_AMOUNT	: 15
@@ -29,19 +25,18 @@ function GlobalVars(_screen as object) as object
 		ENERGY_ITEM_SPRITE_FILENAME	: "pkg:/assets/gameObjects/energyItem.json"
 		MAX_ENERGY			: 1.0
         
-        ENERGY_BAR_STATIC_SPRITE_FILENAME	: "pkg:/assets/ui/energyBar.json"
-        
-		screenWidth			: _screen.GetWidth()
-		screenHeight		: _screen.GetHeight()
-        screen              : _screen
-   
-        
+        screen              : CreateObject("roScreen", true)
+        screenWidth			: invalid
+		screenHeight		: invalid
+
+
+        port                : CreateObject("roMessagePort")
+        codes               : bslUniversalControlEventCodes() 'key codes from bslUniversalControlEventCodes()
+
+        gameObjectInterfaces: {} ' there is a AArray of empty gameobjects which will be loaded to every lavel. They are used to override logic of sprites which loaded by loadLevel function.
     }
     obj.menuState = obj.GAME_STATE_MENU_L1
 	
-	obj.BRICK_WIDTH 		= 64
-    obj.BRICK_HEIGHT 		= 25
-        
 	obj.GAME_FIELD_WIDTH	= obj.BRICK_WIDTH * obj.MAX_LEVEL_COLUMNS
 	obj.GAME_FIELD_HEIGHT	= obj.BRICK_HEIGHT * obj.MAX_LEVEL_LINES
         
@@ -50,5 +45,12 @@ function GlobalVars(_screen as object) as object
 	obj.GAME_FIELD_MIN_Y	= 34
 	obj.GAME_FIELD_MAX_Y	= obj.GAME_FIELD_MIN_Y + obj.GAME_FIELD_HEIGHT
 
+	obj.screen.SetMessagePort(obj.port)
+	obj.screen.SetAlphaEnable(true)
+    obj.screenWidth = obj.screen.GetWidth()
+    obj.screenHeight = obj.screen.GetHeight()
+
+' level needs to have all unique empty gameobjects to be added to that array
+    obj.gameObjectInterfaces.AddReplace("player", CreatePlayer(obj))
     return obj
 end function

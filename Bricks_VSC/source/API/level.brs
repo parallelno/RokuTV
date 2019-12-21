@@ -18,9 +18,15 @@ function CreateLevel(_globalVars as object) as object
 		]
 		filenames: []
 
+		ControlListenerSet	: LevelControlListenerSet
+		listeners			: CreateObject("roList") 'gameobjects which want to have their ControlListener functions being called when any keys pressed
+
+		collisionManager	: CollisionManagerCreate()
+
 		Draw    : LevelDraw
 		Update  : LevelUpdate
 	}
+
 	return obj
 end function
 
@@ -44,36 +50,69 @@ function LoadLevel(_globalVars as object, _path as string) as object
 			objData = LoadStaticSprite(_globalVars.screen, obj.filename)
 		else if obj.type = "sprite"
 			objData = LoadSprite(_globalVars.screen, obj.filename)
-			if obj.Update <> invalid
-				update1 = global["PlayerUpdate"]
-				update = FindMemberFunction(GetGlobalAA(), "PlayerUpdate")
-				'globalAA = GetGlobalAA()
-'				update = function("PlayerUpdate")
-				obj.Update = update
+			if obj.override <> invalid
+				overrideObj = _globalVars.gameObjectInterfaces[obj.override]
+				if overrideObj = invalid 
+					print "levelData " + _path + " has wrong override logic (" + obj.override + ") for sprite. Check line with filename " + obj.filename
+				end if 
+				obj.Append(overrideObj)
 			end if
 		end if
 		if objData = invalid
 			return invalid
 		end if
 		objData.Append(obj)
+		if objData.Init <> invalid 
+			objData.Init(level)
+		end if
 		objs.Push(objData)
 	end for
 
 	objs.SortBy("order")
 	levelData.objs = objs
 	level.Append(levelData)
+
 	return level
 end function
 
 function LevelUpdate(_deltaTime=0 as float) as void
+' key press handler
+    event = m.globalVars.port.GetMessage()
+	if type(event) = "roUniversalControlEvent"
+		id = event.GetInt()
+		for each listener in m.listeners
+			listener.ControlListener(id, m.globalVars.codes)
+		end for
+	end if
+	
 	if (m.active = false) return
+
+' gameobject updates
 	for each obj in m.objs
 		obj.Update(_deltatime)
 	end for
+
+' collision handlers of all collided objects will be called by this object's update
+	m.collisionManager.Update(_deltatime) 
+
 end function
 
 function LevelDraw()
 	for each obj in m.objs
 		obj.Draw()
 	end for	
+end function
+
+function LevelControlListenerSet(_listener)
+    isListenerExist = false
+	for each listener in m.listeners
+		if listener = _listener
+			isListenerExist = true
+			Exit for
+		end if
+	end for
+	
+	if isListenerExist = false
+        m.listeners.AddTail(_listener)
+    end if
 end function

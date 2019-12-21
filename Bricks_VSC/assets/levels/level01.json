@@ -15,9 +15,9 @@
     },
     {
       "type"      : "sprite",
-      "filename"  : "pkg:/assets/testSprite.json",
+      "filename"  : "pkg:/assets/gameObjects/player.json",
       "order"     : 2,
-      "update"    : "PlayerUpdate"
+      "override"    : "player"
     }
   ]
 }

@@ -1,0 +1,38 @@
+{
+	"type" : "sprite",
+	"position" : {
+		"x" : 100,
+		"y" : 670
+	},
+	"bitmaps": {
+		"player": {
+			"filename": "pkg:/assets/gameObjects/png/platformSmall.png",
+			"regions": {
+				"r1": {
+					"offset": {"x": 0, "y": 0},
+					"size": {"x": 144, "y": 57}
+				},
+				"r2": {
+					"offset": {"x": 0, "y": 57},
+					"size": {"x": 144, "y": 57}
+				},
+				"r3": {
+					"offset": {"x": 0, "y": 114},
+					"size": {"x": 144, "y": 57}
+				},
+				"r4": {
+					"offset": {"x": 0, "y": 171},
+					"size": {"x": 144, "y": 57}
+				}
+			}
+		}
+	},
+	"animations": {
+		"idle" : {
+			"speed" : 1,
+			"frames" : [
+				"player.r1"
+			]
+		}
+	}
+}
