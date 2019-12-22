@@ -52,21 +52,21 @@ function Main() as void
 '	gameUI_EnergyBar.Update()
 ' ------------------------------------------------------------------------------------------	
 
-    clock = CreateObject("roTimespan")
-    GAME_VARS = GlobalVars()
-    
-    level = LoadLevel(GAME_VARS, "pkg:/assets/levels/level01.json")
+	clock = CreateObject("roTimespan")
+	GAME_VARS = GlobalVars()
+	
+	level = LoadLevel(GAME_VARS, "pkg:/assets/levels/level01.json")
 
 ' ------------------------------------------------------------------------------------------
-    clock.Mark()
+	clock.Mark()
 
 'MENU_LOOP:
 	
 'GAME_TEST_LOOP:
 '   GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
-    while true
-       	deltaTime = clock.TotalMilliseconds() / 1000.0
-        if (deltaTime > GAME_VARS.STABLE_FPS) 
+	while true
+	   	deltaTime = clock.TotalMilliseconds() / 1000.0
+		if (deltaTime > GAME_VARS.STABLE_FPS) 
 '				gameUI_EnergyBar.Update()
 '				gameUI_EnergyBar.Draw()
 				
@@ -80,14 +80,14 @@ function Main() as void
 '				ball.Update(deltaTime)
 '				ball.Draw()
 				
-            level.Update(deltaTime)
-            level.Draw()
-                
-            GAME_VARS.screen.SwapBuffers()
-            clock.Mark()
-        endif
-    end while
-    
+			level.Update(deltaTime)
+			level.Draw()
+				
+			GAME_VARS.screen.SwapBuffers()
+			clock.Mark()
+		endif
+	end while
+	
 'EXIT_GAME:
-    
+	
 end function

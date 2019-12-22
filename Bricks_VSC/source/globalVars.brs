@@ -9,12 +9,6 @@ function GlobalVars() as object
         BRICK_WIDTH 		: 64
         BRICK_HEIGHT 		: 25
         
-        PLAYER_START_SPEED		: 10.0
-        
-        PLAYER_WIDTHS		: [116.0, 147.0, 225.0]
-        PLAYER_HEIGHT		: 28.0
-        
-        PLAYER_COLLISION_INNER_BOX_HALF_WIDTHS : [39.0, 57.0, 95.0]
         
         ENERGY_ITEM_RADIUS		: 20.0
         ENERGY_ITEM_START_SPEED	: 1.0

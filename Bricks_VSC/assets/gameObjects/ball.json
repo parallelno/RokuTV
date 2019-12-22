@@ -6,7 +6,7 @@
 	},
 	"bitmaps": {
 		"ball": {
-			"filename": "pkg:/assets/ballAnim.png",
+			"filename": "pkg:/assets/gameObjects/png/ball.png",
 			"regions": {
 				"r1": {
 					"offset": {"x": 0, "y": 0},

@@ -20,15 +20,14 @@ function CreateLevel(_globalVars as object) as object
 		]
 		filenames: []
 
-		ControlListenerSet	: LevelControlListenerSet
 		listeners			: {} 'gameobjects which want to have their ControlListener functions being called when any keys pressed
-
 		collisionManager	: CollisionManagerCreate()
 
 		Draw    : LevelDraw
 		Update  : LevelUpdate
-		GetObjsByType : LevelGetObjsByType
+		GetObjsByType	: LevelGetObjsByType
 		SetID	: LevelSetID
+		ControlListenerSet	: LevelControlListenerSet
 	}
 
 	return obj
