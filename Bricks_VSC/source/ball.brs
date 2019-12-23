@@ -72,7 +72,7 @@ function BallUpdate(_deltatime=0 as float, _position=invalid as object) as void
 	end if
 ' END. move it to collision manager
 
-	m.SpriteUpdate(_deltatime)
+	m.OriginalUpdate(_deltatime)
 end function
 
 function BallInit(_level)
@@ -84,7 +84,7 @@ function BallInit(_level)
 	m.status = m.STATUS_STICK
 	players = m.level.GetObjsByType("player")
 	m.player = players[0]
-	m.STICK_POSITION_OFFSET_Y = -m.collisionRadius - m.player.collisionSize.y / 2.0
+	m.STICK_POSITION_OFFSET_Y = -m.collisionRadius - m.player.collisionSize.y
 	m.level.CollisionManager.AddObject(m)
 end function
 
@@ -97,6 +97,6 @@ function BallControlListener(_key as integer, _codes as object) as void
 	endif
 end function
 
-function BallCollisionHandler(_collidedList as object)
-	print "ball is collided"
+function BallCollisionHandler((_collider as object, _collidedList as object)
+'	print "ball is collided"
 end function

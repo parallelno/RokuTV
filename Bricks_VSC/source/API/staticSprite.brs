@@ -6,6 +6,7 @@ function CreateStaticSprite(_screen as object) as object
         time		: 0
         position		: {x: 0.0, y: 0.0}
         scale			: {x: 1.0, y: 1.0}
+		color			: &hFFFFFFFF
 		regions			: {
 			regionName	: invalid
 		}
@@ -28,6 +29,7 @@ function CreateStaticSprite(_screen as object) as object
         screen			: _screen
 '		functions
 		Update	: StaticSpriteUpdate
+		OriginalUpdate	: StaticSpriteUpdate
 		Draw	: StaticSpriteDraw
     }
 	return obj
@@ -72,7 +74,7 @@ function StaticSpriteDraw() as void
    		repeatOffsetY = tile.repeat.y
 
     	for	i=0 to repeatCount-1
-    		m.screen.DrawScaledObject(drawPosition.x + repeatOffsetX * i, drawPosition.y + repeatOffsetY * i, scale.x * m.scale.x, scale.y * m.scale.y, region)
+    		m.screen.DrawScaledObject(drawPosition.x + repeatOffsetX * i, drawPosition.y + repeatOffsetY * i, scale.x * m.scale.x, scale.y * m.scale.y, region, m.color)
     	end for
     end for
 end function

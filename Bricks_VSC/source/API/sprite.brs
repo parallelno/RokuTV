@@ -12,6 +12,7 @@ function CreateSprite(_screen as object) as object
 		regions			: {}
 		animations		: {}
 		currentAnimationName	: "idle"
+		color			: &hFFFFFFFF
 '		private fields
     	time			: 0.0
 		currentRegion	: invalid
@@ -40,7 +41,7 @@ function CreateSprite(_screen as object) as object
 '		functions
 		Draw    : SpriteDraw
 		Update  : SpriteUpdate
-		SpriteUpdate : SpriteUpdate 'clone of Update function. it is used if Update is overriden
+		OriginalUpdate	: SpriteUpdate 'clone of Update function. it is used if Update is overriden
 		AnimationUpdate : SpriteAnimationUpdate
 		AnimationSet : SpriteAnimationSet
     }
@@ -127,5 +128,5 @@ end function
 
 function SpriteDraw() as void
     if (m.visible = false) return
-    m.screen.DrawScaledObject(m.drawPosition.x, m.drawPosition.y, m.scale.x, m.scale.y, m.currentRegion)
+    m.screen.DrawScaledObject(m.drawPosition.x, m.drawPosition.y, m.scale.x, m.scale.y, m.currentRegion, m.color)
 end function

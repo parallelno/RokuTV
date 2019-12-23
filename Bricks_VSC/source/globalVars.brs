@@ -21,11 +21,10 @@ function GlobalVars() as object
         screenWidth			: invalid
 		screenHeight		: invalid
 
-
         port                : CreateObject("roMessagePort")
         codes               : bslUniversalControlEventCodes() 'key codes from bslUniversalControlEventCodes()
 
-        gameObjectInterfaces: {} ' there is a AArray of empty gameobjects which will be loaded to every lavel. They are used to override logic of sprites which loaded by loadLevel function.
+        gameObjectInterfaces: {} ' there is a AArray of empty gameobjects which will be loaded to every level. They are used to override logic of sprites which loaded by loadLevel function.
     }
     obj.menuState = obj.GAME_STATE_MENU_L1
 	
@@ -45,5 +44,6 @@ function GlobalVars() as object
 ' level needs to have all unique empty gameobjects to be added to that array
     obj.gameObjectInterfaces.AddReplace("player", CreatePlayer(obj))
     obj.gameObjectInterfaces.AddReplace("ball", CreateBall(obj))
+    obj.gameObjectInterfaces.AddReplace("collisionBox", CreateCollisionBox(obj))
     return obj
 end function

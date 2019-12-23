@@ -44,16 +44,16 @@ function PlayerUpdate(_deltatime=0 as float, _position=invalid as object) as voi
 	m.position.y += m.speed.y
 
 ' START. move it to collision manager	
-	if (m.position.x > m.globalVars.GAME_FIELD_MAX_X - m.collisionSize.x * 0.5)
-		m.position.x = m.globalVars.GAME_FIELD_MAX_X - m.collisionSize.x * 0.5
-	end if
-
-	if (m.position.x < m.globalVars.GAME_FIELD_MIN_X + m.collisionSize.x * 0.5)
-		m.position.x = m.globalVars.GAME_FIELD_MIN_X + m.collisionSize.x * 0.5 
-	end if
+'	if (m.position.x > m.globalVars.GAME_FIELD_MAX_X - m.collisionSize.x)
+'		m.position.x = m.globalVars.GAME_FIELD_MAX_X - m.collisionSize.x
+'	end if
+'
+'	if (m.position.x < m.globalVars.GAME_FIELD_MIN_X + m.collisionSize.x)
+'		m.position.x = m.globalVars.GAME_FIELD_MIN_X + m.collisionSize.x 
+'	end if
 ' END. move it to collision manager
 
-	m.SpriteUpdate(_deltatime)
+	m.OriginalUpdate(_deltatime)
 end function
 
 function PlayerInit(_level)
@@ -85,6 +85,11 @@ function PlayerMove(_playerMoveCode as Integer) as void
 	end if
 end function
 
-function PlayerCollisionHandler(_collidedList as object)
-	print "player is collided"
+function PlayerCollisionHandler(_collider as object, _collidedList as object)
+	for each colliderOther in _collidedList
+		if colliderOther.collisionLayer = 2
+'			print "border"
+			m.level.CollisionManager.MoveOutOfCollision(_collider, colliderOther)
+		end if
+	end for
 end function

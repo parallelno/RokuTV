@@ -53,14 +53,15 @@ function LoadLevel(_globalVars as object, _path as string) as object
 			objData = LoadStaticSprite(_globalVars.screen, obj.filename)
 		else if obj.type = "sprite"
 			objData = LoadSprite(_globalVars.screen, obj.filename)
-			if obj.override <> invalid
-				overrideObj = _globalVars.gameObjectInterfaces[obj.override]
-				if overrideObj = invalid 
-					print "levelData " + _path + " has wrong override logic (" + obj.override + ") for sprite. Check line with filename " + obj.filename
-				end if 
-				obj.Append(overrideObj)
-			end if
 		end if
+		if obj.override <> invalid
+			overrideObj = _globalVars.gameObjectInterfaces[obj.override]
+			if overrideObj = invalid 
+				print "levelData " + _path + " has wrong override logic (" + obj.override + "). Check line with filename " + obj.filename
+			end if 
+			obj.Append(overrideObj)
+		end if
+
 		if objData = invalid
 			return invalid
 		end if

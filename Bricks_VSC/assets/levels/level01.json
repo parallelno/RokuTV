@@ -1,29 +1,53 @@
 {
 	"type" : "level",
 	"objs": [
-    {
-      "type"      : "staticSprite",
-      "filename"  : "pkg:/assets/levelSkins/levelSkin01.json",
-      "position"  : {"x": 0, "y": 0},
-      "order"     : 0
-    },
-    {
-      "type"      : "staticSprite",
-      "filename"  : "pkg:/assets/ui/gameStaticUI.json",
-      "position"  : {"x": 0, "y": 0},
-      "order"     : 1
-    },
-    {
-      "type"      : "sprite",
-      "filename"  : "pkg:/assets/gameObjects/player.json",
-      "order"     : 2,
-      "override"    : "player"
-    },
-    {
-      "type"      : "sprite",
-      "filename"  : "pkg:/assets/gameObjects/ball.json",
-      "order"     : 3,
-      "override"    : "ball"
-    }
-  ]
+		{
+			"type"      : "staticSprite",
+			"filename"  : "pkg:/assets/levelSkins/levelSkin01.json",
+			"position"  : {"x": 0, "y": 0},
+			"order"     : 0
+		},
+		{
+			"type"      : "staticSprite",
+			"filename"  : "pkg:/assets/ui/gameStaticUI.json",
+			"position"  : {"x": 0, "y": 0},
+			"order"     : 1
+		},
+		{
+			"type"      : "sprite",
+			"filename"  : "pkg:/assets/gameObjects/player.json",
+			"order"     : 2,
+			"override"    : "player"
+		},
+		{
+			"type"      : "sprite",
+			"filename"  : "pkg:/assets/gameObjects/ball.json",
+			"order"     : 3,
+			"override"    : "ball"
+		},
+		{
+			"type"			: "staticSprite",
+			"filename"	: "pkg:/assets/gameObjects/collisionBox.json",
+			"position"  : {"x": 0, "y": 350},
+			"scale"     : {"x": 125, "y": 800},
+			"order"     : 10000,
+			"override"    : "collisionBox"
+		},
+		{
+			"type"			: "staticSprite",
+			"filename"	: "pkg:/assets/gameObjects/collisionBox.json",
+			"position"  : {"x": 930, "y": 350},
+			"scale"     : {"x": 70, "y": 800},
+			"order"     : 10000,
+			"override"    : "collisionBox"
+		},
+		{
+			"type"			: "staticSprite",
+			"filename"	: "pkg:/assets/gameObjects/collisionBox.json",
+			"position"  : {"x": 480, "y": -10},
+			"scale"     : {"x": 850, "y": 90},
+			"order"     : 10000,
+			"override"    : "collisionBox"
+		}	
+	]
 }
