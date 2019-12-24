@@ -27,27 +27,63 @@
 		},
 		{
 			"type"			: "staticSprite",
-			"filename"	: "pkg:/assets/gameObjects/collisionBox.json",
-			"position"  : {"x": 0, "y": 350},
-			"scale"     : {"x": 125, "y": 800},
+			"filename"	: "pkg:/assets/gameObjects/staticCollisionBox.json",
+			"position"  : {"x": 0.0, "y": 350.0},
+			"scale"     : {"x": 125.0, "y": 800.0},
 			"order"     : 10000,
-			"override"    : "collisionBox"
+			"override"    : "staticCollisionBox"
 		},
 		{
 			"type"			: "staticSprite",
-			"filename"	: "pkg:/assets/gameObjects/collisionBox.json",
-			"position"  : {"x": 930, "y": 350},
-			"scale"     : {"x": 70, "y": 800},
+			"filename"	: "pkg:/assets/gameObjects/staticCollisionBox.json",
+			"position"  : {"x": 930.0, "y": 350.0},
+			"scale"     : {"x": 70.0, "y": 800.0},
 			"order"     : 10000,
-			"override"    : "collisionBox"
+			"override"    : "staticCollisionBox"
 		},
 		{
 			"type"			: "staticSprite",
-			"filename"	: "pkg:/assets/gameObjects/collisionBox.json",
-			"position"  : {"x": 480, "y": -10},
-			"scale"     : {"x": 850, "y": 90},
+			"filename"	: "pkg:/assets/gameObjects/staticCollisionBox.json",
+			"position"  : {"x": 480.0, "y": -10.0},
+			"scale"     : {"x": 850.0, "y": 90.0},
 			"order"     : 10000,
-			"override"    : "collisionBox"
-		}	
+			"override"    : "staticCollisionBox"
+		},	
+		{
+			"type"			: "staticSprite",
+			"filename"	: "pkg:/assets/gameObjects/staticCollisionBox.json",
+			"position"  : {"x": 480.0, "y": 750.0},
+			"scale"     : {"x": 850.0, "y": 90.0},
+			"order"     : 10000,
+			"override"    : "staticCollisionBox"
+		},	
+		{
+			"type"			: "staticSprite",
+			"filename"	: "pkg:/assets/gameObjects/playerDebugAABB.json",
+			"order"     : 10000,
+			"override"    : "playerDebugAABB"
+		},
+		{
+			"type"		: "bricks",
+			"order"     : 0,
+			"bricks"	: 
+			[
+				"1112223334445",
+				"1           1",
+				"1           1",
+				"1           1",
+				"1           1",
+				"1           1",
+				"1           1",
+				"1111111111111",
+				"1111111111111",
+				"1111111111111",
+				"1112111111111",
+				"1111111111111",
+				"1111111111111",
+				"1111111111111"
+			]
+		}
+
 	]
 }

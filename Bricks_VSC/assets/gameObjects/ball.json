@@ -1,8 +1,8 @@
 {
 	"type" : "sprite",
 	"position" : {
-		"x" : 100,
-		"y" : 100
+		"x" : 100.0,
+		"y" : 100.0
 	},
 	"bitmaps": {
 		"ball": {

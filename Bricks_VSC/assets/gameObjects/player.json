@@ -1,8 +1,8 @@
 {
 	"type" : "sprite",
 	"position" : {
-		"x" : 100,
-		"y" : 670
+		"x" : 100.0,
+		"y" : 670.0
 	},
 	"bitmaps": {
 		"player": {

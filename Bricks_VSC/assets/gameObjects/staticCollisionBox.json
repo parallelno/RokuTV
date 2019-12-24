@@ -1,0 +1,12 @@
+{
+	"type" : "staticSprite",
+	"filenames": {
+		"bitmap": "pkg:/assets/gameObjects/png/whitePixel.png"
+	},
+	"tiles" : [
+		{
+			"region" : "bitmap",
+			"position" : {"x": 0, "y": 0}
+		}		
+	]
+}

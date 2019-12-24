@@ -19,13 +19,14 @@ function CreateBall(_globalVars as object) as object
 		STATUS_RUN     : 0
 		STATUS_STICK   : 1
 		STATUS_RELEASED: 2
-		STICK_POSITION_OFFSET_Y : -25
+		STICK_POSITION_OFFSET_Y : -25.0
 		START_SPEED	: 5.0
 
 		player         : invalid
 
 		Init			: BallInit
 		Update    		: BallUpdate
+		LateUpdate    		: BallLateUpdate
 		ControlListener	: BallControlListener
 		CollisionHandler : BallCollisionHandler
 	}
@@ -59,23 +60,14 @@ function BallUpdate(_deltatime=0 as float, _position=invalid as object) as void
 		m.speed.y = -m.START_SPEED
 		m.position.y = m.player.position.y + m.STICK_POSITION_OFFSET_Y
 	end if
+end function
 
-' START. move it to collision manager		
-	if ((m.position.x > m.globalVars.GAME_FIELD_MAX_X - m.collisionRadius) OR (m.position.x < m.globalVars.GAME_FIELD_MIN_X + m.collisionRadius)) 
-		m.position.x -= m.speed.x
-		m.speed.x *= -1.0
-	end if
-	
-	if ((m.position.y > m.globalVars.screenHeight - m.collisionRadius) OR (m.position.y < m.globalVars.GAME_FIELD_MIN_Y + m.collisionRadius))
-		m.position.y -= m.speed.y
-		m.speed.y *= -1.0
-	end if
-' END. move it to collision manager
-
+function BallLateUpdate(_deltatime=0 as float, _position=invalid as object) as void
 	m.OriginalUpdate(_deltatime)
 end function
 
-function BallInit(_level)
+
+function BallInit(_level as object) as void
 	m.level = _level
 	m.level.ControlListenerSet(m)
 	m.speed.x = m.START_SPEED
@@ -97,6 +89,23 @@ function BallControlListener(_key as integer, _codes as object) as void
 	endif
 end function
 
-function BallCollisionHandler((_collider as object, _collidedList as object)
-'	print "ball is collided"
+function BallCollisionHandler(_collider as object, _collidedList as object)
+	for each colliderOther in _collidedList
+		if colliderOther.collisionLayer = 2
+			m.level.CollisionManager.ReflectSpeed(_collider, colliderOther)
+		end if
+		if colliderOther.collisionLayer = 0
+			ballPlatfomPosDiffX = _collider.position.x - colliderOther.position.x
+			if Abs(ballPlatfomPosDiffX) < m.player.COLLISION_PLATO_HALF_SIZES[m.player.collisionSizeCode]
+				m.level.CollisionManager.ReflectSpeed(_collider, colliderOther)
+				m.speed.y = -Abs(m.speed.y)
+			else
+				if (_collider.speed.y > 0.0)
+					ballSpeedLength = VectorLength(_collider.speed)
+					_collider.speed.x = 0.7071 * ballSpeedLength * Sgn(ballPlatfomPosDiffX)
+					_collider.speed.y = -0.7071 * ballSpeedLength
+				end if				
+			end if
+		end if
+	end for	
 end function

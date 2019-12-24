@@ -23,6 +23,7 @@ function CollisionManagerCreate() as object
 		AddObject : CollisionManagerAddObject
 		CollideBoxBox	: CollisionManagerBoxBoxCollide
 		MoveOutOfCollision : CollisionManagerMoveOutOfCollision
+		ReflectSpeed : CollisionManagerReflectSpeed
 	}
 	return obj
 end function
@@ -120,9 +121,36 @@ function CollisionManagerAddObject(_Object as object, isDinamic=true as boolean)
 	end if
 end function
 
-function CollisionManagerMoveOutOfCollision(_collider as object, colliderOther as object))
-	backwardSpeedVectorX = colliderOther.position.x - _collider.position.x
-	backwardSpeedVectorY = colliderOther.position.y - _collider.position.y
-	backward
+function CollisionManagerMoveOutOfCollision(_collider as object, _colliderOther as object) as void
+	backwardSpeedVectorX = _collider.position.x - _colliderOther.position.x
+	backwardSpeedVectorY = _collider.position.y - _colliderOther.position.y
+	backwardPosX = _colliderOther.position.x + (_collider.collisionSize.x * _collider.scale.x + _colliderOther.collisionSize.x * _colliderOther.scale.x) * Sgn(backwardSpeedVectorX)
+	backwardPosY = _colliderOther.position.y + (_collider.collisionSize.y * _collider.scale.y + _colliderOther.collisionSize.y * _colliderOther.scale.y) * Sgn(backwardSpeedVectorY)
 
+	backwardMoveX = Abs(_collider.position.x - backwardPosX)
+	backwardMoveY = Abs(_collider.position.y - backwardPosY)
+
+	if backwardMoveX < backwardMoveY
+		_collider.position.x = backwardPosX
+	else
+		_collider.position.y = backwardPosY
+	end if
+end function
+
+function CollisionManagerReflectSpeed(_collider as object, _colliderOther as object) as void
+	backwardSpeedVectorX = _collider.position.x - _colliderOther.position.x
+	backwardSpeedVectorY = _collider.position.y - _colliderOther.position.y
+	backwardPosX = _colliderOther.position.x + (_collider.collisionSize.x * _collider.scale.x + _colliderOther.collisionSize.x * _colliderOther.scale.x) * Sgn(backwardSpeedVectorX)
+	backwardPosY = _colliderOther.position.y + (_collider.collisionSize.y * _collider.scale.y + _colliderOther.collisionSize.y * _colliderOther.scale.y) * Sgn(backwardSpeedVectorY)
+
+	backwardMoveX = Abs(_collider.position.x - backwardPosX)
+	backwardMoveY = Abs(_collider.position.y - backwardPosY)
+
+	if backwardMoveX < backwardMoveY
+		_collider.position.x = backwardPosX
+		_collider.speed.x *= -1.0
+	else
+		_collider.position.y = backwardPosY
+		_collider.speed.y *= -1.0
+	end if
 end function

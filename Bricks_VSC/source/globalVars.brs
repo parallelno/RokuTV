@@ -25,6 +25,7 @@ function GlobalVars() as object
         codes               : bslUniversalControlEventCodes() 'key codes from bslUniversalControlEventCodes()
 
         gameObjectInterfaces: {} ' there is a AArray of empty gameobjects which will be loaded to every level. They are used to override logic of sprites which loaded by loadLevel function.
+        RegisterUniqueGameObject : GlobalVarsRegisterUniqueGameObject
     }
     obj.menuState = obj.GAME_STATE_MENU_L1
 	
@@ -41,9 +42,18 @@ function GlobalVars() as object
     obj.screenWidth = obj.screen.GetWidth()
     obj.screenHeight = obj.screen.GetHeight()
 
-' level needs to have all unique empty gameobjects to be added to that array
-    obj.gameObjectInterfaces.AddReplace("player", CreatePlayer(obj))
-    obj.gameObjectInterfaces.AddReplace("ball", CreateBall(obj))
-    obj.gameObjectInterfaces.AddReplace("collisionBox", CreateCollisionBox(obj))
+' registration gameobjects. level needs to have all unique empty gameobjects to be added to that array
+    obj.RegisterUniqueGameObject(CreateSprite(obj))
+    obj.RegisterUniqueGameObject(CreateStaticSprite(obj))
+
+    obj.RegisterUniqueGameObject(CreatePlayer(obj))
+    obj.RegisterUniqueGameObject(CreateBall(obj))
+    obj.RegisterUniqueGameObject(CreateStaticCollisionBox(obj))
+    obj.RegisterUniqueGameObject(CreatePlayerDebugAABB(obj))
+    obj.RegisterUniqueGameObject(CreateBricks(obj))
     return obj
+end function
+
+function GlobalVarsRegisterUniqueGameObject(_gameObject)
+    m.gameObjectInterfaces.AddReplace(_gameObject.type, _gameObject)
 end function

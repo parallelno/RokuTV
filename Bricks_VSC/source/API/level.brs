@@ -49,20 +49,23 @@ function LoadLevel(_globalVars as object, _path as string) as object
 
 	objs = []
 	for each obj in levelData.objs
-		if obj.type = "staticSprite"
-			objData = LoadStaticSprite(_globalVars.screen, obj.filename)
-		else if obj.type = "sprite"
-			objData = LoadSprite(_globalVars.screen, obj.filename)
+		filename = ""
+		if (obj.filename <> invalid) filename = obj.filename
+		LoadGameObject = _globalVars.gameObjectInterfaces[obj.type]
+		if LoadGameObject = invalid
+			print "obj.type=" + obj.type + " is not registred in globalVars.brs or it doesn't have Load function"
 		end if
+		objData = _globalVars.gameObjectInterfaces[obj.type].Load(_globalVars.screen, filename)
 		if obj.override <> invalid
 			overrideObj = _globalVars.gameObjectInterfaces[obj.override]
 			if overrideObj = invalid 
-				print "levelData " + _path + " has wrong override logic (" + obj.override + "). Check line with filename " + obj.filename
+				print "levelData " + _path + " has wrong override logic (" + obj.override + "). Check line with filename " + filename
 			end if 
 			obj.Append(overrideObj)
 		end if
 
 		if objData = invalid
+			print "levelData " + _path + " loaded unregistred type of object (" + obj.type + "). Check line with filename " + filename + " or check object registration in globalVars.brs"
 			return invalid
 		end if
 		objData.Append(obj)
@@ -102,6 +105,13 @@ function LevelUpdate(_deltaTime=0 as float) as void
 
 ' collision handlers of all collided objects will be called by this object's update
 	m.collisionManager.Update(_deltatime)
+
+' gameobject late updates
+	for each obj in m.objs
+		if obj.LateUpdate <> invalid
+			obj.LateUpdate(_deltatime)
+		end if
+	end for
 end function
 
 function LevelDraw() as void

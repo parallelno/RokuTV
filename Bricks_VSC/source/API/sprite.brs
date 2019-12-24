@@ -44,6 +44,7 @@ function CreateSprite(_screen as object) as object
 		OriginalUpdate	: SpriteUpdate 'clone of Update function. it is used if Update is overriden
 		AnimationUpdate : SpriteAnimationUpdate
 		AnimationSet : SpriteAnimationSet
+		Load : LoadSprite
     }
 	return obj
 end function
@@ -57,6 +58,15 @@ function LoadSprite(_screen as object, _path as String) as object
 	end if
 	
 	spriteData = ParseJson(spriteASCIIData)
+	if (spriteData.position <> invalid)
+		spriteData.position.x +=0.0
+		spriteData.position.y +=0.0
+	end if	
+	if (spriteData.speed <> invalid)
+		spriteData.speed.x +=0.0
+		spriteData.speed.y +=0.0
+	end if	
+
 	if (spriteData = invalid OR spriteData.type <> sprite.type)
 		print "spriteData " + _path + " wasn't created. Check the file structure and type." 
 		return invalid

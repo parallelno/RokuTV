@@ -31,6 +31,7 @@ function CreateStaticSprite(_screen as object) as object
 		Update	: StaticSpriteUpdate
 		OriginalUpdate	: StaticSpriteUpdate
 		Draw	: StaticSpriteDraw
+		Load : LoadStaticSprite
     }
 	return obj
 end function
