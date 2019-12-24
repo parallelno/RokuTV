@@ -51,11 +51,11 @@ function LoadLevel(_globalVars as object, _path as string) as object
 	for each obj in levelData.objs
 		filename = ""
 		if (obj.filename <> invalid) filename = obj.filename
-		LoadGameObject = _globalVars.gameObjectInterfaces[obj.type]
+		LoadGameObject = _globalVars.gameObjectInterfaces[obj.type].Load
 		if LoadGameObject = invalid
 			print "obj.type=" + obj.type + " is not registred in globalVars.brs or it doesn't have Load function"
 		end if
-		objData = _globalVars.gameObjectInterfaces[obj.type].Load(_globalVars.screen, filename)
+		objData = LoadGameObject(_globalVars, filename)
 		if obj.override <> invalid
 			overrideObj = _globalVars.gameObjectInterfaces[obj.override]
 			if overrideObj = invalid 

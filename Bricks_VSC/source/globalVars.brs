@@ -6,8 +6,6 @@ function GlobalVars() as object
         
         MAX_LEVEL_COLUMNS	: 13
         MAX_LEVEL_LINES		: 17
-        BRICK_WIDTH 		: 64
-        BRICK_HEIGHT 		: 25
         
         
         ENERGY_ITEM_RADIUS		: 20.0
@@ -27,15 +25,15 @@ function GlobalVars() as object
         gameObjectInterfaces: {} ' there is a AArray of empty gameobjects which will be loaded to every level. They are used to override logic of sprites which loaded by loadLevel function.
         RegisterUniqueGameObject : GlobalVarsRegisterUniqueGameObject
     }
-    obj.menuState = obj.GAME_STATE_MENU_L1
+'    obj.menuState = obj.GAME_STATE_MENU_L1
 	
-	obj.GAME_FIELD_WIDTH	= obj.BRICK_WIDTH * obj.MAX_LEVEL_COLUMNS
-	obj.GAME_FIELD_HEIGHT	= obj.BRICK_HEIGHT * obj.MAX_LEVEL_LINES
+'	obj.GAME_FIELD_WIDTH	= obj.BRICK_WIDTH * obj.MAX_LEVEL_COLUMNS
+'	obj.GAME_FIELD_HEIGHT	= obj.BRICK_HEIGHT * obj.MAX_LEVEL_LINES
         
-	obj.GAME_FIELD_MIN_X	= 63
-	obj.GAME_FIELD_MAX_X	= obj.GAME_FIELD_MIN_X + obj.GAME_FIELD_WIDTH
-	obj.GAME_FIELD_MIN_Y	= 34
-	obj.GAME_FIELD_MAX_Y	= obj.GAME_FIELD_MIN_Y + obj.GAME_FIELD_HEIGHT
+'	obj.GAME_FIELD_MIN_X	= 63
+'	obj.GAME_FIELD_MAX_X	= obj.GAME_FIELD_MIN_X + obj.GAME_FIELD_WIDTH
+'	obj.GAME_FIELD_MIN_Y	= 34
+'	obj.GAME_FIELD_MAX_Y	= obj.GAME_FIELD_MIN_Y + obj.GAME_FIELD_HEIGHT
 
 	obj.screen.SetMessagePort(obj.port)
 	obj.screen.SetAlphaEnable(true)

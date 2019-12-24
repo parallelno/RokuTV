@@ -17,7 +17,8 @@
 			"type"      : "sprite",
 			"filename"  : "pkg:/assets/gameObjects/player.json",
 			"order"     : 2,
-			"override"    : "player"
+			"override"    : "player",
+			"position"  : {"x": 500.0, "y": 350.0}
 		},
 		{
 			"type"      : "sprite",
@@ -26,7 +27,7 @@
 			"override"    : "ball"
 		},
 		{
-			"type"			: "staticSprite",
+			"type"		: "staticSprite",
 			"filename"	: "pkg:/assets/gameObjects/staticCollisionBox.json",
 			"position"  : {"x": 0.0, "y": 350.0},
 			"scale"     : {"x": 125.0, "y": 800.0},
@@ -65,9 +66,9 @@
 		},
 		{
 			"type"		: "bricks",
+			"filename"	: "pkg:/assets/gameObjects/playerDebugAABB.json",
 			"order"     : 0,
-			"bricks"	: 
-			[
+			"bricks"	: [
 				"1112223334445",
 				"1           1",
 				"1           1",

@@ -37,21 +37,6 @@ function Main() as void
 '	GAME_VARS.Sound_new_round = CreateObject("roAudioResource", "pkg:/sounds/new_round.wav")
 ' ------------------------------------------------------------------------------------------	
 
-' DEBUG LINE AROUND GAME FIELD------------------------------------------------------------------------------------------
-'	gameLevel_DebugWhiteFieldObj = CreateSpriteObj(gameLevelDataSet.regions.whitePixel, screen, GAME_VARS.GAME_FIELD_MIN_X, GAME_VARS.GAME_FIELD_MIN_Y, -0.5, -0.5, GAME_VARS.GAME_FIELD_WIDTH, screenHeight - GAME_VARS.GAME_FIELD_MIN_Y)
-'	gameLevel_DebugWhiteFieldObj.Update()
-' ------------------------------------------------------------------------------------------
-
-	
-'	player = CreatePlayer(GAME_VARS, gameObjectsDataSet)
-'	firstLevel = CreateLevel(GAME_VARS, "pkg:/assets/testLevel.txt", gameObjectsDataSet, player)
-'	ball = CreateBall(GAME_VARS, gameBallDataSet, firstLevel, player, player.SpawnPos())
-	
-'	gameUI_EnergyBar = CreateEnergyBar(GAME_VARS)
-'	gameUI_EnergyBar.Init(firstLevel)
-'	gameUI_EnergyBar.Update()
-' ------------------------------------------------------------------------------------------	
-
 	clock = CreateObject("roTimespan")
 	GAME_VARS = GlobalVars()
 	
@@ -67,19 +52,6 @@ function Main() as void
 	while true
 	   	deltaTime = clock.TotalMilliseconds() / 1000.0
 		if (deltaTime > GAME_VARS.STABLE_FPS) 
-'				gameUI_EnergyBar.Update()
-'				gameUI_EnergyBar.Draw()
-				
-				
-'				firstLevel.Update(deltaTime)
-'				firstLevel.Draw()
-				
-'				player.Update(deltaTime)
-'				player.Draw()
-				
-'				ball.Update(deltaTime)
-'				ball.Draw()
-				
 			level.Update(deltaTime)
 			level.Draw()
 				

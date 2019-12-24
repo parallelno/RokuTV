@@ -1,0 +1,108 @@
+{
+	"type" : "sprite",
+	"bitmaps": {
+		"bricks": {
+			"filename": "pkg:/assets/gameObjects/png/bricks.png",
+			"regions": {
+				"r1": {
+					"offset": {"x": 0, "y": 0},
+					"size": {"x": 64, "y": 24}
+				},
+				"r2": {
+					"offset": {"x": 64, "y": 0},
+					"size": {"x": 64, "y": 24}
+				},
+				"r3": {
+					"offset": {"x": 128, "y": 0},
+					"size": {"x": 64, "y": 24}
+				},
+				"r4": {
+					"offset": {"x": 0, "y": 25},
+					"size": {"x": 64, "y": 24}
+				},
+				"r5": {
+					"offset": {"x": 64, "y": 25},
+					"size": {"x": 64, "y": 24}
+				},
+				"r6": {
+					"offset": {"x": 128, "y": 25},
+					"size": {"x": 64, "y": 24}
+				},
+				"r7": {
+					"offset": {"x": 0, "y": 50},
+					"size": {"x": 64, "y": 24}
+				},
+				"r8": {
+					"offset": {"x": 64, "y": 50},
+					"size": {"x": 64, "y": 24}
+				},
+				"r9": {
+					"offset": {"x": 128, "y": 50},
+					"size": {"x": 64, "y": 24}
+				}
+			}
+		}
+	},
+	"animations": {
+		"idle" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r1"
+			]
+		},
+		"1" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r1"
+			]
+		},
+		"2" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r2"
+			]
+		},
+		"3" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r3"
+			]
+		},
+		"4" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r4"
+			]
+		},
+		"5" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r5"
+			]
+		},
+		"6" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r6"
+			]
+		},
+		"7" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r7"
+			]
+		},
+		"8" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r8"
+			]
+		},
+		"9" : {
+			"speed" : 1,
+			"frames" : [
+				"bricks.r9"
+			]
+		}
+	}
+}

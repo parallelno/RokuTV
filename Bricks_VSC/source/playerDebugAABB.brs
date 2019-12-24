@@ -36,10 +36,10 @@ function PlayerDebugAABBLateUpdate(_deltatime=0 as float, _position=invalid as o
 		m.position.y = _position.y
 	end if
 
-	m.position.x = m.player.position.x
-	m.position.y = m.player.position.y
-    m.scale.x = m.player.scale.x * m.player.collisionSize.x * 2.0
-    m.scale.y = m.player.scale.y * m.player.collisionSize.y * 2.0
+'	m.position.x = m.player.position.x
+'	m.position.y = m.player.position.y
+'	m.scale.x = m.player.scale.x * m.player.collisionSize.x * 2.0
+'	m.scale.y = m.player.scale.y * m.player.collisionSize.y * 2.0
 
 	m.OriginalUpdate(_deltatime)
 end function

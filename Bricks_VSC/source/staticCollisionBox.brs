@@ -14,7 +14,6 @@ function CreateStaticCollisionBox(_globalVars as object) as object
 		Init			: StaticCollisionBoxInit
 		Update    		: StaticCollisionBoxUpdate
 		ControlListener	: StaticCollisionBoxControlListener
-		Move			: StaticCollisionBoxMove
 		CollisionHandler: StaticCollisionBoxCollisionHandler
 	}
 	return obj

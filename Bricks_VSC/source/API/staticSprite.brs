@@ -1,4 +1,4 @@
-function CreateStaticSprite(_screen as object) as object
+function CreateStaticSprite(_globalVars as object) as object
     obj = {
 '		public
 		type		: "staticSprite"
@@ -26,7 +26,8 @@ function CreateStaticSprite(_screen as object) as object
 			regionName : ""
 		}
 '		private fields
-        screen			: _screen
+		globalVars		: _globalVars
+        screen			: _globalVars.screen
 '		functions
 		Update	: StaticSpriteUpdate
 		OriginalUpdate	: StaticSpriteUpdate
@@ -80,8 +81,8 @@ function StaticSpriteDraw() as void
     end for
 end function
 
-function LoadStaticSprite(_screen as object, _path as String) as object
-	staticSprite = CreateStaticSprite(_screen)
+function LoadStaticSprite(_globalVars as object, _path as String) as object
+	staticSprite = CreateStaticSprite(_globalVars)
 	staticSpriteASCIIData = ReadAsciiFile(_path)
 	if (staticSpriteASCIIData = invalid) 
 		print "staticSpriteASCIIData " + _path + " wasn't created. Check file name."

@@ -1,4 +1,4 @@
-function CreateSprite(_screen as object) as object
+function CreateSprite(_globalVars as object) as object
     obj = {
 '		public
 		type		: "sprite"
@@ -18,7 +18,8 @@ function CreateSprite(_screen as object) as object
 		currentRegion	: invalid
 		currentRegionNum	: 0
     	drawPosition	: {x: 0.0, y: 0.0}
-        screen			: _screen
+		globalVars		: _globalVars
+        screen			: _globalVars.screen
         bitmaps			: {
         		"bitmapName"	: {
         			filename	: ""
@@ -49,8 +50,8 @@ function CreateSprite(_screen as object) as object
 	return obj
 end function
 
-function LoadSprite(_screen as object, _path as String) as object
-	sprite = CreateSprite(_screen)
+function LoadSprite(_globalVars as object, _path as String) as object
+	sprite = CreateSprite(_globalVars)
 	spriteASCIIData = ReadAsciiFile(_path)
 	if (spriteASCIIData = invalid) 
 		print "spriteASCIIData " + _path + " wasn't created. Check file name."
