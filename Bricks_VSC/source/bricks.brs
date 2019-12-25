@@ -14,8 +14,8 @@ function CreateBricks(_globalVars as object) as object
 		SPRITE_FILENAME	: "pkg:/assets/gameObjects/brick.json"
 		BRICK_TYPES_COUNT: 9 'max types of bricks
 		brickSprites : [] 'there are all of the brick sprites saved in the proper order. the first sprite plays "1" animation and so on.
-		MIN_POS_X	: 63
-		MIN_POS_Y	: 34
+		MIN_POS_X	: 94
+		MIN_POS_Y	: 55
         BRICK_WIDTH : 64
         BRICK_HEIGHT: 25
 
@@ -29,13 +29,12 @@ function CreateBricks(_globalVars as object) as object
 end function
 
 function LoadBricks(_globalVars as object, _path as String) as object
-	'_path contains an array of strings as a text format data of the level
+	'_path isn't used
 	bricks = CreateBricks(_globalVars)
 	return bricks
 end function
 
 function BricksUpdate(_deltatime=0 as float, _position=invalid as object) as void
-	return
 	if (m.active = false) return
 	
 	if _position <> invalid
@@ -53,7 +52,6 @@ end function
 function BricksDraw() as void
 	if (m.visible = false) return
 	
-	return
 	
 	brickPosition = {x:0, y:0}
 	brickCode = 0

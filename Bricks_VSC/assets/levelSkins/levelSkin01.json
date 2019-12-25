@@ -26,7 +26,7 @@
 		{
 			"region" : "borderCR",
 			"order"	 : 1,
-			"position" : {"x": 848, "y": 31},
+			"position" : {"x": 846, "y": 31},
 			"localOffset" : {"x": -0.5, "y": 0}
 		},
 		{
@@ -44,7 +44,7 @@
 		{
 			"region" : "borderR",
 			"repeat" : {"count": 5, "x": 0, "y": 128},
-			"position" : {"x": 878, "y": 81},
+			"position" : {"x": 876, "y": 81},
 			"localOffset" : {"x": -0.5, "y": -0.5}
 		}
 	]

@@ -122,10 +122,13 @@ function CollisionManagerAddObject(_Object as object, isDinamic=true as boolean)
 end function
 
 function CollisionManagerMoveOutOfCollision(_collider as object, _colliderOther as object) as void
-	backwardSpeedVectorX = _collider.position.x - _colliderOther.position.x
-	backwardSpeedVectorY = _collider.position.y - _colliderOther.position.y
-	backwardPosX = _colliderOther.position.x + (_collider.collisionSize.x * _collider.scale.x + _colliderOther.collisionSize.x * _colliderOther.scale.x) * Sgn(backwardSpeedVectorX)
-	backwardPosY = _colliderOther.position.y + (_collider.collisionSize.y * _collider.scale.y + _colliderOther.collisionSize.y * _colliderOther.scale.y) * Sgn(backwardSpeedVectorY)
+	backwardSpeedVectorX = 1.0
+	if (_collider.position.x - _colliderOther.position.x < 0.0 ) backwardSpeedVectorX = -1.0
+	backwardSpeedVectorY = 1.0
+	if (_collider.position.y - _colliderOther.position.y < 0.0 ) backwardSpeedVectorY = -1.0
+
+	backwardPosX = _colliderOther.position.x + (_collider.collisionSize.x * _collider.scale.x + _colliderOther.collisionSize.x * _colliderOther.scale.x) * backwardSpeedVectorX
+	backwardPosY = _colliderOther.position.y + (_collider.collisionSize.y * _collider.scale.y + _colliderOther.collisionSize.y * _colliderOther.scale.y) * backwardSpeedVectorY
 
 	backwardMoveX = Abs(_collider.position.x - backwardPosX)
 	backwardMoveY = Abs(_collider.position.y - backwardPosY)

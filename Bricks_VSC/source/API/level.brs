@@ -6,7 +6,7 @@ function CreateLevel(_globalVars as object) as object
 		position	: {x: 0.0, y: 0.0}
 		objsId		: 0 'it uses to generate unique id for every gameobject
 		objs : [
-			{' this is an interface of all visual objects
+			{' this has to be an interface of all visual objects
 				active	: true
 				visible	: true
 				type	: ""
@@ -42,10 +42,11 @@ function LoadLevel(_globalVars as object, _path as string) as object
 	end if
 
 	levelData = ParseJson(levelASCIIData)
+
 	if (levelData = invalid OR levelData.type <> level.type)
 		print "levelData " + _path + " wasn't created. Check the file structure and type." 
 		return invalid
-	end if	
+	end if
 
 	objs = []
 	for each obj in levelData.objs
@@ -76,9 +77,10 @@ function LoadLevel(_globalVars as object, _path as string) as object
 	objs.SortBy("order")
 	levelData.objs = objs
 	level.Append(levelData)
-	
+
 	for each obj in level.objs
-		if obj.Init <> invalid 
+		print obj.type
+		if obj.Init <> invalid
 			obj.Init(level)
 		end if
 	end for

@@ -58,7 +58,6 @@ function PlayerInit(_level as object) as void
 	m.level = _level
 	m.level.ControlListenerSet(m)
 
-'	m.position.x = m.globalVars.GAME_FIELD_MIN_X + m.globalVars.GAME_FIELD_WIDTH * 0.5
 	m.collisionSize = m.COLLISION_SIZES[m.collisionSizeCode]	
 	m.level.CollisionManager.AddObject(m)
 end function

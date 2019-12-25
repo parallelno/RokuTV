@@ -68,14 +68,16 @@ end function
 
 
 function BallInit(_level as object) as void
+return
 	m.level = _level
 	m.level.ControlListenerSet(m)
 	m.speed.x = m.START_SPEED
 	m.speed.y = -m.START_SPEED
 	m.collisionRadius = m.COLLISION_RADIUSES[m.collisionRadiusCode]
 	m.status = m.STATUS_STICK
-	players = m.level.GetObjsByType("player")
+	players = m.level.GetObjsByType("player")	
 	m.player = players[0]
+
 	m.STICK_POSITION_OFFSET_Y = -m.collisionRadius - m.player.collisionSize.y
 	m.level.CollisionManager.AddObject(m)
 end function

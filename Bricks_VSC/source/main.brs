@@ -41,23 +41,27 @@ function Main() as void
 	GAME_VARS = GlobalVars()
 	
 	level = LoadLevel(GAME_VARS, "pkg:/assets/levels/level01.json")
-
 ' ------------------------------------------------------------------------------------------
-	clock.Mark()
 
+'----------
+deltaTime = 0.0
 'MENU_LOOP:
 	
 'GAME_TEST_LOOP:
 '   GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
 	while true
-	   	deltaTime = clock.TotalMilliseconds() / 1000.0
-		if (deltaTime > GAME_VARS.STABLE_FPS) 
-			level.Update(deltaTime)
-			level.Draw()
-				
-			GAME_VARS.screen.SwapBuffers()
-			clock.Mark()
-		endif
+	   	clock.Mark()
+		
+		level.Update(deltaTime)
+		level.Draw()
+
+		GAME_VARS.screen.SwapBuffers()
+		deltaTime = clock.TotalMilliseconds() / 1000.0
+		
+		clampedDeltaTime = MaxF(deltaTime, GAME_VARS.MAX_DELTATIME)
+		waitTime = Abs(GAME_VARS.MAX_DELTATIME - clampedDeltaTime) + GAME_VARS.MAX_DELTATIME
+		deltaTime = clampedDeltaTime
+		sleep(waitTime * 1000.0)
 	end while
 	
 'EXIT_GAME:

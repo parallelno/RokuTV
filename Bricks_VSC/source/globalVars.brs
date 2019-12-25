@@ -1,7 +1,7 @@
 function GlobalVars() as object
 	obj = {
 ' ------- NEW -----------------------------------
-        STABLE_FPS			: 1.0 / 30.0    'stable 30 fps
+        MAX_DELTATIME   : 16.665 / 1000.0
         PI					: 3.14159265359
         
         MAX_LEVEL_COLUMNS	: 13
@@ -49,6 +49,7 @@ function GlobalVars() as object
     obj.RegisterUniqueGameObject(CreateStaticCollisionBox(obj))
     obj.RegisterUniqueGameObject(CreatePlayerDebugAABB(obj))
     obj.RegisterUniqueGameObject(CreateBricks(obj))
+    obj.RegisterUniqueGameObject(CreateFpsCounter(obj))
     return obj
 end function
 
