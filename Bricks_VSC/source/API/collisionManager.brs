@@ -4,23 +4,19 @@ function CollisionManagerCreate() as object
 		dynamicColliders : []
 		staticColliders : [] ' they can't initiate collision
 		ids : 0 'used for giving unique id for every new collider
-		staticGridObjectsLayer	: 2 'Int. [0-31]. Represent collision layer which this object belong
-		staticGridObjectHandlers: [
-			[
-				{
-					active	: false
-					obj			: invalid 'static objects collision. its CollisionHandler function will be called when this static grid object are collided
-				}
-			]
-		]
-		staticGridOrigin		: {x: 30, y: 30}
-		staticGridSize			: {x: 13, y: 17}
+		
+		staticGridCellSize		: {x: 0, y: 0}
+		staticGridPositionOffset: {x: 0, y: 0}
+		staticGridDimension		: {x: 0, y: 0}
+		staticGridCollisionLayer: 2 'Int. [0-31]. Represent collision layer which this object belong
+		staticGridColliders		: [] 'array of ByteArrays with brick codes (0-9). zero is empty block and not active
 
 		STATIC 		: false
 		DINAMIC		: true
 
 		Update	: CollisionManagerUpdate
 		AddObject : CollisionManagerAddObject
+		AddStaticGridObjects : CollisionManagerAddStaticGridObjects
 		CollideBoxBox	: CollisionManagerBoxBoxCollide
 		MoveOutOfCollision : CollisionManagerMoveOutOfCollision
 		ReflectSpeed : CollisionManagerReflectSpeed
@@ -69,6 +65,30 @@ function CollisionManagerUpdate(_deltatime=0 as float) as void
 			end if
 		end for
 	end for
+	
+	for each collider in m.dynamicColliders
+		leftCollidedStaticGridCell = (collider.position.x - collider.collisionSize.x * collider.scale.x - m.staticGridPositionOffset.x) \ m.staticGridDimension.x
+		topCollidedStaticGridCell = (collider.position.y - collider.collisionSize.y * collider.scale.y - m.staticGridPositionOffset.y) \ m.staticGridDimension.y
+		rightCollidedStaticGridCell = (collider.position.x + collider.collisionSize.x * collider.scale.x - m.staticGridPositionOffset.x) \ m.staticGridDimension.x
+		downCollidedStaticGridCell = (collider.position.y + collider.collisionSize.y * collider.scale.y - m.staticGridPositionOffset.y) \ m.staticGridDimension.y
+		if (leftCollidedStaticGridCell > 0 AND leftCollidedStaticGridCell < m.staticGridDimension.x) OR (rightCollidedStaticGridCell > 0 AND rightCollidedStaticGridCell < m.staticGridDimension.x)
+			if (topCollidedStaticGridCell > 0 AND topCollidedStaticGridCell < m.staticGridDimension.y) OR (downCollidedStaticGridCell > 0 AND downCollidedStaticGridCell < m.staticGridDimension.y)
+				print collider.obj.type
+				print "x: " + collider.obj.position.x.ToStr() + " y: " + collider.obj.position.y.ToStr()
+				print "cell left x: " + leftCollidedStaticGridCell.ToStr() + " cell top y: " + topCollidedStaticGridCell.ToStr()
+				print "cell right x: " + rightCollidedStaticGridCell.ToStr() + " cell down y: " + downCollidedStaticGridCell.ToStr()
+
+				for y=topCollidedStaticGridCell to downCollidedStaticGridCell
+					for x=leftCollidedStaticGridCell to rightCollidedStaticGridCell
+						'brickCode = m.staticGridColliders[y][x]
+						'if brickCode > 0
+							isCollided = m.CollideBoxBox(collider, staticCollider)
+					end for
+				end for
+			end if
+		end if
+	end for
+
 	for each collider in m.dynamicColliders
 		if (collider.isCollided = true) 
 			collider.obj.CollisionHandler(collider, collider.collidedList)
@@ -124,6 +144,15 @@ function CollisionManagerAddObject(_object as object, isDinamic=true as boolean)
 	else
 		m.staticColliders.Push(collisionData)
 	end if
+end function
+
+function CollisionManagerAddStaticGridObjects(_bricks as object, _positionOffset as object, _cellSize as object, _collisionLayer as integer) as void
+	m.staticGridColliders = _bricks
+	m.staticGridDimension.x = _bricks.Count()
+	m.staticGridDimension.y = _bricks[0].Count()
+	m.staticGridPositionOffset = _positionOffset
+	m.staticGridCellSize = _cellSize
+	m.staticGridCollisionLayer = _collisionLayer
 end function
 
 function CollisionManagerMoveOutOfCollision(_collider as object, _colliderOther as object) as void

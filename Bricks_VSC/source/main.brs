@@ -58,10 +58,10 @@ deltaTime = 0.0
 		GAME_VARS.screen.SwapBuffers()
 		deltaTime = clock.TotalMilliseconds() / 1000.0
 		
-		clampedDeltaTime = MaxF(deltaTime, GAME_VARS.MAX_DELTATIME)
-		waitTime = Abs(GAME_VARS.MAX_DELTATIME - clampedDeltaTime) + GAME_VARS.MAX_DELTATIME
-		deltaTime = clampedDeltaTime
-		sleep(waitTime * 1000.0)
+'		clampedDeltaTime = MaxF(deltaTime, GAME_VARS.MAX_DELTATIME)
+'		waitTime = Abs(GAME_VARS.MAX_DELTATIME - clampedDeltaTime) + GAME_VARS.MAX_DELTATIME
+'		deltaTime = clampedDeltaTime
+'		sleep(waitTime * 1000.0)
 	end while
 	
 'EXIT_GAME:

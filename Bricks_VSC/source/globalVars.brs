@@ -1,18 +1,13 @@
 function GlobalVars() as object
 	obj = {
 ' ------- NEW -----------------------------------
-        MAX_DELTATIME   : 16.665 / 1000.0
+        MAX_DELTATIME   : 0.005 / 1000.0
         PI					: 3.14159265359
-        
-        MAX_LEVEL_COLUMNS	: 13
-        MAX_LEVEL_LINES		: 17
-        
         
         ENERGY_ITEM_RADIUS		: 20.0
         ENERGY_ITEM_START_SPEED	: 1.0
         ENERGY_ITEMS_MAX_AMOUNT	: 15
         ENERGY_ITEMS_ENERGY		: 0.01
-		ENERGY_ITEM_SPRITE_FILENAME	: "pkg:/assets/gameObjects/energyItem.json"
 		MAX_ENERGY			: 1.0
         
         screen              : CreateObject("roScreen", true)

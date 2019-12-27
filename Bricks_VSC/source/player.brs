@@ -19,7 +19,7 @@ function CreatePlayer(_globalVars as object) as object
 
 		MOVE_CODE_RIGHT	: 1
 		MOVE_CODE_LEFT	: 2
-		START_SPEED		: 5.0
+		START_SPEED		: 200.0
 		
 		COLLISION_PLATO_HALF_SIZES : [39.0, 57.0, 95.0] 'the plato is an inner flat part of the platform
 
@@ -41,8 +41,8 @@ function PlayerUpdate(_deltatime=0 as float, _position=invalid as object) as voi
 		m.position.y = _position.y
 	end if
 
-	m.position.x += m.speed.x
-	m.position.y += m.speed.y
+	m.position.x += m.speed.x * _deltatime
+	m.position.y += m.speed.y * _deltatime
 end function
 
 function PlayerLateUpdate(_deltatime=0 as float, _position=invalid as object) as void

@@ -21,7 +21,7 @@ function CreateBall(_globalVars as object) as object
 		STATUS_RELEASED	: 2
 		STATUS_INIT		: 3
 		STICK_POSITION_OFFSET_Y : -25.0
-		START_SPEED	: 2.5
+		START_SPEED	: 100
 
 		player         : invalid
 
@@ -49,8 +49,8 @@ function BallUpdate(_deltatime=0 as float, _position=invalid as object) as void
 	end if
 
 	if m.status = m.STATUS_RUN
-		m.position.x += m.speed.x
-		m.position.y += m.speed.y
+		m.position.x += m.speed.x * _deltatime
+		m.position.y += m.speed.y * _deltatime
 	end if
 
 	if m.status = m.STATUS_STICK
