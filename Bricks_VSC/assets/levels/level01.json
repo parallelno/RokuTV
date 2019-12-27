@@ -43,7 +43,7 @@
 			"override"    : "staticCollisionBox"
 		},
 		{
-			"type"			: "staticSprite",
+			"type"		: "staticSprite",
 			"filename"	: "pkg:/assets/gameObjects/staticCollisionBox.json",
 			"position"  : {"x": 480.0, "y": -10.0},
 			"scale"     : {"x": 850.0, "y": 90.0},
@@ -51,7 +51,7 @@
 			"override"    : "staticCollisionBox"
 		},	
 		{
-			"type"			: "staticSprite",
+			"type"		: "staticSprite",
 			"filename"	: "pkg:/assets/gameObjects/staticCollisionBox.json",
 			"position"  : {"x": 480.0, "y": 750.0},
 			"scale"     : {"x": 850.0, "y": 90.0},
@@ -59,7 +59,7 @@
 			"override"    : "staticCollisionBox"
 		},	
 		{
-			"type"			: "staticSprite",
+			"type"		: "staticSprite",
 			"filename"	: "pkg:/assets/gameObjects/playerDebugAABB.json",
 			"order"     : 10000,
 			"override"    : "playerDebugAABB"

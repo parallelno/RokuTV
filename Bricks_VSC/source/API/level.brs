@@ -79,7 +79,6 @@ function LoadLevel(_globalVars as object, _path as string) as object
 	level.Append(levelData)
 
 	for each obj in level.objs
-		print obj.type
 		if obj.Init <> invalid
 			obj.Init(level)
 		end if

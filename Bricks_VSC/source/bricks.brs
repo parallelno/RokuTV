@@ -35,6 +35,7 @@ function LoadBricks(_globalVars as object, _path as String) as object
 end function
 
 function BricksUpdate(_deltatime=0 as float, _position=invalid as object) as void
+return
 	if (m.active = false) return
 	
 	if _position <> invalid
@@ -52,7 +53,7 @@ end function
 function BricksDraw() as void
 	if (m.visible = false) return
 	
-	
+return
 	brickPosition = {x:0, y:0}
 	brickCode = 0
 	for y=0 to m.globalVars.MAX_LEVEL_LINES - 1

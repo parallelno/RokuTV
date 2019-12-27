@@ -16,11 +16,12 @@ function CreateBall(_globalVars as object) as object
 		COLLISION_RADIUSES : [10.0, 20.0, 40.0]
 
 		status		: invalid
-		STATUS_RUN     : 0
-		STATUS_STICK   : 1
-		STATUS_RELEASED: 2
+		STATUS_RUN		: 0
+		STATUS_STICK	: 1
+		STATUS_RELEASED	: 2
+		STATUS_INIT		: 3
 		STICK_POSITION_OFFSET_Y : -25.0
-		START_SPEED	: 5.0
+		START_SPEED	: 2.5
 
 		player         : invalid
 
@@ -38,6 +39,13 @@ function BallUpdate(_deltatime=0 as float, _position=invalid as object) as void
 	if _position <> invalid
 		m.position.x = _position.x
 		m.position.y = _position.y
+	end if
+
+	if m.status = m.STATUS_INIT
+		m.status = m.STATUS_STICK
+		players = m.level.GetObjsByType("player")
+		m.player = players[0]
+		m.STICK_POSITION_OFFSET_Y = -m.collisionRadius - m.player.collisionSize.y
 	end if
 
 	if m.status = m.STATUS_RUN
@@ -68,17 +76,12 @@ end function
 
 
 function BallInit(_level as object) as void
-return
 	m.level = _level
 	m.level.ControlListenerSet(m)
 	m.speed.x = m.START_SPEED
 	m.speed.y = -m.START_SPEED
 	m.collisionRadius = m.COLLISION_RADIUSES[m.collisionRadiusCode]
-	m.status = m.STATUS_STICK
-	players = m.level.GetObjsByType("player")	
-	m.player = players[0]
-
-	m.STICK_POSITION_OFFSET_Y = -m.collisionRadius - m.player.collisionSize.y
+	m.status = m.STATUS_INIT
 	m.level.CollisionManager.AddObject(m)
 end function
 

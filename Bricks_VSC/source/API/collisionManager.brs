@@ -30,8 +30,15 @@ end function
 
 function CollisionManagerUpdate(_deltatime=0 as float) as void
 	for each collider in m.dynamicColliders
-		collider.collidedList = []
 		collider.isCollided = false
+		collider.collidedList = []
+	end for
+	for each staticCollider in m.staticColliders
+		staticCollider.isCollided = false
+		staticCollider.collidedList = []
+	end for
+	
+	for each collider in m.dynamicColliders
 		for each colliderOther in m.dynamicColliders
 			isTheyCollided = false
 			for each collidedCollider in collider.collidedList
@@ -40,7 +47,6 @@ function CollisionManagerUpdate(_deltatime=0 as float) as void
 					exit for
 				end if
 			end for
-			
 			if isTheyCollided = false AND collider.id<>colliderOther.id
 				isCollided = m.CollideBoxBox(collider, colliderOther)
 				if isCollided = true
@@ -53,7 +59,6 @@ function CollisionManagerUpdate(_deltatime=0 as float) as void
 		end for
 	end for
 	for each staticCollider in m.staticColliders
-		staticCollider.isCollided = false
 		for each collider in m.dynamicColliders
 			isCollided = m.CollideBoxBox(collider, staticCollider)
 			if isCollided = true
@@ -94,7 +99,7 @@ function CollisionManagerBoxBoxCollide(_collider1 as object, _collider2 as objec
 	return false
 end function
 
-function CollisionManagerAddObject(_Object as object, isDinamic=true as boolean) as void
+function CollisionManagerAddObject(_object as object, isDinamic=true as boolean) as void
 	if (_object.collisionSize = invalid) _object.collisionSize = {x: 1.0, y: 1.0}
 	if (_object.collisionLayers = invalid) _object.collisionLayers = 1<<0
 	if (_object.collisionRadius = invalid) _object.collisionRadius = 1.0
@@ -141,19 +146,20 @@ function CollisionManagerMoveOutOfCollision(_collider as object, _colliderOther 
 end function
 
 function CollisionManagerReflectSpeed(_collider as object, _colliderOther as object) as void
-	backwardSpeedVectorX = _collider.position.x - _colliderOther.position.x
-	backwardSpeedVectorY = _collider.position.y - _colliderOther.position.y
-	backwardPosX = _colliderOther.position.x + (_collider.collisionSize.x * _collider.scale.x + _colliderOther.collisionSize.x * _colliderOther.scale.x) * Sgn(backwardSpeedVectorX)
-	backwardPosY = _colliderOther.position.y + (_collider.collisionSize.y * _collider.scale.y + _colliderOther.collisionSize.y * _colliderOther.scale.y) * Sgn(backwardSpeedVectorY)
+	backwardSpeedVectorX = 1.0
+	if (_collider.position.x - _colliderOther.position.x < 0.0 ) backwardSpeedVectorX = -1.0
+	backwardSpeedVectorY = 1.0
+	if (_collider.position.y - _colliderOther.position.y < 0.0 ) backwardSpeedVectorY = -1.0
+
+	backwardPosX = _colliderOther.position.x + (_collider.collisionSize.x * _collider.scale.x + _colliderOther.collisionSize.x * _colliderOther.scale.x) * backwardSpeedVectorX
+	backwardPosY = _colliderOther.position.y + (_collider.collisionSize.y * _collider.scale.y + _colliderOther.collisionSize.y * _colliderOther.scale.y) * backwardSpeedVectorY
 
 	backwardMoveX = Abs(_collider.position.x - backwardPosX)
 	backwardMoveY = Abs(_collider.position.y - backwardPosY)
 
 	if backwardMoveX < backwardMoveY
-		_collider.position.x = backwardPosX
-		_collider.speed.x *= -1.0
+		_collider.speed.x = Abs(_collider.speed.x) * backwardSpeedVectorX
 	else
-		_collider.position.y = backwardPosY
-		_collider.speed.y *= -1.0
+		_collider.speed.y = Abs(_collider.speed.y) * backwardSpeedVectorY
 	end if
 end function

@@ -10,6 +10,10 @@ function CreatePlayerDebugAABB(_globalVars as object) as object
 		collisionLayer	: 2
 		collisionType	: 0
 		collisionSize	: {x: 0.5, y: 0.5} 'it is half of each side
+
+		status			: 0
+		STATUS_INIT		: 0
+		STATUS_RUN		: 1
 		
 		Init			: PlayerDebugAABBInit
 		Update    		: PlayerDebugAABBUpdate
@@ -36,10 +40,15 @@ function PlayerDebugAABBLateUpdate(_deltatime=0 as float, _position=invalid as o
 		m.position.y = _position.y
 	end if
 
-'	m.position.x = m.player.position.x
-'	m.position.y = m.player.position.y
-'	m.scale.x = m.player.scale.x * m.player.collisionSize.x * 2.0
-'	m.scale.y = m.player.scale.y * m.player.collisionSize.y * 2.0
+	if m.status = m.STATUS_INIT
+		m.status = m.STATUS_RUN
+		players = m.level.GetObjsByType("player")
+		m.player = players[0]
+	end if
+	m.position.x = m.player.position.x
+	m.position.y = m.player.position.y
+	m.scale.x = m.player.scale.x * m.player.collisionSize.x * 2.0
+	m.scale.y = m.player.scale.y * m.player.collisionSize.y * 2.0
 
 	m.OriginalUpdate(_deltatime)
 end function
@@ -47,8 +56,7 @@ end function
 function PlayerDebugAABBInit(_level as object) as void
 	m.level = _level
 	m.level.ControlListenerSet(m)
-	players = m.level.GetObjsByType("player")
-	m.player = players[0]
+	m.status = m.STATUS_INIT
 end function
 
 function PlayerDebugAABBControlListener(_key as integer, _codes as object) as void

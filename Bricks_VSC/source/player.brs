@@ -19,7 +19,7 @@ function CreatePlayer(_globalVars as object) as object
 
 		MOVE_CODE_RIGHT	: 1
 		MOVE_CODE_LEFT	: 2
-		START_SPEED		: 10.0
+		START_SPEED		: 5.0
 		
 		COLLISION_PLATO_HALF_SIZES : [39.0, 57.0, 95.0] 'the plato is an inner flat part of the platform
 
