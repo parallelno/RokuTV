@@ -104,5 +104,5 @@ function BricksInit(_level as object) as void
 
 	m.level = _level
 
-	m.level.CollisionManager.AddStaticGridObjects(m.bricks, {x: m.BRICKS_POS_OFFSET_X, y: m.BRICKS_POS_OFFSET_Y}, {x: m.BRICK_WIDTH, y: m.BRICK_HEIGHT}, m.collisionLayer)
+	m.level.CollisionManager.AddStaticGridObjects(m, m.bricks, {x: m.BRICKS_POS_OFFSET_X, y: m.BRICKS_POS_OFFSET_Y}, {x: m.BRICK_WIDTH, y: m.BRICK_HEIGHT}, m.collisionLayer)
 end function
