@@ -1,0 +1,16 @@
+{
+	"type" : "staticSprite",
+	"filenames": {
+		"background": "pkg:/assets/ui/png/mainMenu_Back.jpg"
+	},
+	"tiles" : [
+		{
+			"region" : "background",
+			"order"	 : -1,
+			"type"	 : "scrolling",
+			"speed"	 : {"x": 0, "y": 0},
+			"position" : {"x": 0, "y": 0},
+			"localOffset" : {"x": -0.5, "y": -0.5}
+		}
+	]
+}

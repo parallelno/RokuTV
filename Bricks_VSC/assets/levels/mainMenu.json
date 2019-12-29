@@ -1,0 +1,16 @@
+{
+	"type" : "level",
+	"objs": [
+		{
+			"type"      : "staticSprite",
+			"filename"  : "pkg:/assets/levelSkins/mainMenuBack.json",
+			"position"  : {"x": 0, "y": 0},
+			"order"     : 0
+		},
+		{
+			"type"      : "fpsCounter",
+			"filename"  : " ",
+			"order"     : 10
+		}		
+	]
+}

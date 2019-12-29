@@ -1,7 +1,9 @@
-function CollisionManagerCreate() as object
+function CollisionManagerCreate(_globalVars as object) as object
 	obj = {
-		activate	: true
+		active	: true
+		visible		: false
 		dynamicColliders : []
+		globalVars : _globalVars
 		staticColliders : [] ' they can't initiate collision
 		ids : 0 'used for giving unique id for every new collider
 		
@@ -14,16 +16,84 @@ function CollisionManagerCreate() as object
 
 		STATIC 		: false
 		DINAMIC		: true
+		
+		color		: &hFF000060
 
-		Update	: CollisionManagerUpdate
-		AddObject : CollisionManagerAddObject
-		AddStaticGridObjects : CollisionManagerAddStaticGridObjects
-		CollideBoxBox	: CollisionManagerBoxBoxCollide
-		MoveOutOfCollision : CollisionManagerMoveOutOfCollision
-		ReflectSpeed : CollisionManagerReflectSpeed
-		CollideStaticGridCellBox : CollisionManagerCollideStaticGridCellBox
+		Update				: CollisionManagerUpdate
+		AddObject			: CollisionManagerAddObject
+		AddStaticGridObjects: CollisionManagerAddStaticGridObjects
+		CollideBoxBox		: CollisionManagerBoxBoxCollide
+		MoveOutOfCollision	: CollisionManagerMoveOutOfCollision
+		ReflectSpeed		: CollisionManagerReflectSpeed
+		CollideStaticGridCellRing: CollisionManagerCollideStaticGridCellRing
+		ControlListener		: CollisionManagerControlListener
+		Draw    			: CollisionManagerDraw
 	}
 	return obj
+end function
+
+function CollisionManagerControlListener(_key as integer, _codes as object) as void
+	if (m.active = false) return
+	if (_key = _codes.BUTTON_UP_PRESSED) m.visible = NOT m.visible
+end function
+
+function CollisionManagerDraw() as void
+	if (m.visible = false) return
+
+	'draw dynamic collision
+	for each obj in m.dynamicColliders
+		x = obj.position.x - obj.collisionSize.x * obj.scale.x
+		y = obj.position.y - obj.collisionSize.y * obj.scale.y
+		w = obj.collisionSize.x * obj.scale.x * 2.0
+		h = obj.collisionSize.y * obj.scale.y * 2.0
+		m.globalVars.screen.DrawRect(x, y, w, h, m.color)
+	end for
+	'draw static collision
+	for each obj in m.staticColliders
+		x = obj.position.x - obj.collisionSize.x * obj.scale.x
+		y = obj.position.y - obj.collisionSize.y * obj.scale.y
+		w = obj.collisionSize.x * obj.scale.x * 2.0
+		h = obj.collisionSize.y * obj.scale.y * 2.0
+		m.globalVars.screen.DrawRect(x, y, w, h, m.color)
+	end for
+
+end function
+
+function CollisionManagerAddObject(_object as object, isDinamic=true as boolean) as void
+	if (_object.collisionSize = invalid) _object.collisionSize = {x: 1.0, y: 1.0}
+	if (_object.collisionLayers = invalid) _object.collisionLayers = 1<<0
+	if (_object.collisionRadius = invalid) _object.collisionRadius = 1.0
+	
+	collisionData = {
+		collisionLayer	: _object.collisionLayer 'Int. [0-31]. Represent collision layer which this object belong
+		collisionLayers : _object.collisionLayers
+		collisionType	: _object.collisionType
+		position		: _object.position
+		speed 			: _object.speed
+		collisionSize	: _object.collisionSize 'it is half of each side
+		scale			: _object.scale
+		collisionRadius	: _object.collisionRadius
+		isCollided		: false
+		obj : _object
+		id	: m.ids
+		collidedList	: []
+	}
+	m.ids++
+	if (isDinamic = true)
+		m.dynamicColliders.Push(collisionData)
+	else
+		m.staticColliders.Push(collisionData)
+	end if
+end function
+
+function CollisionManagerAddStaticGridObjects(_obj as object, _bricks as object, _positionOffset as object, _cellSize as object, _collisionLayer as integer) as void
+	m.staticGridColliders = _bricks
+	m.staticGridDimension.y = _bricks.Count()
+	m.staticGridDimension.x = _bricks[0].Count()
+	m.staticGridPositionOffset = _positionOffset
+	m.staticGridCellSize = _cellSize
+	m.staticGridCollisionLayer = _collisionLayer
+	m.staticGridObj = _obj
 end function
 
 function CollisionManagerUpdate(_deltatime=0 as float) as void
@@ -67,7 +137,7 @@ function CollisionManagerUpdate(_deltatime=0 as float) as void
 			end if
 		end for
 	end for
-	
+' static grid collision
 	for each collider in m.dynamicColliders
 		leftCollidedStaticGridCell = (collider.position.x - collider.collisionSize.x * collider.scale.x - m.staticGridPositionOffset.x) \ m.staticGridCellSize.x
 		topCollidedStaticGridCell = (collider.position.y - collider.collisionSize.y * collider.scale.y - m.staticGridPositionOffset.y) \ m.staticGridCellSize.y
@@ -83,7 +153,11 @@ function CollisionManagerUpdate(_deltatime=0 as float) as void
 					for x=leftCollidedStaticGridCell to rightCollidedStaticGridCell
 						brickCode = m.staticGridColliders[y][x]
 						if brickCode > 0
-							isCollided = m.CollideStaticGridCellBox(collider)
+							isCollided = m.CollideStaticGridCellRing(collider, x, y)
+							if isCollided = true
+								collider.isCollided = true
+								m.staticGridObj.CollisionHandler(x, y)
+							end if
 						end if
 					end for
 				end for
@@ -120,91 +194,52 @@ function CollisionManagerBoxBoxCollide(_collider1 as object, _collider2 as objec
 	return false
 end function
 
-function CollisionManagerCollideStaticGridCellBox(_collider1 as object, _collider2 as object) as boolean
-	blockX = m.globalVars.GAME_FIELD_MIN_X + _collisionData.testedBlock.j * m.globalVars.BRICK_WIDTH  + m.globalVars.BRICK_WIDTH * 0.5
-	blockY = m.globalVars.GAME_FIELD_MIN_Y + _collisionData.testedBlock.i * m.globalVars.BRICK_HEIGHT + m.globalVars.BRICK_HEIGHT * 0.5
-
-	blockLeftSideX = blockX - m.globalVars.BRICK_WIDTH * 0.5
-	blockRightSideX = blockX + m.globalVars.BRICK_WIDTH * 0.5
+function CollisionManagerCollideStaticGridCellRing(_collider as object, x as integer, y as integer) as boolean
+	brickLeftSideX = x * m.staticGridCellSize.x + m.staticGridPositionOffset.x
+	brickRightSideX = brickLeftSideX + m.staticGridCellSize.x
 	
-	blockLeftSideY = blockY - m.globalVars.BRICK_HEIGHT * 0.5
-	blockRightSideY = blockY + m.globalVars.BRICK_HEIGHT * 0.5
+	brickLeftSideY = y * m.staticGridCellSize.y + m.staticGridPositionOffset.y
+	brickRightSideY = brickLeftSideY + m.staticGridCellSize.y
 
-	'finding a box point closest to the circle' center
-	nearestX = MaxF(blockLeftSideX, MinF(_collisionData.position.x, blockRightSideX))
-	nearestY = MaxF(blockLeftSideY, MinF(_collisionData.position.y, blockRightSideY))
+	'finding a brick's point closest to the circle' center
+	nearestX = MaxF(brickLeftSideX, MinF(_collider.position.x, brickRightSideX))
+	nearestY = MaxF(brickLeftSideY, MinF(_collider.position.y, brickRightSideY))
 
-	boxBallPosDeltaX = _collisionData.position.x - nearestX
-	boxBallPosDeltaY = _collisionData.position.y - nearestY
+	brickBallPosDeltaX = _collider.position.x - nearestX
+	brickBallPosDeltaY = _collider.position.y - nearestY
 	
-	boxBallPosDeltaDistanceInPow = boxBallPosDeltaX * boxBallPosDeltaX + boxBallPosDeltaY * boxBallPosDeltaY 
-	  
-	_collisionData.isCollided = boxBallPosDeltaDistanceInPow < (_collisionData.radius * _collisionData.radius)
-	if (_collisionData.isCollided = false)
-		return _collisionData
+	brickBallPosDeltaDistanceInPow = brickBallPosDeltaX * brickBallPosDeltaX + brickBallPosDeltaY * brickBallPosDeltaY 
+	
+	colliderRadiusInPow = _collider.collisionRadius * _collider.scale.x
+	colliderRadiusInPow *= colliderRadiusInPow
+
+	_collider.isCollided = brickBallPosDeltaDistanceInPow < colliderRadiusInPow
+	if (_collider.isCollided = false)
+		return false
 	end if
 
-	boxNormal = {
-		x : boxBallPosDeltaX
-		y : boxBallPosDeltaY
+	brickNormal = {
+		x : brickBallPosDeltaX
+		y : brickBallPosDeltaY
 	}
 
-	boxBallPosDeltaLength = Sqr(boxBallPosDeltaDistanceInPow)
+	brickBallPosDeltaLength = Sqr(brickBallPosDeltaDistanceInPow)
 
-	boxNormal = NormalizeVector(boxNormal)
-	reflectedBallSpeed = ReflectVector(_collisionData.speed, boxNormal)
+	brickNormal = NormalizeVector(brickNormal)
+	reflectedBallSpeed = ReflectVector(_collider.speed, brickNormal)
 
-	_collisionData.speed = reflectedBallSpeed
+	_collider.speed.x = reflectedBallSpeed.x
+	_collider.speed.y = reflectedBallSpeed.y
 
 	hitPos = {
 		x : 0.0
 		y : 0.0
 	}
-	hitPos.x = _collisionData.position.x + boxNormal.x * (_collisionData.radius - boxBallPosDeltaLength)
-	hitPos.y = _collisionData.position.y + boxNormal.y * (_collisionData.radius - boxBallPosDeltaLength)
-	_collisionData.position = hitPos
-
-	_collisionData.isCollided = true
-	
-	return _collisionData		
-	return false
-end function
-
-function CollisionManagerAddObject(_object as object, isDinamic=true as boolean) as void
-	if (_object.collisionSize = invalid) _object.collisionSize = {x: 1.0, y: 1.0}
-	if (_object.collisionLayers = invalid) _object.collisionLayers = 1<<0
-	if (_object.collisionRadius = invalid) _object.collisionRadius = 1.0
-	
-	collisionData = {
-		collisionLayer	: _object.collisionLayer 'Int. [0-31]. Represent collision layer which this object belong
-		collisionLayers : _object.collisionLayers
-		collisionType	: _object.collisionType
-		position		: _object.position
-		speed 			: _object.speed
-		collisionSize	: _object.collisionSize 'it is half of each side
-		scale			: _object.scale
-		collisionRadius	: _object.collisionRadius
-		isCollided		: false
-		obj : _object
-		id	: m.ids
-		collidedList	: []
-	}
-	m.ids++
-	if (isDinamic = true)
-		m.dynamicColliders.Push(collisionData)
-	else
-		m.staticColliders.Push(collisionData)
-	end if
-end function
-
-function CollisionManagerAddStaticGridObjects(_obj : objects, _bricks as object, _positionOffset as object, _cellSize as object, _collisionLayer as integer) as void
-	m.staticGridColliders = _bricks
-	m.staticGridDimension.y = _bricks.Count()
-	m.staticGridDimension.x = _bricks[0].Count()
-	m.staticGridPositionOffset = _positionOffset
-	m.staticGridCellSize = _cellSize
-	m.staticGridCollisionLayer = _collisionLayer
-	m.staticGridObj = _obj
+	hitPos.x = _collider.position.x + brickNormal.x * (_collider.collisionRadius - brickBallPosDeltaLength)
+	hitPos.y = _collider.position.y + brickNormal.y * (_collider.collisionRadius - brickBallPosDeltaLength)
+	_collider.position.x = hitPos.x
+	_collider.position.y = hitPos.y
+	return true
 end function
 
 function CollisionManagerMoveOutOfCollision(_collider as object, _colliderOther as object) as void

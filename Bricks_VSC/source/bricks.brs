@@ -22,12 +22,14 @@ function CreateBricks(_globalVars as object) as object
 		MAX_LEVEL_COLUMNS	: 13
 		MAX_LEVEL_LINES		: 17
 		collisionLayer : 4
+		currentLevelBricksLeft : 0
 
 '		functions
 		Draw    : BricksDraw
 		Update  : BricksUpdate
 		Load : LoadBricks
 		Init : BricksInit
+		CollisionHandler: BrickCollisionHandler
 	}
 	return obj
 end function
@@ -40,6 +42,7 @@ end function
 
 function BricksUpdate(_deltatime=0 as float, _position=invalid as object) as void
 	if (m.active = false) return
+	if (m.currentLevelBricksLeft = 0) m.level.status = m.level.STATUS_END
 end function
 
 function BricksDraw() as void
@@ -57,6 +60,8 @@ function BricksDraw() as void
 end function
 
 function BricksInit(_level as object) as void
+	m.currentLevelBricksLeft = 0
+
 	allBricksBitmapProp = {
 		width	: m.MAX_LEVEL_COLUMNS * m.BRICK_WIDTH
 		height	: m.MAX_LEVEL_LINES * m.BRICK_HEIGHT
@@ -88,6 +93,7 @@ function BricksInit(_level as object) as void
 			end if
 			if (Asc(blockChar) >= Asc("1") AND Asc(blockChar) <= Asc("9"))
 				bricksDataLine[x] = Asc(blockChar) - Asc("1") + 1
+				m.currentLevelBricksLeft++
 			end if
 		end for
 	end for
@@ -105,4 +111,14 @@ function BricksInit(_level as object) as void
 	m.level = _level
 
 	m.level.CollisionManager.AddStaticGridObjects(m, m.bricks, {x: m.BRICKS_POS_OFFSET_X, y: m.BRICKS_POS_OFFSET_Y}, {x: m.BRICK_WIDTH, y: m.BRICK_HEIGHT}, m.collisionLayer)
+end function
+
+function BrickCollisionHandler(x as integer, y as integer) as void
+	brickCode = m.bricks[y][x]
+	if (brickCode = 1) 
+		m.bricks[y][x] = 0
+		m.currentLevelBricksLeft--
+		return
+	end if
+
 end function

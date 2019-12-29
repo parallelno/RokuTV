@@ -21,7 +21,12 @@ function CreateLevel(_globalVars as object) as object
 		filenames: []
 
 		listeners			: {} 'gameobjects which want to have their ControlListener functions being called when any keys pressed
-		collisionManager	: CollisionManagerCreate()
+		collisionManager	: CollisionManagerCreate(_globalVars)
+
+		status : 0
+		STATUS_RUN	: 0
+		STATUS_END	: 1
+		STATUS_GAMEOVER : 3
 
 		Draw    : LevelDraw
 		Update  : LevelUpdate
@@ -88,6 +93,8 @@ function LoadLevel(_globalVars as object, _path as string) as object
 end function
 
 function LevelUpdate(_deltaTime=0 as float) as void
+	if (m.active = false) return
+
 ' key press handler
     event = m.globalVars.port.GetMessage()
 	if type(event) = "roUniversalControlEvent"
@@ -95,9 +102,8 @@ function LevelUpdate(_deltaTime=0 as float) as void
 		for each listener in m.listeners
 			m.listeners[listener].ControlListener(id, m.globalVars.codes)
 		end for
+		m.collisionManager.ControlListener(id, m.globalVars.codes)
 	end if
-	
-	if (m.active = false) return
 
 ' gameobject updates
 	for each obj in m.objs
@@ -118,7 +124,8 @@ end function
 function LevelDraw() as void
 	for each obj in m.objs
 		obj.Draw()
-	end for	
+	end for
+	m.collisionManager.Draw()
 end function
 
 function LevelControlListenerSet(_listener) as object

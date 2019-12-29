@@ -13,7 +13,6 @@ function CreateStaticCollisionBox(_globalVars as object) as object
 		
 		Init			: StaticCollisionBoxInit
 		Update    		: StaticCollisionBoxUpdate
-		ControlListener	: StaticCollisionBoxControlListener
 		CollisionHandler: StaticCollisionBoxCollisionHandler
 	}
 	return obj
@@ -31,20 +30,7 @@ end function
 
 function StaticCollisionBoxInit(_level)
 	m.level = _level
-	m.level.ControlListenerSet(m)
 	m.level.CollisionManager.AddObject(m, m.level.CollisionManager.STATIC)
-end function
-
-function StaticCollisionBoxControlListener(_key as integer, _codes as object) as void
-	if (m.active = false) return
-	
-	if (_key = _codes.BUTTON_UP_PRESSED)
-		if m.visible = true
-            m.visible = false
-        else
-            m.visible = true
-        end if
-	endif
 end function
 
 function StaticCollisionBoxCollisionHandler(_collider as object, _collidedList as object)
