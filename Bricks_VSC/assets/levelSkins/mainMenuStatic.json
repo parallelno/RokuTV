@@ -1,0 +1,66 @@
+{
+	"type" : "staticSprite",
+	"filenames": {
+		"title": "pkg:/assets/ui/png/mainMenu_Title.png",
+		"options": "pkg:/assets/ui/png/mainMenu_Options.png",
+		"borderCL": "pkg:/assets/levelSkins/skin01/gameLevel_BorderCL.png",
+		"borderCR": "pkg:/assets/levelSkins/skin01/gameLevel_BorderCR.png",
+		"borderCLD": "pkg:/assets/levelSkins/skin01/gameLevel_BorderCLD.png",
+		"borderCRD": "pkg:/assets/levelSkins/skin01/gameLevel_BorderCRD.png",
+		"borderH": "pkg:/assets/levelSkins/skin01/gameLevel_BorderH.png",
+		"borderL": "pkg:/assets/levelSkins/skin01/gameLevel_BorderL.png",
+		"borderR": "pkg:/assets/levelSkins/skin01/gameLevel_BorderR.png"
+	},
+	"tiles" : [
+		{
+			"region" : "title",
+			"order"	 : 1,
+			"position" : {"x": 647, "y": 240}
+		},
+		{
+			"region" : "options",
+			"order"	 : 1,
+			"position" : {"x": 647, "y": 482}
+		},
+		{
+			"region" : "borderCL",
+			"order"	 : 1,
+			"position" : {"x": 228, "y": 126}
+		},
+		{
+			"region" : "borderCR",
+			"order"	 : 1,
+			"position" : {"x": 1094, "y": 126}
+		},
+		{
+			"region" : "borderCLD",
+			"order"	 : 1,
+			"position" : {"x": 228, "y": 610}
+		},
+		{
+			"region" : "borderCRD",
+			"order"	 : 1,
+			"position" : {"x": 1094, "y": 610}
+		},
+		{
+			"region" : "borderH",
+			"repeat" : {"count": 6, "x":128, "y": 0},
+			"position" : {"x": 341, "y": 111}
+		},
+		{
+			"region" : "borderH",
+			"repeat" : {"count": 6, "x":128, "y": 0},
+			"position" : {"x": 341, "y": 625}
+		},
+		{
+			"region" : "borderL",
+			"position" : {"x": 212, "y": 240},
+			"repeat" : {"count": 3, "x": 0, "y": 128}
+		},
+		{
+			"region" : "borderR",
+			"position" : {"x": 1110, "y": 240},
+			"repeat" : {"count": 3, "x": 0, "y": 128}
+		}
+	]
+}

@@ -51,7 +51,7 @@ STATUS_INPLAY = 2
 STATUS_SCORE = 3
 STATUS_END = 4
 
-status = STATUS_INTRO
+status = STATUS_MAINMENU
 
 levelMainMenu = LoadLevel(GAME_VARS, "pkg:/assets/levels/mainMenu.json")
 levelIntro = LoadLevel(GAME_VARS, "pkg:/assets/levels/intro.json")
@@ -79,23 +79,22 @@ deltaTime = 0.0
 			status = STATUS_INPLAY
 		end if
 		if status = STATUS_INPLAY
-			level.Update(deltaTime)
-			level.Draw()
-		end if
+				level.Update(deltaTime)
+				level.Draw()
 
-		if (level.status = level.STATUS_END) 
-			status = STATUS_INTRO
-			currentLevel++
-			if currentLevel > allLevels.Count()-1 
-				status = STATUS_END
+			if (level.status = level.STATUS_END) 
+				status = STATUS_INTRO
+				currentLevel++
+				if currentLevel > allLevels.Count()-1 
+					status = STATUS_END
+				end if
+			end if
+
+			if (level.status = level.STATUS_GAMEOVER) 
+				status = STATUS_GAMEOVER
+				currentLevel = 0
 			end if
 		end if
-
-		if (level.status = level.STATUS_GAMEOVER) 
-			status = STATUS_GAMEOVER
-			currentLevel = 0
-		end if
-
 
 		GAME_VARS.screen.SwapBuffers()
 		deltaTime = clock.TotalMilliseconds() / 1000.0

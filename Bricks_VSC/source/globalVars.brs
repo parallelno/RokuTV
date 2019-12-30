@@ -44,6 +44,7 @@ function GlobalVars() as object
     obj.RegisterUniqueGameObject(CreateStaticCollisionBox(obj))
     obj.RegisterUniqueGameObject(CreateBricks(obj))
     obj.RegisterUniqueGameObject(CreateFpsCounter(obj))
+    obj.RegisterUniqueGameObject(CreateMainMenuOptions(obj))
     return obj
 end function
 

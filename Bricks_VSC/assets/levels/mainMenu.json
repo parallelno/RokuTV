@@ -5,6 +5,18 @@
 			"type"      : "staticSprite",
 			"filename"  : "pkg:/assets/levelSkins/mainMenuBack.json",
 			"position"  : {"x": 0, "y": 0},
+			"order"     : -1
+		},
+		{
+			"type"      : "staticSprite",
+			"filename"  : "pkg:/assets/levelSkins/mainMenuStatic.json",
+			"position"  : {"x": 0, "y": 0},
+			"order"     : 1
+		},
+		{
+			"type"      : "staticSprite",
+			"filename"  : "pkg:/assets/levelSkins/mainMenuOptionFrames.json",
+			"position"  : {"x": 0, "y": 0},
 			"order"     : 0
 		},
 		{

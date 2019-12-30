@@ -1,0 +1,29 @@
+{
+	"type" : "staticSprite",
+	"filenames": {
+        "options_EnergyBar": "pkg:/assets/ui/png/mainMenu_Options_EnergyBar.png"
+	},
+	"tiles" : [
+        {
+			"region" : "options_EnergyBar",
+			"order"	 : 0,
+            "position" : {"x": 447, "y": 410},
+            "localOffset" : {"x": -0.5, "y": 0.0},
+            "override"    : "mainMenuOptions"
+		},
+		{
+			"region" : "options_EnergyBar",
+			"order"	 : 0,
+            "position" : {"x": 447, "y": 478},
+            "localOffset" : {"x": -0.5, "y": 0.0},
+            "override"    : "mainMenuOptions"
+		},
+		{
+			"region" : "options_EnergyBar",
+			"order"	 : 0,
+            "position" : {"x": 447, "y": 546},
+            "localOffset" : {"x": -0.5, "y": 0.0},
+            "override"    : "mainMenuOptions"
+		}
+	]
+}

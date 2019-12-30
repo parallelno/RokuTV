@@ -1,16 +1,32 @@
 {
 	"type" : "staticSprite",
 	"filenames": {
-		"background": "pkg:/assets/ui/png/mainMenu_Back.jpg"
+        "background": "pkg:/assets/levelSkins/skin01/gameLevel_Back.jpg",
+        "options_EnergyFrame": "pkg:/assets/ui/png/mainMenu_Options_EnergyFrame.png"
 	},
 	"tiles" : [
 		{
 			"region" : "background",
-			"order"	 : -1,
+			"order"	 : 0,
 			"type"	 : "scrolling",
-			"speed"	 : {"x": 0, "y": 0},
+			"speed"	 : {"x": 0, "y": -80},
 			"position" : {"x": 0, "y": 0},
 			"localOffset" : {"x": -0.5, "y": -0.5}
+        },
+        {
+			"region" : "options_EnergyFrame",
+			"order"	 : 1,
+			"position" : {"x": 646, "y": 410}
+		},
+		{
+			"region" : "options_EnergyFrame",
+			"order"	 : 1,
+			"position" : {"x": 646, "y": 478}
+		},
+		{
+			"region" : "options_EnergyFrame",
+			"order"	 : 1,
+			"position" : {"x": 646, "y": 546}
 		}
 	]
 }
