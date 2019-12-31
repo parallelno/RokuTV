@@ -17,7 +17,16 @@
 			"type"      : "staticSprite",
 			"filename"  : "pkg:/assets/levelSkins/mainMenuOptionFrames.json",
 			"position"  : {"x": 0, "y": 0},
-			"order"     : 0
+			"order"     : 0,
+			"override"    : "mainMenuOptions"
+		},
+		{
+			"type"      : "sprite",
+			"filename"  : "pkg:/assets/gameObjects/ball.json",
+			"order"     : 3,
+			"position"  : {"x": 620, "y": 173},
+			"scale"		: {"x": 2.0, "y": 2.0},
+			"override"    : "mainMenuBall"
 		},
 		{
 			"type"      : "fpsCounter",

@@ -8,22 +8,19 @@
 			"region" : "options_EnergyBar",
 			"order"	 : 0,
             "position" : {"x": 447, "y": 410},
-            "localOffset" : {"x": -0.5, "y": 0.0},
-            "override"    : "mainMenuOptions"
+            "localOffset" : {"x": -0.5, "y": 0.0}
 		},
 		{
 			"region" : "options_EnergyBar",
 			"order"	 : 0,
             "position" : {"x": 447, "y": 478},
-            "localOffset" : {"x": -0.5, "y": 0.0},
-            "override"    : "mainMenuOptions"
+            "localOffset" : {"x": -0.5, "y": 0.0}
 		},
 		{
 			"region" : "options_EnergyBar",
 			"order"	 : 0,
             "position" : {"x": 447, "y": 546},
-            "localOffset" : {"x": -0.5, "y": 0.0},
-            "override"    : "mainMenuOptions"
+            "localOffset" : {"x": -0.5, "y": 0.0}
 		}
 	]
 }

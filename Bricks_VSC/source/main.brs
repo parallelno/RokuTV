@@ -36,41 +36,40 @@ function Main() as void
 '	GAME_VARS.Sound_levelup = CreateObject("roAudioResource", "pkg:/sounds/levelup.wav")
 '	GAME_VARS.Sound_new_round = CreateObject("roAudioResource", "pkg:/sounds/new_round.wav")
 
-clock = CreateObject("roTimespan")
-GAME_VARS = GlobalVars()
-
-allLevels = [
-	"pkg:/assets/levels/01.json"
-	"pkg:/assets/levels/01.json"
-]
-currentLevel = 0
-
-STATUS_MAINMENU = 0
-STATUS_INTRO = 1
-STATUS_INPLAY = 2
-STATUS_SCORE = 3
-STATUS_END = 4
-
-status = STATUS_MAINMENU
-
-levelMainMenu = LoadLevel(GAME_VARS, "pkg:/assets/levels/mainMenu.json")
-levelIntro = LoadLevel(GAME_VARS, "pkg:/assets/levels/intro.json")
-levelScore = LoadLevel(GAME_VARS, "pkg:/assets/levels/score.json")
-levelEnd = LoadLevel(GAME_VARS, "pkg:/assets/levels/end.json")
-
 ' ------------------------------------------------------------------------------------------	
-'	level = LoadLevel(GAME_VARS, "pkg:/assets/levels/01.json")
+	'GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
 ' ------------------------------------------------------------------------------------------
 
-'----------
-deltaTime = 0.0
-'MENU_LOOP:
-	
-'GAME_TEST_LOOP:
-'   GAME_VARS.Sound_MainMenu_Intro.Trigger(65)
+	clock = CreateObject("roTimespan")
+	GAME_VARS = GlobalVars()
+
+	allLevels = [
+		"pkg:/assets/levels/01.json"
+		"pkg:/assets/levels/01.json"
+	]
+	currentLevel = 0
+
+	STATUS_MAINMENU = 0
+	STATUS_INTRO = 1
+	STATUS_INPLAY = 2
+	STATUS_SCORE = 3
+	STATUS_END = 4
+
+	status = STATUS_MAINMENU
+
+	levelMainMenu = LoadLevel(GAME_VARS, "pkg:/assets/levels/mainMenu.json")
+	levelIntro = LoadLevel(GAME_VARS, "pkg:/assets/levels/intro.json")
+	levelScore = LoadLevel(GAME_VARS, "pkg:/assets/levels/score.json")
+	levelEnd = LoadLevel(GAME_VARS, "pkg:/assets/levels/end.json")
+
+	deltaTime = 0.0
 	while true
 	   	clock.Mark()
 		if status = STATUS_MAINMENU
+			if (levelMainMenu.status = 1) 
+				status = STATUS_INTRO
+				currentLevel = 0
+			end if
 			levelMainMenu.Update(deltaTime)
 			levelMainMenu.Draw()
 		end if
@@ -104,7 +103,5 @@ deltaTime = 0.0
 '		deltaTime = clampedDeltaTime
 '		sleep(waitTime * 1000.0)
 	end while
-	
-'EXIT_GAME:
 	
 end function
