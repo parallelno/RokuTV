@@ -12,13 +12,13 @@
 		},
 		{
 			"region" : "options_EnergyBar",
-			"order"	 : 0,
+			"order"	 : 1,
             "position" : {"x": 447, "y": 478},
             "localOffset" : {"x": -0.5, "y": 0.0}
 		},
 		{
 			"region" : "options_EnergyBar",
-			"order"	 : 0,
+			"order"	 : 2,
             "position" : {"x": 447, "y": 546},
             "localOffset" : {"x": -0.5, "y": 0.0}
 		}

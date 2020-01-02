@@ -23,6 +23,7 @@ function CreateBricks(_globalVars as object) as object
 		MAX_LEVEL_LINES		: 17
 		collisionLayer : 4
 		currentLevelBricksLeft : 0
+		BOMB_EXPLOSION_WIDTH : 4
 
 '		functions
 		Draw    : BricksDraw
@@ -30,6 +31,7 @@ function CreateBricks(_globalVars as object) as object
 		Load : LoadBricks
 		Init : BricksInit
 		CollisionHandler: BrickCollisionHandler
+		GetBrick	: BricksGetBrick
 	}
 	return obj
 end function
@@ -47,7 +49,8 @@ end function
 
 function BricksDraw() as void
 	if (m.visible = false) return
-	
+m.globalVars.screen.DrawObject(0, 0, m.regions[0])
+
 	brickCode = 0
 	for y=0 to m.MAX_LEVEL_LINES - 1
 		for x=0 to m.MAX_LEVEL_COLUMNS - 1			
@@ -62,14 +65,6 @@ end function
 function BricksInit(_level as object) as void
 	m.currentLevelBricksLeft = 0
 
-	allBricksBitmapProp = {
-		width	: m.MAX_LEVEL_COLUMNS * m.BRICK_WIDTH
-		height	: m.MAX_LEVEL_LINES * m.BRICK_HEIGHT
-		alphaenable : true
-	}
-	m.allBricksBitmap = CreateObject("roBitmap", allBricksBitmapProp)
-	m.allBricksBitmap.Clear(&h000000FF)
-	
 '	parsing brick text data	
 '	erase the bricks array
 	bricks = []
@@ -115,10 +110,30 @@ end function
 
 function BrickCollisionHandler(x as integer, y as integer) as void
 	brickCode = m.bricks[y][x]
-	if (brickCode = 1) 
+	if (brickCode = 1)
 		m.bricks[y][x] = 0
 		m.currentLevelBricksLeft--
 		return
 	end if
+	if (brickCode = 2)
+		m.bricks[y][x] = 0
+		m.currentLevelBricksLeft--
+		if m.GetBrick(x+1,y)<> -1
+			xRightStart = x+1
+			xRightEnd = Min(x + m.BOMB_EXPLOSION_WIDTH, m.MAX_LEVEL_COLUMNS - 1)
+			for x1 = xPlus1 to xRightEnd
+				m.bricks[y][x1] = 0
+			end for
+		end if
+		
+		return
+	end if
 
+end function
+
+function BricksGetBrick(_x as integer, _y as integer) as integer
+	if (_y < 0 OR _y > m.MAX_LEVEL_LINES - 1) return -1
+	if (_x < 0 OR _x > m.MAX_LEVEL_COLUMNS - 1) return -1
+
+	return m.bricks[y][x]
 end function

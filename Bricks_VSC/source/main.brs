@@ -55,12 +55,12 @@ function Main() as void
 	STATUS_SCORE = 3
 	STATUS_END = 4
 
-	status = STATUS_MAINMENU
+	status = STATUS_INTRO
 
 	levelMainMenu = LoadLevel(GAME_VARS, "pkg:/assets/levels/mainMenu.json")
-	levelIntro = LoadLevel(GAME_VARS, "pkg:/assets/levels/intro.json")
-	levelScore = LoadLevel(GAME_VARS, "pkg:/assets/levels/score.json")
-	levelEnd = LoadLevel(GAME_VARS, "pkg:/assets/levels/end.json")
+'	levelIntro = LoadLevel(GAME_VARS, "pkg:/assets/levels/intro.json")
+'	levelScore = LoadLevel(GAME_VARS, "pkg:/assets/levels/score.json")
+'	levelEnd = LoadLevel(GAME_VARS, "pkg:/assets/levels/end.json")
 
 	deltaTime = 0.0
 	while true

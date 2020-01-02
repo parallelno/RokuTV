@@ -11,19 +11,19 @@
 			"type"      : "staticSprite",
 			"filename"  : "pkg:/assets/ui/gameStaticUI.json",
 			"position"  : {"x": 0, "y": 0},
-			"order"     : 1
+			"order"     : 2
 		},
 		{
 			"type"      : "sprite",
 			"filename"  : "pkg:/assets/gameObjects/player.json",
-			"order"     : 2,
+			"order"     : 3,
 			"override"    : "player",
 			"position"  : {"x": 500.0, "y": 670.0}
 		},
 		{
 			"type"      : "sprite",
 			"filename"  : "pkg:/assets/gameObjects/ball.json",
-			"order"     : 3,
+			"order"     : 4,
 			"override"    : "ball"
 		},
 		{
@@ -61,7 +61,7 @@
 		{
 			"type"		: "bricks",
 			"filename"	: "",
-			"order"     : 0,
+			"order"     : 1,
 			"bricks"	: [
 				"0000000000000",
 				"0000000000000",

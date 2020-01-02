@@ -55,7 +55,6 @@ end function
 
 function MainMenuOptionsControlListener(_key as integer, _codes as object) as void
 	if (m.active = false) return
-	
 	if m.level.status = m.level.STATUS_RUN
 		if (_key = _codes.BUTTON_UP_PRESSED)
 			m.currentOption--
