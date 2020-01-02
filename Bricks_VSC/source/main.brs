@@ -45,7 +45,7 @@ function Main() as void
 
 	allLevels = [
 		"pkg:/assets/levels/01.json"
-		"pkg:/assets/levels/01.json"
+		"pkg:/assets/levels/02.json"
 	]
 	currentLevel = 0
 
@@ -90,7 +90,7 @@ function Main() as void
 			end if
 
 			if (level.status = level.STATUS_GAMEOVER) 
-				status = STATUS_GAMEOVER
+				status = STATUS_MAINMENU
 				currentLevel = 0
 			end if
 		end if
