@@ -16,7 +16,7 @@ function Main() as void
 	speedIconAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/speed_icon_anim.xml"))
 	
 	mainMenuBackAnimDataSet = dfNewBitmapSet(ReadAsciiFile("pkg:/assets/main_menu_back.xml"))
-	
+' ----- test
     
 	scoreRegSection = CreateObject("roRegistrySection", "ScoreTable")
     screen = CreateObject("roScreen", true)
