@@ -1,1 +1,1 @@
-# This is a difference projects for Roku device
+# Projects for Roku TV device
